@@ -448,12 +448,13 @@ a { color: #22d3ee; }
     <h2 class="section-title"><span class="idx">i</span>使用说明</h2>
     <div class="card-body">
       <div class="help-grid">
-        <div class="help-item"><h4>Token 怎么来</h4><p>GitHub → Settings → Developer settings → <b>Personal access tokens</b> → Fine-grained token，Repository access 选你的仓库，Permissions 里 <b>Contents</b> 设为 Read and write。Token 只保存在这台设备的浏览器里，页面不会把它发给任何第三方。</p></div>
+        <div class="help-item"><h4>两种同步方式</h4><p><b>本站同步（推荐）</b>：读写全部经由 <span class="mono">lucky-chip-sync</span> Worker 代理，GitHub 令牌只存在 Worker 的 secret 里，页面只发送管理员密码，输一次就长期生效。<b>浏览器直连</b>：令牌存在你这台设备的 localStorage，不发第三方，换设备要重填一次。两种方式在「同步方式与凭据」面板里随时切换。</p></div>
+        <div class="help-item"><h4>为什么不能把令牌写进页面</h4><p>本页是公开站点上的静态文件，令牌一旦内嵌，任何人查看源码就能拿到你仓库的写权限，包括改写和删除其他玩家的存档。所以令牌只能待在服务端 secret 或本机浏览器里，前端密码门也挡不住读源码的人——密码校验必须发生在 Worker 内。</p></div>
         <div class="help-item"><h4>写入走什么接口</h4><p>上传走 Git Data API（blob → tree → commit → ref），一次提交可带多个存档文件，不受 Contents 接口 1MB 限制；单个文件建议不超过 25MB，超限由 GitHub 拒绝。</p></div>
         <div class="help-item"><h4>存档安全</h4><p>GitHub 免费版私有仓库不支持大文件与 Git LFS 免费额度，重要存档建议双备份；本页面是纯前端，不搭服务端，也不记录你的任何数据。</p></div>
         <div class="help-item"><h4>接口限流</h4><p>匿名调用每小时 60 次，带 Token 每小时 5000 次。右上角实时显示剩余次数，触顶时等待整点窗口重置即可。</p></div>
-        <div class="help-item"><h4>公共设备务必清 Token</h4><p>本页部署在公开站点上，任何人都能打开，但 Token 只写进你当前浏览器的 localStorage，不会上传或内嵌在页面里。在网吧、手机借用他人设备等场景用完，请点 Token 面板里的「清除本机 Token」。</p></div>
-        <div class="help-item"><h4>和 Game5 自动云存档的关系</h4><p>Game5 里已有的 <span class="mono">lucky-chip-sync</span> Worker 负责游戏内自动同步（<span class="mono">Game5Saves/{用户名}/save.json</span>），密钥在服务端。本页是它的补充：手动查看、批量导出、跨游戏备份，以及处理 Game3、Game4 那些没有 Worker 覆盖的存档目录。两者写入同一批路径，互不冲突。</p></div>
+        <div class="help-item"><h4>公共设备用完请清除</h4><p>本页在公开站点上任何人都能打开，凭据本身不内嵌在页面里：Token 只写进当前浏览器的 localStorage，管理员密码也只在提交时发一次。在网吧、借他人手机等场景用完，请打开「同步方式与凭据」点「清除本机凭据」，把两类凭据一起抹掉。</p></div>
+        <div class="help-item"><h4>和 Game5 游戏内自动同步</h4><p>同一个 <span class="mono">lucky-chip-sync</span> Worker 现在承担两件事：原有的游戏内自动同步（<span class="mono">Game5Saves/{用户名}/save.json</span>、<span class="mono">Game5Accounts/…</span>，接口与行为一字未改）和本页的管理代理（新增 <span class="mono">/proxy</span> 通道，只放行白名单端点、且仓库被锁死在你自己的仓库上）。Game3、Game4 那些没有自动同步的目录，用本页手动备份即可。</p></div>
       </div>
     </div>
   </section>
@@ -466,24 +467,36 @@ a { color: #22d3ee; }
 <!-- SECTION: modal-token -->
 <div class="overlay hidden" id="token-modal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="token-modal-title">
-    <div class="modal-head"><h3 id="token-modal-title">配置 GitHub Token</h3><button class="modal-close" type="button" id="btn-token-close">✕</button></div>
+    <div class="modal-head"><h3 id="token-modal-title">同步方式与凭据</h3><button class="modal-close" type="button" id="btn-token-close">✕</button></div>
     <div class="modal-body stack">
       <div class="field">
+        <label>用哪种方式读写仓库</label>
+        <div class="opt-list" id="mode-opts">
+          <label class="opt"><input type="radio" name="syncmode" value="worker">本站同步（管理员密码）</label>
+          <label class="opt"><input type="radio" name="syncmode" value="direct">浏览器直连（GitHub Token）</label>
+        </div>
+      </div>
+      <div class="field" id="key-field">
+        <label for="key-input">管理员密码（只发送到你自己的 Worker，由服务端比对）</label>
+        <input class="input mono" id="key-input" type="password" autocomplete="off" spellcheck="false" placeholder="与 Worker secret 里 ADMIN_PASSWORD 一致">
+        <div class="hint" style="margin-top:8px">Worker 地址 <span class="mono" id="worker-url"></span> · 连通状态 <span class="badge" id="worker-state">未探测</span> <button class="btn btn-sm btn-ghost" id="btn-ping" type="button">重新探测</button></div>
+      </div>
+      <div class="field hidden" id="token-field">
         <label for="token-input">Personal Access Token（仅存在本机浏览器）</label>
         <input class="input mono" id="token-input" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_... 或 ghp_...">
       </div>
       <div class="subtle-box">
         <ol class="steps">
-          <li>打开 <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener">Fine-grained tokens 创建页</a></li>
-          <li>Repository access 选 <code>Only select repositories</code>，勾选你的存档仓库</li>
-          <li>Permissions → <code>Contents</code> → <code>Read and write</code></li>
-          <li>生成后粘贴到上方输入框，点「保存并验证」</li>
+          <li>Cloudflare Workers → <code>lucky-chip-sync</code> → 粘贴仓库里新版 <code>cloudflare-worker/worker.js</code> → Deploy</li>
+          <li>Settings → Secrets → 添加 <code>GITHUB_TOKEN</code>（细粒度 PAT，仅本仓库 Contents: read and write）</li>
+          <li>再添加 <code>ADMIN_PASSWORD</code>（建议 20 位以上随机串），Variables 里保留 <code>REPO_OWNER</code> / <code>REPO_NAME</code></li>
+          <li>回到本页选「本站同步」，把管理员密码填一次即可长期生效</li>
         </ol>
       </div>
-      <div class="hint">只想从私有仓库导出存档时，同样需要 Token（只读权限即可）。</div>
+      <div class="hint" id="auth-note"></div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-danger btn-sm" type="button" id="btn-token-clear">清除本机 Token</button>
+      <button class="btn btn-danger btn-sm" type="button" id="btn-token-clear">清除本机凭据</button>
       <button class="btn btn-primary" type="button" id="btn-token-save">保存并验证</button>
     </div>
   </div>
@@ -508,7 +521,10 @@ a { color: #22d3ee; }
 "use strict";
 /* SECTION: js-utils */
 const API = "https://api.github.com";
+const WORKER_URL = "https://lucky-chip-sync.3837782838.workers.dev";
 const LS_TOKEN = "***";
+const LS_MODE = "ghsave.mode";
+const LS_KEY = "***";
 const LS_REPO = "ghsave.repo";
 const LS_DIR = "ghsave.dir";
 const LS_RECENT = "ghsave.recent";
@@ -519,9 +535,15 @@ const S = {
   owner: "", repo: "", ref: "", defaultBranch: "", repoPrivate: false,
   entries: new Map(), children: new Map(), truncated: false,
   selDir: "", staged: [], remote: [], checked: new Set(), busy: false,
-  token: "", lastCommitMsg: "", commitUrl: ""
+  token: "", mode: "direct", adminKey: "", workerOk: null,
+  lastCommitMsg: "", commitUrl: ""
 };
-try { S.token = localStorage.getItem(LS_TOKEN) || ""; } catch (e) { S.token = ""; }
+function lsGet(k) { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
+function lsDel(k) { try { localStorage.removeItem(k); } catch (e) { } }
+S.token = lsGet(LS_TOKEN);
+S.adminKey = lsGet(LS_KEY);
+S.mode = lsGet(LS_MODE) || "direct";
 
 function fmtSize(n) {
   if (n === undefined || n === null || isNaN(n)) return "大小未知";
@@ -586,7 +608,7 @@ class ApiError extends Error {
       raw = payload.message || "";
       if (payload.errors && payload.errors.length) raw += " · " + payload.errors.map(function (e) { return e.message || e.code || ""; }).join("；");
     } else if (typeof payload === "string") raw = payload.slice(0, 200);
-    if (status === 401) return "Token 无效或已过期（401），请重新生成并保存";
+    if (status === 401) return raw ? "凭据不被接受（401）：" + raw : "凭据无效或已过期（401），请重新填写";
     if (status === 403) return "被拒绝（403）：Token 权限不足，或触发接口限流。" + raw;
     if (status === 404) return "找不到内容（404）：仓库 / 分支 / 路径不存在；若是私有仓库，需要先配置 Token";
     if (status === 422) return "GitHub 拒绝该写法（422）：" + raw;
@@ -600,8 +622,50 @@ function updateRate(res) {
   var max = res.headers.get("x-ratelimit-limit");
   if (left !== null) $("rate-num").textContent = left + (max ? " / " + max : "");
 }
+function base64ToU8(b64) {
+  var bin = atob(b64), u8 = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return u8;
+}
+function netFailText() {
+  return "连不上本站同步服务。可能是 Worker 还没部署、workers.dev 在你当前网络直连超时（你仓库的部署文档里记过这个坑），或管理员密码未填。可以开代理、给 Worker 绑自定义域名，或在「同步方式」里切到浏览器直连。";
+}
+/* 本站模式：所有 GitHub 调用改走你自己的 Worker 代理，令牌不进浏览器 */
+async function apiViaWorker(path, opt) {
+  var payload = { password: S.adminKey, method: opt.method || "GET", path: path, accept: opt.raw ? "raw" : "json" };
+  if (opt.body !== undefined) payload.body = opt.body;
+  var res;
+  try {
+    res = await fetch(WORKER_URL + "/proxy", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  } catch (e) {
+    S.workerOk = false;
+    renderModeState();
+    throw new Error(netFailText());
+  }
+  var d;
+  try { d = await res.json(); } catch (e2) { throw new Error(netFailText()); }
+  if (d.remaining !== null && d.remaining !== undefined) $("rate-num").textContent = String(d.remaining);
+  if (res.status === 401) { toast("管理员密码不正确", "err"); throw new ApiError(401, { message: "管理员密码不正确（服务端比对失败）" }); }
+  if (!d.ok) throw new ApiError(d.status || res.status, d.payload || { message: d.error || "Worker 调用失败" });
+  if (S.workerOk !== true) { S.workerOk = true; renderModeState(); }
+  if (opt.raw) return d.contentB64 ? base64ToU8(d.contentB64) : new Uint8Array(0);
+  return d.data;
+}
+async function pingWorker() {
+  try {
+    var r = await fetch(WORKER_URL + "/ping", { method: "GET" });
+    var d = await r.json();
+    S.workerOk = !!(d && d.ok);
+    if (d && d.version) S.workerVer = d.version;
+  } catch (e) {
+    S.workerOk = false;
+  }
+  renderModeState();
+  return S.workerOk;
+}
 async function api(path, opt) {
   opt = opt || {};
+  if (S.mode === "worker" && S.adminKey) return await apiViaWorker(path, opt);
   var headers = { "Accept": opt.raw ? "application/vnd.github.raw" : "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
   if (S.token) headers.Authorization = "Bearer " + S.token;
   var body;
@@ -659,49 +723,102 @@ function blobToU8(file) {
   });
 }
 
-/* SECTION: js-token */
-function paintTokenState() {
-  var on = !!S.token;
-  $("token-dot").className = "dot " + (on ? "on" : "off");
-  $("token-state").textContent = on ? "Token 已配置" : "未配置 Token";
-  $("api-chip").title = on ? "已认证调用，每小时上限 5000 次" : "匿名调用，每小时上限 60 次";
+/* SECTION: js-auth */
+function paintTokenState() { renderModeState(); }
+function renderModeState() {
+  var isWorker = S.mode === "worker";
+  var ready = isWorker ? !!S.adminKey : !!S.token;
+  var blocked = isWorker && S.workerOk === false;
+  $("token-dot").className = "dot " + (ready && !blocked ? "on" : "off");
+  var txt;
+  if (isWorker) {
+    txt = !S.adminKey ? "本站同步 · 待填密码" : (blocked ? "本站同步 · 服务不可达" : "本站同步 · 就绪");
+  } else {
+    txt = S.token ? "浏览器直连 · Token 已配置" : "浏览器直连 · 未配置 Token";
+  }
+  $("token-state").textContent = txt;
+  $("api-chip").title = isWorker
+    ? "读写全部经由你自己的 Worker 代理，GitHub 令牌不下发到浏览器"
+    : (S.token ? "已认证调用，每小时上限 5000 次" : "匿名调用，每小时上限 60 次");
+  if ($("key-field")) $("key-field").classList.toggle("hidden", !isWorker);
+  if ($("token-field")) $("token-field").classList.toggle("hidden", isWorker);
+  var radios = document.querySelectorAll('input[name="syncmode"]');
+  radios.forEach(function (r) {
+    r.checked = r.value === S.mode;
+    r.closest(".opt").classList.toggle("sel", r.value === S.mode);
+  });
+  if ($("worker-url")) $("worker-url").textContent = WORKER_URL;
+  if ($("worker-state")) {
+    $("worker-state").textContent = S.workerOk === null ? "未探测" : (S.workerOk ? "可达" + (S.workerVer ? " · " + S.workerVer : "") : "不可达");
+    $("worker-state").className = S.workerOk ? "badge ok" : (S.workerOk === false ? "badge warn" : "badge");
+  }
+  if ($("auth-note")) {
+    $("auth-note").textContent = isWorker
+      ? "本站同步模式：GitHub 令牌只存在 Worker 的 secret 里，浏览器每次只发送管理员密码，密码也在服务端比对。配一次就一直生效，直到你下次改密码。"
+      : "浏览器直连模式：令牌只写进这台设备的 localStorage，不发第三方。公共设备用完请务必清除。";
+  }
+  var hint = $("connect-hint");
+  if (hint && isWorker && blocked && S.adminKey) {
+    hint.textContent = "同步方式选的是本站 Worker，但当前网络连不上它。" + netFailText();
+  }
 }
-function requireToken(action) {
+function requireToken() {
+  if (S.mode === "worker") {
+    if (S.adminKey) return true;
+    toast("本站同步需要先填管理员密码", "err");
+    openTokenModal();
+    return false;
+  }
   if (S.token) return true;
   toast("写入仓库需要 Token，请先配置", "err");
-  openTokenModal(action);
+  openTokenModal();
   return false;
 }
 function openTokenModal() {
   $("token-input").value = S.token || "";
+  $("key-input").value = S.adminKey || "";
+  renderModeState();
   $("token-modal").classList.remove("hidden");
-  setTimeout(function () { $("token-input").focus(); }, 40);
+  setTimeout(function () { (S.mode === "worker" ? $("key-input") : $("token-input")).focus(); }, 40);
 }
 async function saveToken() {
-  var v = $("token-input").value.trim();
-  if (!v) { toast("请输入 Token 内容", "err"); return; }
+  var isWorker = S.mode === "worker";
+  var v = (isWorker ? $("key-input").value : $("token-input").value).trim();
+  if (!v) { toast(isWorker ? "请输入管理员密码" : "请输入 Token 内容", "err"); return; }
+  var bakMode = S.mode, bakToken = S.token, bakKey = S.adminKey;
   try {
-    var prev = S.token;
-    S.token = v;
+    if (isWorker) { S.adminKey = v; S.token = ""; } else { S.token = v; }
     var me = await api("/user");
-    localStorage.setItem(LS_TOKEN, v);
+    if (isWorker) { lsSet(LS_KEY, v); S.workerOk = true; } else { lsSet(LS_TOKEN, v); }
+    lsSet(LS_MODE, S.mode);
     $("token-modal").classList.add("hidden");
-    paintTokenState();
-    toast("已验证，当前账号：" + (me.login || "") + (me.name ? "（" + me.name + "）" : ""), "ok");
-    log("upload-log", "Token 验证通过，账号 " + me.login, "ok");
-    if (S.owner) await loadTree(S.ref || S.defaultBranch);
+    renderModeState();
+    toast("已验证并记住，同步方式：" + (isWorker ? "本站 Worker 代理" : "浏览器直连") + " · 身份 " + ((me && me.login) || ""), "ok");
+    log("upload-log", "凭据验证通过（" + (isWorker ? "本站同步" : "直连") + "），身份 " + ((me && me.login) || "未知"), "ok");
+    if (isWorker && S.owner && S.repo) await loadTree(S.ref || S.defaultBranch);
+    if (S.owner) renderRepoInfo(await api("/repos/" + S.owner + "/" + S.repo));
   } catch (e) {
-    S.token = "";
-    paintTokenState();
+    S.mode = bakMode; S.token = bakToken; S.adminKey = bakKey;
+    renderModeState();
     toast(e.message, "err");
+    if (String(e.message).indexOf("连不上本站同步") >= 0) S.workerOk = false;
+    renderModeState();
   }
 }
 function clearToken() {
-  try { localStorage.removeItem(LS_TOKEN); } catch (e) { }
-  S.token = "";
+  lsDel(LS_TOKEN); lsDel(LS_KEY);
+  S.token = ""; S.adminKey = "";
   $("token-input").value = "";
-  paintTokenState();
-  toast("已清除本机保存的 Token", "ok");
+  if ($("key-input")) $("key-input").value = "";
+  renderModeState();
+  toast("已清除本机保存的 Token 与管理员密码", "ok");
+}
+function setMode(m) {
+  S.mode = m === "worker" ? "worker" : "direct";
+  lsSet(LS_MODE, S.mode);
+  renderModeState();
+  log("export-log", "同步方式已切到 " + (S.mode === "worker" ? "本站 Worker 代理（管理员密码）" : "浏览器直连（GitHub Token）"), "info");
+  if (S.owner) loadTree(S.ref).catch(function (e) { toast(e.message, "err"); });
 }
 
 /* SECTION: js-connect */
@@ -737,7 +854,7 @@ async function connect(explicit) {
     }
   } catch (e) {
     $("connect-hint").textContent = "连接失败：" + e.message;
-    if (e.status === 404 && !S.token) $("connect-hint").textContent += "（私有仓库需先配置 Token）";
+    if (e.status === 404 && !canWrite()) $("connect-hint").textContent += "（私有仓库需要先配置凭据：本站同步填管理员密码，或直连模式填 Token）";
     toast("连接失败", "err");
   } finally {
     lock(false);
@@ -815,7 +932,7 @@ function renderRepoInfo(info) {
     ["默认分支", info.default_branch || "—"],
     ["占用", fmtSize((info.size || 0) * 1024) + " · " + (info.disk_usage_type || "Git 对象")],
     ["最近更新", (info.pushed_at || info.updated_at || "—").replace("T", " ").replace("Z", " UTC")],
-    ["写入账号", S.token ? "已配置 Token" : "未配置 Token（只能读取）"]
+    ["写入凭据", canWrite() ? (S.mode === "worker" ? "本站 Worker 代理 · 管理员密码" : "浏览器直连 · Token") : "未配置（只能读公开仓库）"]
   ];
   rows.forEach(function (pair) {
     var dt = document.createElement("dt"); dt.textContent = pair[0];
@@ -1054,11 +1171,14 @@ function emptyBox(ico, text) {
   d.appendChild(i); d.appendChild(t);
   return d;
 }
+function canWrite() {
+  return S.mode === "worker" ? !!S.adminKey : !!S.token;
+}
 function syncExportBtn() {
   var n = S.checked.size;
   $("btn-zip").disabled = S.busy || !n;
   $("btn-one-by-one").disabled = S.busy || !n;
-  $("btn-delete").disabled = S.busy || !n || !S.token;
+  $("btn-delete").disabled = S.busy || !n || !canWrite();
   $("btn-zip").textContent = n ? "📦 打包 ZIP 下载 " + n + " 个" : "📦 打包 ZIP 下载所选";
 }
 function syncUploadBtn() {
@@ -1467,6 +1587,13 @@ function bindEvents() {
   $("btn-token-close").addEventListener("click", function () { $("token-modal").classList.add("hidden"); });
   $("btn-token-save").addEventListener("click", saveToken);
   $("btn-token-clear").addEventListener("click", clearToken);
+  $("btn-ping").addEventListener("click", function () {
+    $("worker-state").textContent = "探测中…";
+    pingWorker().then(function (ok) { toast(ok ? "Worker 可达，本站同步可用" : "Worker 不可达，可切浏览器直连", ok ? "ok" : "err"); });
+  });
+  document.querySelectorAll('input[name="syncmode"]').forEach(function (r) {
+    r.addEventListener("change", function () { if (r.checked) setMode(r.value); });
+  });
   $("tab-import").addEventListener("click", function () { switchTab("import"); });
   $("tab-export").addEventListener("click", function () { switchTab("export"); });
 
@@ -1554,6 +1681,11 @@ async function init() {
   renderStaged();
   refreshRemote();
   bindEvents();
+  await pingWorker();
+  if (!lsGet(LS_MODE)) {
+    S.mode = S.workerOk ? "worker" : "direct";
+    renderModeState();
+  }
   var detected = await detectRepoFromHost();
   var saved = "";
   try { saved = localStorage.getItem(LS_REPO) || ""; } catch (e) { saved = ""; }
