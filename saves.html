@@ -5,327 +5,426 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>存档同步台 · YunYu 的像素游戏厅</title>
 <style>
-/* SECTION: reset-and-tokens */
-*, *::before, *::after { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; }
+/* SECTION: tokens */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg: #0b0d18;
-  --bg-2: #12152a;
-  --card: rgba(23, 27, 51, .82);
-  --card-2: rgba(31, 36, 66, .7);
-  --line: rgba(124, 92, 255, .26);
-  --line-soft: rgba(255, 255, 255, .08);
-  --violet: #7c5cff;
-  --violet-soft: rgba(124, 92, 255, .16);
-  --mint: #29e0b5;
-  --amber: #ffc14d;
-  --rose: #ff6b81;
-  --text: #edf0ff;
-  --text-2: #a8b0d6;
-  --text-3: #6f789f;
-  --radius: 16px;
-  --shadow: 0 18px 40px rgba(4, 6, 16, .55);
-  --font: "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono: "SF Mono", "JetBrains Mono", Consolas, monospace;
+  /* 间距系统（4 / 8 / 12 / 16 / 24 / 40） */
+  --sp-xs: 4px; --sp-sm: 8px; --sp-md: 12px; --sp-lg: 16px; --sp-xl: 24px; --sp-2xl: 40px;
+  /* 圆角 */
+  --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-pill: 999px;
+  /* 站内像素厅配色 */
+  --bg: #0a0b12;
+  --surface: #12141d;
+  --surface-2: #171a25;
+  --surface-3: #1d2130;
+  --border: rgba(255, 255, 255, .07);
+  --border-2: rgba(255, 255, 255, .13);
+  --gold: #ffd700;
+  --gold-dim: rgba(255, 215, 0, .12);
+  --gold-line: rgba(255, 215, 0, .32);
+  --neon: #22d3ee;
+  --neon-dim: rgba(34, 211, 238, .12);
+  --neon-line: rgba(34, 211, 238, .34);
+  --magenta: #ff3d6e;
+  --magenta-dim: rgba(255, 61, 110, .13);
+  --blue: #4a9eff;
+  --text: #e8eaf2;
+  --text-2: #9aa1b8;
+  --text-3: #666d84;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, .45);
+  --shadow-3: 0 24px 60px rgba(0, 0, 0, .55);
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
 }
+html { -webkit-text-size-adjust: 100%; }
 body {
   font-family: var(--font);
   color: var(--text);
-  background: var(--bg);
+  line-height: 1.5;
+  background-color: var(--bg);
   background-image:
-    radial-gradient(900px 520px at 12% -8%, rgba(124, 92, 255, .3), transparent 62%),
-    radial-gradient(760px 480px at 92% 4%, rgba(41, 224, 181, .18), transparent 60%),
-    linear-gradient(180deg, #0b0d18 0%, #0d1022 55%, #090b14 100%);
+    radial-gradient(1100px 420px at 15% -12%, rgba(255, 215, 0, .07), transparent 65%),
+    radial-gradient(900px 400px at 88% -6%, rgba(34, 211, 238, .08), transparent 62%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .014) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .014) 0 1px, transparent 1px 5px);
   background-attachment: fixed;
   min-height: 100vh;
-  line-height: 1.55;
-  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
 }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; border: 0; background: none; }
-a { color: var(--mint); text-decoration: none; }
-a:active { color: #7df3d4; }
+a { color: var(--neon); text-decoration: none; }
+ul, ol { list-style: none; }
 .hidden { display: none !important; }
 .mono { font-family: var(--mono); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; vertical-align: -3px; }
+.ic-sm { width: 15px; height: 15px; }
+.ic-lg { width: 22px; height: 22px; }
+.spacer { margin-left: auto; }
 
 /* SECTION: layout */
-.app { max-width: 1280px; margin: 0 auto; padding: 20px 16px 56px; }
+.app { max-width: 1440px; margin: 0 auto; padding: var(--sp-xl) var(--sp-lg) var(--sp-2xl); }
 .card {
-  background: var(--card);
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(8px);
+  background: linear-gradient(180deg, rgba(29, 33, 48, .72), rgba(18, 20, 29, .82));
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-2);
+  position: relative;
+  overflow: hidden;
 }
-.card-pad { padding: 18px; }
-.stack > * + * { margin-top: 14px; }
-.grid-main { display: grid; grid-template-columns: 380px 1fr; gap: 16px; align-items: start; }
-.grid-side { position: sticky; top: 14px; }
+.card::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .14), transparent);
+}
+.card-body { padding: var(--sp-lg); }
+.stack > * + * { margin-top: var(--sp-md); }
+.grid-main { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: var(--sp-lg); align-items: start; }
+.grid-side { position: sticky; top: var(--sp-md); }
+.section-title {
+  display: flex; align-items: center; gap: var(--sp-sm);
+  padding: var(--sp-lg) var(--sp-lg) var(--sp-md);
+  font-size: 14px; font-weight: 600; letter-spacing: .3px;
+}
+.section-title > .ic { color: var(--gold); }
+.section-title + .card-body { padding-top: 0; }
+.section-title .idx {
+  width: 20px; height: 20px; border-radius: var(--r-pill); flex: none;
+  background: var(--gold-dim); color: var(--gold);
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  display: grid; place-items: center;
+}
+.card-foot { border-top: 1px solid var(--border); padding: var(--sp-md) var(--sp-lg); }
 
-/* SECTION: header */
-.topbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 4px 2px 18px; }
-.logo { width: 46px; height: 46px; flex: none; border-radius: 14px; background: linear-gradient(140deg, var(--violet), #4a2fd6 60%, var(--mint)); display: grid; place-items: center; font-size: 24px; box-shadow: 0 10px 24px rgba(124, 92, 255, .4); }
-.brand-text h1 { margin: 0; font-size: 21px; letter-spacing: .5px; }
-.brand-text p { margin: 2px 0 0; font-size: 12.5px; color: var(--text-2); }
-.topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; font-size: 12.5px; background: var(--card); border: 1px solid var(--line-soft); color: var(--text-2); white-space: nowrap; }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); flex: none; }
-.dot.on { background: var(--mint); box-shadow: 0 0 8px rgba(41, 224, 181, .8); }
-.dot.off { background: var(--rose); }
+/* SECTION: hero */
+.hero { padding: var(--sp-lg) var(--sp-lg) var(--sp-lg); border-radius: var(--r-lg); border: 1px solid var(--border); background: linear-gradient(160deg, rgba(255, 215, 0, .07), rgba(34, 211, 238, .05) 42%, rgba(18, 20, 29, .6)); box-shadow: var(--shadow-2); }
+.hero-top { display: flex; align-items: center; gap: var(--sp-md); flex-wrap: wrap; }
+.logo { width: 44px; height: 44px; flex: none; border-radius: var(--r-md); background: linear-gradient(140deg, var(--gold), #ff9f1c 48%, var(--magenta)); color: #14141f; display: grid; place-items: center; box-shadow: var(--shadow-1), inset 0 1px 0 rgba(255, 255, 255, .4); }
+.logo .ic { width: 24px; height: 24px; stroke-width: 1.9; }
+.brand-text { min-width: 0; }
+.brand-text h1 { font-size: 19px; font-weight: 700; letter-spacing: .4px; }
+.brand-text p { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+.hero-actions { margin-left: auto; display: flex; gap: var(--sp-sm); align-items: center; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 var(--sp-md); border-radius: var(--r-pill); font-size: 12.5px; background: rgba(10, 11, 18, .55); border: 1px solid var(--border-2); color: var(--text-2); white-space: nowrap; }
+.chip:hover { border-color: var(--gold-line); color: var(--text); }
+.dot { width: 7px; height: 7px; border-radius: var(--r-pill); background: var(--text-3); flex: none; }
+.dot.on { background: var(--neon); box-shadow: 0 0 0 3px var(--neon-dim); }
+.dot.off { background: var(--magenta); }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-md); margin-top: var(--sp-lg); }
+.stat-card { padding: var(--sp-md); border-radius: var(--r-sm); background: rgba(10, 11, 18, .42); border: 1px solid var(--border); }
+.stat-value { font-family: var(--mono); font-size: 19px; font-weight: 700; color: var(--gold); letter-spacing: .5px; }
+.stat-card.c2 .stat-value { color: var(--neon); }
+.stat-card.c3 .stat-value { color: var(--text); }
+.stat-card.c4 .stat-value { color: var(--blue); }
+.stat-label { font-size: 11.5px; color: var(--text-3); margin-top: 2px; }
+
+/* SECTION: steps */
+.steps { display: flex; align-items: center; margin-top: var(--sp-lg); padding-top: var(--sp-lg); border-top: 1px solid var(--border); }
+.step { display: flex; align-items: center; gap: var(--sp-sm); flex: none; }
+.step-dot {
+  width: 26px; height: 26px; border-radius: var(--r-pill); flex: none;
+  display: grid; place-items: center;
+  background: var(--surface-3); border: 1px solid var(--border-2);
+  color: var(--text-3); font-family: var(--mono); font-size: 12px; font-weight: 700;
+  transition: all .2s ease;
+}
+.step-dot .ic { width: 14px; height: 14px; display: none; }
+.step-label { font-size: 12.5px; color: var(--text-3); white-space: nowrap; }
+.step-line { flex: 1 1 auto; height: 1px; margin: 0 var(--sp-sm); background: var(--border-2); }
+.step.done .step-dot { background: var(--gold-dim); border-color: var(--gold-line); color: var(--gold); }
+.step.done .step-label { color: var(--text-2); }
+.step.active .step-dot { background: var(--gold); border-color: var(--gold); color: #14141f; box-shadow: 0 0 0 4px var(--gold-dim); }
+.step.active .step-label { color: var(--text); font-weight: 600; }
+.step.done .step-dot span { display: none; }
+.step.done .step-dot .ic { display: block; }
+.step-line.done { background: var(--gold-line); }
+
+/* SECTION: site-nav */
+.site-nav { display: flex; gap: var(--sp-sm); flex-wrap: wrap; align-items: center; margin: var(--sp-md) 0 var(--sp-lg); }
+.site-nav a { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 var(--sp-md); border: 1px solid var(--border); border-radius: var(--r-sm); background: rgba(18, 20, 29, .7); color: var(--text-2); font-size: 12.5px; transition: all .16s ease; }
+.site-nav a:hover { color: var(--gold); border-color: var(--gold-line); background: var(--gold-dim); transform: translateY(-1px); }
+.site-nav a.cur { color: var(--gold); border-color: var(--gold-line); background: var(--gold-dim); }
 
 /* SECTION: controls */
-.btn { min-height: 44px; padding: 0 18px; border-radius: 12px; font-size: 15px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--line-soft); background: var(--card-2); color: var(--text); transition: transform .14s ease, box-shadow .14s ease, background .14s ease; }
-.btn:hover { background: rgba(48, 55, 98, .9); }
-.btn:active { transform: translateY(1px) scale(.99); }
-.btn:disabled { opacity: .45; cursor: not-allowed; }
-.btn-primary { background: linear-gradient(135deg, #8a6bff, #5b3ce0); border-color: rgba(160, 135, 255, .55); box-shadow: 0 10px 26px rgba(96, 62, 224, .45); }
-.btn-primary:hover { background: linear-gradient(135deg, #9b7fff, #6a49f0); }
-.btn-mint { background: linear-gradient(135deg, #2ee0b6, #12a684); color: #05231b; border-color: rgba(41, 224, 181, .5); box-shadow: 0 10px 26px rgba(23, 180, 140, .32); }
-.btn-ghost { background: transparent; }
-.btn-danger { background: rgba(255, 107, 129, .13); border-color: rgba(255, 107, 129, .45); color: #ffb3bd; }
-.btn-sm { min-height: 36px; padding: 0 12px; font-size: 13px; border-radius: 10px; font-weight: 500; }
-.btn-block { width: 100%; }
-.field { display: block; }
-.field > label { display: block; font-size: 13px; color: var(--text-2); margin-bottom: 7px; font-weight: 600; }
-.input, .select { width: 100%; min-height: 46px; padding: 11px 14px; font-size: 16px; border-radius: 12px; background: rgba(9, 11, 22, .72); border: 1px solid var(--line-soft); color: var(--text); }
-.input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--violet); box-shadow: 0 0 0 3px var(--violet-soft); }
-.input::placeholder { color: var(--text-3); font-size: 14px; }
-.textarea { width: 100%; min-height: 66px; padding: 11px 14px; font-size: 14px; border-radius: 12px; background: rgba(9, 11, 22, .72); border: 1px solid var(--line-soft); resize: vertical; }
-.row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-sm);
+  min-height: 44px; padding: 0 var(--sp-lg); border-radius: var(--r-sm);
+  font-size: 14.5px; font-weight: 600; white-space: nowrap;
+  background: var(--surface-2); border: 1px solid var(--border-2); color: var(--text);
+  box-shadow: var(--shadow-1);
+  transition: transform .14s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+.btn:hover { background: var(--surface-3); border-color: var(--border-2); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--gold-dim); }
+.btn-primary { background: linear-gradient(180deg, #ffe45c, #eabb00); color: #14141f; border-color: transparent; box-shadow: 0 6px 18px rgba(224, 180, 0, .28); }
+.btn-primary:hover { background: linear-gradient(180deg, #fff08a, #f5c832); }
+.btn-mint { background: linear-gradient(180deg, #4fe3f7, #12b8d6); color: #04202a; border-color: transparent; box-shadow: 0 6px 18px rgba(24, 180, 210, .25); }
+.btn-mint:hover { background: linear-gradient(180deg, #6cecfb, #1fc9e8); }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--text-2); }
+.btn-ghost:hover { background: rgba(255, 255, 255, .05); color: var(--text); }
+.btn-danger { background: var(--magenta-dim); border-color: rgba(255, 61, 110, .45); color: #ffb0c0; }
+.btn-danger:hover { background: rgba(255, 61, 110, .22); }
+.btn-sm { min-height: 34px; padding: 0 var(--sp-md); font-size: 12.5px; font-weight: 500; border-radius: var(--r-sm); }
+.btn-block { width: 100%; min-height: 50px; font-size: 15.5px; }
+.field > label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-2); margin-bottom: var(--sp-sm); letter-spacing: .2px; }
+.input, .select, .textarea {
+  width: 100%; min-height: 46px; padding: 11px var(--sp-md); font-size: 16px;
+  border-radius: var(--r-sm); background: rgba(10, 11, 18, .66);
+  border: 1px solid var(--border-2); color: var(--text);
+  transition: border-color .16s ease, box-shadow .16s ease;
+}
+.textarea { min-height: 74px; font-size: 13.5px; resize: vertical; font-family: var(--mono); line-height: 1.5; }
+.select { appearance: none; padding-right: var(--sp-2xl); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%239aa1b8' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right var(--sp-md) center; }
+.input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-dim); }
+.input::placeholder { color: var(--text-3); font-size: 13.5px; font-family: var(--mono); }
+.row { display: flex; gap: var(--sp-md); align-items: flex-end; flex-wrap: wrap; }
 .row > .field { flex: 1 1 200px; min-width: 0; }
-.hint { font-size: 12.5px; color: var(--text-3); }
+.hint { font-size: 12px; color: var(--text-3); line-height: 1.6; }
 .hint-strong { color: var(--text-2); }
-.section-title { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 15.5px; font-weight: 700; }
-.section-title .idx { width: 22px; height: 22px; border-radius: 7px; background: var(--violet-soft); color: #c9b8ff; font-size: 12px; display: grid; place-items: center; font-family: var(--mono); flex: none; }
-.card > .section-title { padding: 18px 18px 0; }
-.card > .section-title + .card-body { padding-top: 12px; }
-.card-body { padding: 18px; }
-.card-body + .card-foot { border-top: 1px solid var(--line-soft); padding: 14px 18px; }
-.subtle-box { background: rgba(9, 11, 22, .5); border: 1px solid var(--line-soft); border-radius: 12px; padding: 12px 14px; }
-.opt-list { display: flex; gap: 8px; flex-wrap: wrap; }
-.opt { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 13px; border-radius: 11px; border: 1px solid var(--line-soft); background: rgba(9, 11, 22, .5); font-size: 13.5px; cursor: pointer; }
-.opt input { width: 16px; height: 16px; accent-color: var(--violet); }
-.opt.sel { border-color: var(--violet); background: var(--violet-soft); }
+.subtle-box { background: rgba(10, 11, 18, .5); border: 1px solid var(--border); border-radius: var(--r-sm); padding: var(--sp-md); }
+.opt-list { display: flex; gap: var(--sp-sm); flex-wrap: wrap; }
+.opt { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 var(--sp-md); border-radius: var(--r-sm); border: 1px solid var(--border); background: rgba(10, 11, 18, .45); font-size: 13px; color: var(--text-2); cursor: pointer; transition: all .16s ease; }
+.opt:hover { border-color: var(--border-2); color: var(--text); }
+.opt input { width: 15px; height: 15px; accent-color: var(--gold); }
+.opt.sel { border-color: var(--gold-line); background: var(--gold-dim); color: var(--text); }
 
 /* SECTION: repo-list */
-.repo-chips { display: flex; flex-wrap: wrap; gap: 8px; max-height: 168px; overflow: auto; }
-.repo-chip { min-height: 40px; padding: 6px 13px; border-radius: 999px; border: 1px solid var(--line-soft); background: rgba(9, 11, 22, .55); font-size: 13px; color: var(--text-2); display: inline-flex; align-items: center; gap: 7px; }
-.repo-chip:hover { border-color: var(--violet); color: var(--text); }
-.repo-chip.active { background: var(--violet-soft); border-color: var(--violet); color: #e6deff; font-weight: 600; }
-.repo-chip .priv { font-size: 10.5px; padding: 1px 6px; border-radius: 6px; background: rgba(255, 193, 77, .16); color: var(--amber); }
+.repo-chips { display: flex; flex-wrap: wrap; gap: var(--sp-sm); max-height: 172px; overflow: auto; }
+.repo-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 var(--sp-md); border-radius: var(--r-pill); border: 1px solid var(--border); background: rgba(10, 11, 18, .5); font-size: 12.5px; color: var(--text-2); transition: all .16s ease; }
+.repo-chip:hover { border-color: var(--gold-line); color: var(--text); transform: translateY(-1px); }
+.repo-chip.active { background: var(--gold-dim); border-color: var(--gold-line); color: var(--gold); font-weight: 600; }
+.repo-chip .priv { font-size: 10px; padding: 1px 6px; border-radius: var(--r-pill); background: rgba(74, 158, 255, .16); color: var(--blue); }
 
 /* SECTION: tree */
-.tree { max-height: 46vh; overflow: auto; padding: 4px 6px 6px; }
-.tree-node { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 8px; border-radius: 10px; cursor: pointer; }
-.tree-node:hover { background: rgba(255, 255, 255, .05); }
-.tree-node.sel { background: var(--violet-soft); box-shadow: inset 0 0 0 1px var(--violet); }
-.tree-caret { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-size: 11px; color: var(--text-3); flex: none; }
+.tree { max-height: 46vh; overflow: auto; padding: var(--sp-xs); }
+.tree-node { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 var(--sp-sm); border-radius: var(--r-sm); cursor: pointer; position: relative; transition: background .14s ease; }
+.tree-node:hover { background: rgba(255, 255, 255, .045); }
+.tree-node.sel { background: var(--gold-dim); }
+.tree-node.sel::before { content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 2px; border-radius: 2px; background: var(--gold); }
+.tree-node.sel .tree-label { color: var(--gold); font-weight: 600; }
+.tree-caret { width: 24px; height: 24px; flex: none; display: grid; place-items: center; color: var(--text-3); border-radius: 6px; }
 .tree-caret:hover { background: rgba(255, 255, 255, .08); color: var(--text); }
-.tree-ico { width: 20px; flex: none; text-align: center; }
-.tree-label { flex: 1 1 auto; min-width: 0; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tree-count { font-size: 11.5px; color: var(--text-3); font-family: var(--mono); flex: none; }
-.tree-children { margin-left: 14px; padding-left: 10px; border-left: 1px dashed rgba(124, 92, 255, .3); }
-.tree-empty { padding: 18px 12px; text-align: center; color: var(--text-3); font-size: 13px; }
-.path-bar { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12.5px; color: var(--mint); background: rgba(41, 224, 181, .08); border: 1px solid rgba(41, 224, 181, .28); border-radius: 10px; padding: 9px 12px; word-break: break-all; }
-.path-bar .lbl { font-family: var(--font); color: var(--text-2); font-size: 12.5px; flex: none; }
+.tree-ico { width: 18px; flex: none; display: grid; place-items: center; color: var(--text-3); }
+.tree-node.sel .tree-ico { color: var(--gold); }
+.tree-label { flex: 1 1 auto; min-width: 0; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree-count { font-family: var(--mono); font-size: 10.5px; color: var(--text-3); flex: none; padding: 1px 6px; border-radius: var(--r-pill); background: rgba(255, 255, 255, .05); }
+.tree-children { margin-left: var(--sp-lg); padding-left: var(--sp-sm); border-left: 1px solid var(--border-2); }
+.tree-empty { padding: var(--sp-xl); text-align: center; color: var(--text-3); font-size: 12.5px; }
+.path-bar { display: flex; align-items: center; gap: var(--sp-sm); padding: var(--sp-sm) var(--sp-md); border-radius: var(--r-sm); border: 1px solid var(--neon-line); background: var(--neon-dim); font-family: var(--mono); font-size: 12.5px; color: #7ee9f7; word-break: break-all; }
+.path-bar .lbl { font-family: var(--font); font-size: 11.5px; color: var(--text-2); flex: none; }
 
 /* SECTION: tabs */
-.tabs { display: flex; gap: 8px; margin: 16px 0 14px; padding: 6px; border-radius: 14px; background: var(--card); border: 1px solid var(--line-soft); }
-.tab { flex: 1 1 0; min-height: 46px; border-radius: 10px; font-size: 15px; font-weight: 600; color: var(--text-2); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-.tab.active { background: linear-gradient(135deg, rgba(124, 92, 255, .35), rgba(41, 224, 181, .16)); color: var(--text); box-shadow: inset 0 0 0 1px var(--line); }
-.tab .k { font-size: 11.5px; font-weight: 500; color: var(--text-3); }
+.tabs { position: relative; display: flex; gap: var(--sp-xs); padding: var(--sp-xs); margin: var(--sp-lg) 0 var(--sp-md); border-radius: var(--r-md); border: 1px solid var(--border); background: rgba(10, 11, 18, .55); }
+.tab { flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-sm); min-height: 46px; border-radius: var(--r-sm); font-size: 14.5px; font-weight: 600; color: var(--text-2); transition: all .16s ease; }
+.tab:hover { color: var(--text); }
+.tab.active { background: linear-gradient(180deg, rgba(255, 215, 0, .18), rgba(255, 215, 0, .08)); color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold-line); }
+.tab .k { font-size: 11px; font-weight: 500; color: var(--text-3); }
+.tab.active .k { color: var(--gold); opacity: .8; }
 
 /* SECTION: dropzone */
-.drop { border: 1.5px dashed rgba(124, 92, 255, .45); border-radius: 14px; padding: 26px 18px; text-align: center; background: rgba(124, 92, 255, .07); }
-.drop.over { border-color: var(--mint); background: rgba(41, 224, 181, .1); }
-.drop .big { font-size: 15.5px; font-weight: 700; }
-.drop .small { font-size: 12.5px; color: var(--text-2); margin-top: 5px; }
-.drop-btns { display: flex; gap: 10px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+.drop { border: 1.5px dashed var(--border-2); border-radius: var(--r-md); padding: var(--sp-xl) var(--sp-lg); text-align: center; background: rgba(10, 11, 18, .4); transition: all .18s ease; }
+.drop:hover { border-color: var(--gold-line); }
+.drop.over { border-color: var(--neon); background: var(--neon-dim); transform: scale(1.005); }
+.drop .big { display: flex; align-items: center; justify-content: center; gap: var(--sp-sm); font-size: 15px; font-weight: 600; }
+.drop .big .ic { color: var(--gold); }
+.drop .small { font-size: 12px; color: var(--text-2); margin-top: var(--sp-xs); }
+.drop-btns { display: flex; gap: var(--sp-sm); justify-content: center; margin-top: var(--sp-lg); flex-wrap: wrap; }
 
 /* SECTION: lists */
-.list { display: flex; flex-direction: column; gap: 8px; }
-.list-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: rgba(9, 11, 22, .55); border: 1px solid var(--line-soft); }
-.list-row .ck { width: 20px; height: 20px; accent-color: var(--mint); flex: none; }
+.list { display: flex; flex-direction: column; gap: var(--sp-sm); }
+.list-row { display: flex; align-items: center; gap: var(--sp-md); padding: var(--sp-md); border-radius: var(--r-sm); background: rgba(10, 11, 18, .5); border: 1px solid var(--border); transition: all .14s ease; }
+.list-row:hover { border-color: var(--border-2); background: rgba(23, 26, 37, .8); transform: translateY(-1px); box-shadow: var(--shadow-1); }
+.list-row .ck { width: 18px; height: 18px; flex: none; accent-color: var(--gold); cursor: pointer; }
 .row-main { flex: 1 1 auto; min-width: 0; }
-.row-name { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.row-sub { font-size: 11.5px; color: var(--text-3); font-family: var(--mono); margin-top: 2px; display: flex; gap: 10px; flex-wrap: wrap; }
-.row-act { flex: none; display: flex; gap: 6px; }
-.row-x { width: 32px; height: 32px; border-radius: 9px; color: var(--text-3); font-size: 16px; display: grid; place-items: center; }
-.row-x:hover { background: rgba(255, 107, 129, .16); color: var(--rose); }
-.list-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-.list-head .spacer, .spacer { margin-left: auto; }
-.list-scroll { max-height: 40vh; overflow: auto; }
-.badge { font-size: 11px; padding: 2px 8px; border-radius: 7px; background: var(--violet-soft); color: #cbbcff; font-family: var(--mono); }
-.badge.warn { background: rgba(255, 193, 77, .15); color: var(--amber); }
-.badge.ok { background: rgba(41, 224, 181, .14); color: var(--mint); }
-.badge.err { background: rgba(255, 107, 129, .15); color: #ffa4b0; }
-.empty { text-align: center; padding: 30px 16px; color: var(--text-3); font-size: 13.5px; }
-.empty .em-ico { font-size: 26px; display: block; margin-bottom: 8px; opacity: .7; }
+.row-name { font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-sub { display: flex; gap: var(--sp-md); flex-wrap: wrap; margin-top: 2px; font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+.row-act { flex: none; display: flex; gap: var(--sp-xs); }
+.row-x { width: 34px; height: 34px; border-radius: var(--r-sm); flex: none; display: grid; place-items: center; color: var(--text-3); border: 1px solid transparent; transition: all .14s ease; }
+.row-x:hover { background: var(--gold-dim); border-color: var(--gold-line); color: var(--gold); }
+.list-head { display: flex; align-items: center; gap: var(--sp-sm); flex-wrap: wrap; margin-bottom: var(--sp-md); }
+.list-scroll { max-height: 42vh; overflow: auto; padding-right: 2px; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px var(--sp-sm); border-radius: var(--r-pill); font-family: var(--mono); font-size: 11px; background: var(--gold-dim); color: var(--gold); }
+.badge.ok { background: var(--neon-dim); color: var(--neon); }
+.badge.warn { background: rgba(74, 158, 255, .16); color: var(--blue); }
+.badge.err { background: var(--magenta-dim); color: #ffa4b4; }
+.empty { display: flex; flex-direction: column; align-items: center; padding: var(--sp-2xl) var(--sp-lg); color: var(--text-3); }
+.em-ic { width: 46px; height: 46px; fill: none; stroke: var(--text-3); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; opacity: .55; }
+.empty span.txt { margin-top: var(--sp-md); font-size: 13px; max-width: 340px; line-height: 1.6; text-align: center; }
+
+/* SECTION: skeleton */
+.skeleton-line { height: 44px; border-radius: var(--r-sm); background: linear-gradient(90deg, rgba(255, 255, 255, .04) 25%, rgba(255, 255, 255, .09) 50%, rgba(255, 255, 255, .04) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+.skeleton-line + .skeleton-line { margin-top: var(--sp-sm); }
+.skeleton-line.w40 { width: 40%; } .skeleton-line.w60 { width: 60%; } .skeleton-line.w80 { width: 80%; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 /* SECTION: progress-log */
-.progress { height: 8px; border-radius: 999px; background: rgba(255, 255, 255, .08); overflow: hidden; }
-.progress > i { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--violet), var(--mint)); transition: width .25s ease; }
-.log { max-height: 200px; overflow: auto; display: flex; flex-direction: column; gap: 6px; font-family: var(--mono); font-size: 12px; }
-.log-line { display: flex; gap: 8px; padding: 6px 9px; border-radius: 9px; background: rgba(9, 11, 22, .5); border-left: 3px solid var(--text-3); word-break: break-all; }
-.log-line.ok { border-left-color: var(--mint); }
-.log-line.err { border-left-color: var(--rose); }
-.log-line.info { border-left-color: var(--violet); }
+.progress { height: 6px; border-radius: var(--r-pill); background: rgba(255, 255, 255, .07); overflow: hidden; }
+.progress > i { display: block; height: 100%; width: 0; border-radius: var(--r-pill); background: linear-gradient(90deg, var(--gold), var(--neon)); transition: width .28s ease; }
+.log { display: flex; flex-direction: column; gap: 6px; max-height: 190px; overflow: auto; }
+.log:empty { display: none; }
+.log-line { display: flex; gap: var(--sp-sm); padding: var(--sp-sm) var(--sp-md); border-radius: var(--r-sm); background: rgba(10, 11, 18, .5); border-left: 2px solid var(--border-2); font-family: var(--mono); font-size: 11.5px; line-height: 1.55; word-break: break-all; }
+.log-line.ok { border-left-color: var(--neon); }
+.log-line.err { border-left-color: var(--magenta); }
+.log-line.info { border-left-color: var(--gold-line); }
 .log-line .t { color: var(--text-3); flex: none; }
+.log-line .m { color: var(--text-2); }
 
 /* SECTION: modal */
-.overlay { position: fixed; inset: 0; background: rgba(4, 6, 14, .72); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 16px; z-index: 60; }
-.modal { width: min(560px, 100%); max-height: 88vh; overflow: auto; background: #141830; border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
-.modal-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px; border-bottom: 1px solid var(--line-soft); }
-.modal-head h3 { margin: 0; font-size: 16.5px; }
-.modal-body { padding: 18px; }
-.modal-foot { padding: 14px 18px; border-top: 1px solid var(--line-soft); display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
-.modal-close { margin-left: auto; width: 36px; height: 36px; border-radius: 10px; color: var(--text-2); font-size: 18px; }
-.modal-close:hover { background: rgba(255, 255, 255, .08); }
-ol.steps { margin: 0; padding-left: 20px; font-size: 13px; color: var(--text-2); }
-ol.steps li { margin-bottom: 7px; }
-ol.steps code { font-family: var(--mono); font-size: 12px; color: var(--mint); background: rgba(41, 224, 181, .1); padding: 1px 5px; border-radius: 5px; }
-.kv { display: grid; grid-template-columns: 96px 1fr; gap: 6px 10px; font-size: 13px; }
+.overlay { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: var(--sp-lg); background: rgba(5, 6, 12, .74); backdrop-filter: blur(6px); animation: fade .18s ease; }
+.modal { width: min(580px, 100%); max-height: 88vh; overflow: auto; border-radius: var(--r-lg); background: linear-gradient(180deg, #1a1d29, #12141d); border: 1px solid var(--border-2); box-shadow: var(--shadow-3); animation: pop .2s ease; }
+.modal-head { display: flex; align-items: center; gap: var(--sp-md); padding: var(--sp-lg); border-bottom: 1px solid var(--border); }
+.modal-head h3 { font-size: 15.5px; font-weight: 600; }
+.modal-body { padding: var(--sp-lg); }
+.modal-foot { display: flex; gap: var(--sp-sm); justify-content: flex-end; flex-wrap: wrap; padding: var(--sp-md) var(--sp-lg); border-top: 1px solid var(--border); }
+.modal-close { margin-left: auto; width: 34px; height: 34px; border-radius: var(--r-sm); color: var(--text-3); display: grid; place-items: center; }
+.modal-close:hover { background: rgba(255, 255, 255, .07); color: var(--text); }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+ol.steps-list { padding-left: var(--sp-lg); font-size: 12.5px; color: var(--text-2); }
+ol.steps-list li { margin-bottom: var(--sp-sm); line-height: 1.6; }
+ol.steps-list code { font-family: var(--mono); font-size: 11.5px; color: var(--neon); background: var(--neon-dim); padding: 1px 5px; border-radius: 5px; }
+.kv { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 6px var(--sp-md); font-size: 12.5px; }
 .kv dt { color: var(--text-3); }
-.kv dd { margin: 0; word-break: break-all; }
+.kv dd { word-break: break-all; font-family: var(--mono); font-size: 12px; }
 
 /* SECTION: toast */
-.toast-wrap { position: fixed; right: 14px; bottom: 14px; display: flex; flex-direction: column; gap: 8px; z-index: 90; max-width: min(420px, calc(100vw - 28px)); }
-.toast { background: #1b2040; border: 1px solid var(--line); border-radius: 12px; padding: 11px 14px; font-size: 13.5px; box-shadow: var(--shadow); animation: pop .2s ease; }
-.toast.ok { border-color: rgba(41, 224, 181, .6); }
-.toast.err { border-color: rgba(255, 107, 129, .6); }
-@keyframes pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.toast-wrap { position: fixed; right: var(--sp-lg); bottom: var(--sp-lg); z-index: 90; display: flex; flex-direction: column; gap: var(--sp-sm); max-width: min(420px, calc(100vw - 32px)); }
+.toast { padding: var(--sp-md) var(--sp-lg); border-radius: var(--r-sm); background: rgba(26, 29, 41, .96); border: 1px solid var(--border-2); box-shadow: var(--shadow-3); font-size: 13px; animation: pop .2s ease; }
+.toast.ok { border-color: var(--neon-line); }
+.toast.err { border-color: rgba(255, 61, 110, .5); }
 
-/* SECTION: footer-help */
-.help-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
-.help-item { padding: 14px; border-radius: 12px; background: rgba(9, 11, 22, .5); border: 1px solid var(--line-soft); }
-.help-item h4 { margin: 0 0 6px; font-size: 13.5px; color: var(--text); }
-.help-item p { margin: 0; font-size: 12.5px; color: var(--text-2); }
-.page-foot { margin-top: 22px; text-align: center; font-size: 12px; color: var(--text-3); }
+/* SECTION: help */
+.help-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--sp-md); }
+.help-item { padding: var(--sp-md); border-radius: var(--r-sm); background: rgba(10, 11, 18, .45); border: 1px solid var(--border); }
+.help-item h4 { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: var(--sp-xs); }
+.help-item h4 .ic { color: var(--neon); }
+.help-item p { font-size: 12px; color: var(--text-2); line-height: 1.65; }
+.help-item .mono { color: var(--neon); font-size: 11.5px; }
+.page-foot { margin-top: var(--sp-xl); text-align: center; font-size: 11.5px; color: var(--text-3); }
+.page-foot .mono { color: var(--text-2); }
 
 /* SECTION: responsive */
-@media (max-width: 900px) {
-  .grid-main { grid-template-columns: 1fr; }
-  .grid-side { position: static; }
-  .tree { max-height: 34vh; }
-  .topbar-actions { width: 100%; margin-left: 0; }
+@media (max-width: 1100px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-main { grid-template-columns: 300px minmax(0, 1fr); }
 }
-@media (max-width: 520px) {
-  .app { padding: 14px 12px 44px; }
-  .brand-text h1 { font-size: 18.5px; }
+@media (max-width: 900px) {
+  .grid-main { grid-template-columns: minmax(0, 1fr); }
+  .grid-side { position: static; }
+  .tree { max-height: 300px; }
+  .hero-actions { margin-left: 0; width: 100%; }
+  .step-label { display: none; }
+  .steps { gap: var(--sp-xs); }
+}
+@media (max-width: 560px) {
+  .app { padding: var(--sp-md) var(--sp-md) var(--sp-xl); }
+  .brand-text h1 { font-size: 17px; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-sm); }
+  .stat-value { font-size: 16px; }
   .row > .field { flex: 1 1 100%; }
-  .row .btn { width: 100%; }
+  .row .btn, .drop-btns .btn { width: 100%; }
   .tab .k { display: none; }
   .list-scroll, .tree { max-height: none; }
-  .kv { grid-template-columns: 1fr; gap: 2px 0; }
-  .modal-foot .btn { width: 100%; }
+  .kv { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .modal-foot .btn { flex: 1 1 100%; }
+  .toast-wrap { left: var(--sp-md); right: var(--sp-md); bottom: var(--sp-md); max-width: none; }
+  .site-nav a { font-size: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
 }
-/* SECTION: site-theme */
-:root {
-  --bg: #0b0b13;
-  --bg-2: #14141f;
-  --card: rgba(20, 20, 31, .94);
-  --card-2: rgba(32, 32, 48, .9);
-  --line: #2a2a3c;
-  --line-soft: rgba(255, 215, 0, .16);
-  --violet: #ffd700;
-  --violet-soft: rgba(255, 215, 0, .14);
-  --mint: #22d3ee;
-  --amber: #4a9eff;
-  --rose: #ff3d6e;
-  --text: #e9e9f2;
-  --text-2: #a8a8c0;
-  --text-3: #6a6a82;
-  --shadow: 0 14px 34px rgba(5, 5, 10, .7);
-}
-body {
-  background-color: #0b0b13;
-  background-image:
-    radial-gradient(820px 460px at 8% -10%, rgba(255, 215, 0, .12), transparent 62%),
-    radial-gradient(700px 420px at 94% 0%, rgba(34, 211, 238, .13), transparent 60%),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, .022) 0 1px, transparent 1px 4px),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, .022) 0 1px, transparent 1px 4px),
-    linear-gradient(180deg, #0b0b13, #0d0d17 60%, #08080e);
-}
-.card { border-color: var(--line); border-radius: 10px; }
-.btn { border-radius: 8px; border: 2px solid #2a2a3c; box-shadow: 0 4px 0 rgba(5, 5, 10, .75); }
-.btn:active { box-shadow: 0 1px 0 rgba(5, 5, 10, .75); }
-.btn-primary { background: linear-gradient(180deg, #ffe45c, #e8b900); color: #14141f; border-color: #ffd700; box-shadow: 0 5px 0 rgba(120, 92, 0, .8); }
-.btn-primary:hover { background: linear-gradient(180deg, #fff08a, #f5c832); }
-.btn-mint { background: linear-gradient(180deg, #4fe3f7, #0eb6d4); color: #04202a; border-color: #22d3ee; box-shadow: 0 5px 0 rgba(8, 90, 110, .8); }
-.btn-danger { background: rgba(255, 61, 110, .16); border-color: #ff3d6e; color: #ffb8c6; }
-.input, .select, .textarea { border: 2px solid #2a2a3c; background: #0d0d17; border-radius: 8px; }
-.input:focus, .select:focus, .textarea:focus { border-color: #ffd700; box-shadow: 0 0 0 3px rgba(255, 215, 0, .18); }
-.tabs { border-color: var(--line); border-radius: 10px; }
-.tab.active { background: linear-gradient(135deg, rgba(255, 215, 0, .26), rgba(34, 211, 238, .16)); box-shadow: inset 0 0 0 2px rgba(255, 215, 0, .5); }
-.logo { border-radius: 8px; background: linear-gradient(140deg, #ffd700, #ff3d6e 70%, #22d3ee); box-shadow: 0 6px 0 rgba(120, 92, 0, .7); }
-.tree-children { border-left-color: rgba(255, 215, 0, .3); }
-.tree-node.sel { background: rgba(255, 215, 0, .13); box-shadow: inset 0 0 0 2px var(--violet); }
-.drop { border-color: rgba(255, 215, 0, .45); background: rgba(255, 215, 0, .05); }
-.drop.over { border-color: #22d3ee; background: rgba(34, 211, 238, .1); }
-.repo-chip.active, .opt.sel { background: rgba(255, 215, 0, .16); border-color: #ffd700; color: #ffe9a8; }
-.badge { background: rgba(255, 215, 0, .14); color: #ffe9a8; }
-.section-title .idx { background: rgba(255, 215, 0, .16); color: #ffd700; }
-.path-bar { color: #7ee9f7; background: rgba(34, 211, 238, .08); border-color: rgba(34, 211, 238, .35); }
-.progress > i { background: linear-gradient(90deg, #ffd700, #22d3ee); }
-.log-line.ok { border-left-color: #22d3ee; }
-.log-line.err { border-left-color: #ff3d6e; }
-.log-line.info { border-left-color: #ffd700; }
-.overlay { background: rgba(4, 4, 10, .8); }
-.modal { background: #14141f; border-color: #2a2a3c; border-radius: 12px; }
-.toast { background: #1a1a28; border-color: #2a2a3c; }
-a { color: #22d3ee; }
-.brand-text h1 { font-family: var(--mono); letter-spacing: 1px; }
-.site-nav { display: flex; gap: 8px; flex-wrap: wrap; margin: -4px 0 16px; }
-.site-nav a { min-height: 38px; display: inline-flex; align-items: center; padding: 0 13px; border: 2px solid #2a2a3c; border-radius: 8px; background: rgba(20, 20, 31, .9); color: #a8a8c0; font-size: 13px; }
-.site-nav a:hover { color: #ffd700; border-color: #ffd700; }
-.site-nav a.cur { color: #ffe9a8; border-color: rgba(255, 215, 0, .55); background: rgba(255, 215, 0, .1); }
-.auto-note { color: #7ee9f7; }
-.subtle-box.sec { border-color: rgba(255, 61, 110, .4); background: rgba(255, 61, 110, .07); }
-/* site-theme 覆盖块结束 */
 </style>
 </head>
 <body>
+<!-- SECTION: icon-sprite -->
+<svg class="sr-only" aria-hidden="true">
+  <symbol id="i-pad" viewBox="0 0 24 24"><path d="M6 10h4M8 8v4"/><circle cx="16" cy="9" r="1.2"/><circle cx="18.5" cy="12" r="1.2"/><rect x="2.5" y="5" width="19" height="14" rx="4"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0V8zM12 17v4"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></symbol>
+  <symbol id="i-folder-open" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h18l-2 7a2 2 0 0 1-2 1.5H6A2 2 0 0 1 4 17z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v8a1.5 1.5 0 0 1-1.5 1.5H5.5A1.5 1.5 0 0 1 4 19z"/><path d="M9.5 20.5V14h5v6.5"/></symbol>
+  <symbol id="i-chev-right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-chev-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M4 16v2.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v12m0 0 4-4m-4 4-4-4"/><path d="M4 16v2.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16"/></symbol>
+  <symbol id="i-cloud-up" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.6-7.9A5.5 5.5 0 0 1 17 9.6 3.7 3.7 0 0 1 17.5 18H13"/><path d="M9 14l3-3 3 3M12 11v7"/></symbol>
+  <symbol id="i-cloud-off" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.6-7.9 5.5 5.5 0 0 1 8.3-3.4"/><path d="M17 9.6a3.7 3.7 0 0 1 .5 7.4h-3"/><path d="M3 3l18 18"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M12 3l8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/></symbol>
+  <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 13l4 4 10-11"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="3.5"/><path d="M10.5 12.5 20 3m-4 4 3 3"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4h-4"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M12 3c3 2 4.5 5.5 4.5 9L14 15h-4l-2.5-3C7.5 8.5 9 5 12 3z"/><path d="M10 15l-2 4M14 15l2 4M12 12h.01"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+  <symbol id="i-zip" viewBox="0 0 24 24"><path d="M12 3l8 4v10l-8 4-8-4V7z"/><path d="M10 6h2v2h-2zm2 2h2v2h-2zm-2 2h2v2h-2zm2 2h2v2h-2z"/></symbol>
+</svg>
+
 <div class="app">
 
   <!-- SECTION: header -->
-  <header class="topbar">
-    <div class="logo" aria-hidden="true">🎮</div>
-    <div class="brand-text">
-      <h1>存档同步台</h1>
-      <p>YunYu 的像素游戏厅 · 用你的 GitHub 仓库当存档盘：导入备份、导出取回</p>
+  <header class="hero">
+    <div class="hero-top">
+      <div class="logo"><svg class="ic"><use href="#i-pad"/></svg></div>
+      <div class="brand-text">
+        <h1>存档同步台</h1>
+        <p>YunYu 的像素游戏厅 · 用你的 GitHub 仓库当存档盘</p>
+      </div>
+      <div class="hero-actions">
+        <button class="chip" id="token-chip" type="button"><span class="dot off" id="token-dot"></span><span id="token-state">未配置凭据</span></button>
+        <span class="chip" id="api-chip"><svg class="ic ic-sm"><use href="#i-clock"/></svg>API 余量 <span class="mono" id="rate-num">—</span></span>
+      </div>
     </div>
-    <div class="topbar-actions">
-      <button class="chip" id="token-chip" type="button"><span class="dot off" id="token-dot"></span><span id="token-state">未配置 Token</span></button>
-      <span class="chip" id="api-chip">API 余量 <span class="mono" id="rate-num">—</span></span>
+
+    <!-- SECTION: stats -->
+    <div class="stats">
+      <div class="stat-card"><div class="stat-value" id="stat-entries">—</div><div class="stat-label">仓库条目</div></div>
+      <div class="stat-card c2"><div class="stat-value" id="stat-saves">—</div><div class="stat-label">当前目录存档</div></div>
+      <div class="stat-card c3"><div class="stat-value" id="stat-staged">0</div><div class="stat-label">待上传文件</div></div>
+      <div class="stat-card c4"><div class="stat-value" id="stat-mode">未连接</div><div class="stat-label">同步方式</div></div>
+    </div>
+
+    <!-- SECTION: steps -->
+    <div class="steps">
+      <div class="step active" data-step="1"><div class="step-dot"><span>1</span><svg class="ic"><use href="#i-check"/></svg></div><div class="step-label">连接仓库</div></div>
+      <div class="step-line"></div>
+      <div class="step" data-step="2"><div class="step-dot"><span>2</span><svg class="ic"><use href="#i-check"/></svg></div><div class="step-label">勾选存储位置</div></div>
+      <div class="step-line"></div>
+      <div class="step" data-step="3"><div class="step-dot"><span>3</span><svg class="ic"><use href="#i-check"/></svg></div><div class="step-label">导入 / 导出存档</div></div>
     </div>
   </header>
 
   <!-- SECTION: site-nav -->
   <nav class="site-nav" aria-label="站内导航">
-    <a href="Game.html">← 返回游戏厅</a>
+    <a href="Game.html"><svg class="ic ic-sm"><use href="#i-back"/></svg>返回游戏厅</a>
     <a href="game5/">幸运筹码乐园 Game5</a>
     <a href="game3.html">Game3</a>
     <a href="game1.html">Game1</a>
-    <span class="chip" id="source-chip" style="min-height:38px">本页仓库 <span class="mono" id="source-repo">检测中…</span></span>
+    <span class="chip" id="source-chip" style="margin-left:auto">本页仓库 <span class="mono" id="source-repo">检测中…</span></span>
   </nav>
 
   <!-- SECTION: connect -->
   <section class="card" id="connect-card">
-    <h2 class="section-title"><span class="idx">1</span>连接仓库</h2>
+    <h2 class="section-title"><svg class="ic"><use href="#i-plug"/></svg>连接仓库</h2>
     <div class="card-body stack">
       <div class="row">
         <div class="field" style="flex:1 1 320px">
           <label for="repo-input">GitHub 仓库地址 / 用户名</label>
-          <input class="input mono" id="repo-input" type="text" autocomplete="off" spellcheck="false"
-                 placeholder="https://github.com/YunYu-ca/YunYu-ca.github.io">
+          <input class="input mono" id="repo-input" type="text" autocomplete="off" spellcheck="false" placeholder="https://github.com/YunYu-ca/YunYu-ca.github.io">
         </div>
-        <button class="btn btn-primary" id="btn-connect" type="button">连接并展开</button>
+        <button class="btn btn-primary" id="btn-connect" type="button"><svg class="ic"><use href="#i-plug"/></svg>连接并展开</button>
       </div>
-      <div class="hint" id="connect-hint">支持三种写法：完整仓库 URL、<span class="hint-strong">用户名/仓库名</span>、或只写<span class="hint-strong">用户名</span>（自动列出该账号的全部仓库供你勾选）。读取公开仓库不需要 Token，写入存档才需要。</div>
+      <div class="hint" id="connect-hint">支持完整仓库 URL、用户名/仓库名、或只写用户名。读取公开仓库不需要凭据，写入才需要。</div>
       <div class="field hidden" id="repo-list-field">
         <label>该账号的仓库列表（点选即切换）</label>
         <div class="repo-chips" id="repo-chips"></div>
@@ -340,16 +439,14 @@ a { color: #22d3ee; }
           <input class="input mono" id="sub-input" type="text" placeholder="saves" autocomplete="off">
         </div>
       </div>
-      <div class="subtle-box hidden" id="repo-info">
-        <dl class="kv" id="repo-info-kv"></dl>
-      </div>
+      <div class="subtle-box hidden" id="repo-info"><dl class="kv" id="repo-info-kv"></dl></div>
     </div>
   </section>
 
   <!-- SECTION: tabs -->
   <nav class="tabs" role="tablist">
-    <button class="tab active" id="tab-import" role="tab" type="button">⬆️ 导入存档<span class="k">本地 → 仓库</span></button>
-    <button class="tab" id="tab-export" role="tab" type="button">⬇️ 导出存档<span class="k">仓库 → 本地</span></button>
+    <button class="tab active" id="tab-import" role="tab" type="button"><svg class="ic"><use href="#i-upload"/></svg>导入存档<span class="k">本地 → 仓库</span></button>
+    <button class="tab" id="tab-export" role="tab" type="button"><svg class="ic"><use href="#i-download"/></svg>导出存档<span class="k">仓库 → 本地</span></button>
   </nav>
 
   <!-- SECTION: main-grid -->
@@ -358,10 +455,15 @@ a { color: #22d3ee; }
     <!-- SECTION: tree-panel -->
     <aside class="grid-side">
       <section class="card">
-        <h2 class="section-title"><span class="idx">2</span>勾选存储位置<span class="spacer"></span><label class="opt" style="min-height:32px;font-size:12.5px"><input type="checkbox" id="only-saves">只看有存档的目录</label><button class="btn btn-sm btn-ghost" id="btn-newdir" type="button">+ 新目录</button><button class="btn btn-sm btn-ghost" id="btn-refreshtree" type="button">刷新</button></h2>
+        <h2 class="section-title"><svg class="ic"><use href="#i-folder"/></svg>勾选存储位置<span class="spacer"></span><button class="btn btn-sm btn-ghost" id="btn-newdir" type="button"><svg class="ic ic-sm"><use href="#i-plus"/></svg>新目录</button></h2>
         <div class="card-body stack">
+          <div class="list-head" style="margin-bottom:0">
+            <label class="opt" style="min-height:34px"><input type="checkbox" id="only-saves">只看有存档的目录</label>
+            <span class="spacer"></span>
+            <button class="btn btn-sm btn-ghost" id="btn-refreshtree" type="button"><svg class="ic ic-sm"><use href="#i-refresh"/></svg>刷新</button>
+          </div>
           <div class="tree" id="tree" aria-label="仓库目录树"></div>
-          <div class="path-bar"><span class="lbl">当前位置</span><span id="path-out">/</span></div>
+          <div class="path-bar"><svg class="ic ic-sm"><use href="#i-home"/></svg><span class="lbl">当前位置</span><span id="path-out">/</span></div>
         </div>
       </section>
     </aside>
@@ -369,15 +471,15 @@ a { color: #22d3ee; }
     <div>
       <!-- SECTION: panel-import -->
       <section class="card" id="panel-import">
-        <h2 class="section-title"><span class="idx">3</span>选择本地存档文件</h2>
+        <h2 class="section-title"><svg class="ic"><use href="#i-upload"/></svg>选择本地存档文件</h2>
         <div class="card-body stack">
           <div class="drop" id="drop">
-            <div class="big">把存档文件拖到这里</div>
-            <div class="small">支持多文件与整个存档文件夹（会保留文件夹内的层级）</div>
+            <div class="big"><svg class="ic ic-lg"><use href="#i-cloud-up"/></svg>把存档文件拖到这里</div>
+            <div class="small">支持多文件与整个存档文件夹，会保留文件夹内的层级</div>
             <div class="drop-btns">
-              <button class="btn btn-mint" id="btn-files" type="button">选择文件</button>
-              <button class="btn" id="btn-dir" type="button">选择文件夹</button>
-              <button class="btn btn-ghost btn-sm" id="btn-clear-files" type="button">清空</button>
+              <button class="btn btn-mint" id="btn-files" type="button"><svg class="ic"><use href="#i-file"/></svg>选择文件</button>
+              <button class="btn" id="btn-dir" type="button"><svg class="ic"><use href="#i-folder"/></svg>选择文件夹</button>
+              <button class="btn btn-ghost btn-sm" id="btn-clear-files" type="button">清空列表</button>
             </div>
             <input class="sr-only" id="picker-files" type="file" multiple>
             <input class="sr-only" id="picker-dir" type="file" multiple webkitdirectory directory>
@@ -387,7 +489,7 @@ a { color: #22d3ee; }
               <span class="badge" id="staged-count">0 个文件 · 0 B</span>
               <span class="spacer"></span>
               <span class="hint">目录前缀（追加到存储位置后）</span>
-              <input class="input mono" id="prefix-input" style="max-width:190px;min-height:38px" type="text" placeholder="saves-2026">
+              <input class="input mono" id="prefix-input" style="max-width:190px;min-height:38px;font-size:13px" type="text" placeholder="saves-2026">
             </div>
             <div class="list list-scroll" id="staged-list"></div>
           </div>
@@ -398,21 +500,21 @@ a { color: #22d3ee; }
           </div>
           <div class="field">
             <label for="commit-msg">提交说明</label>
-            <textarea class="textarea mono" id="commit-msg" spellcheck="false"></textarea>
+            <textarea class="textarea" id="commit-msg" spellcheck="false"></textarea>
           </div>
           <div class="progress"><i id="up-bar"></i></div>
-          <button class="btn btn-primary btn-block" id="btn-upload" type="button" data-primary-action disabled>🚀 上传到仓库</button>
+          <button class="btn btn-primary btn-block" id="btn-upload" type="button" data-primary-action disabled><svg class="ic"><use href="#i-rocket"/></svg>上传到仓库</button>
           <div class="log" id="upload-log"></div>
         </div>
       </section>
 
       <!-- SECTION: panel-export -->
       <section class="card hidden" id="panel-export">
-        <h2 class="section-title"><span class="idx">3</span>当前位置的存档</h2>
+        <h2 class="section-title"><svg class="ic"><use href="#i-list"/></svg>当前位置的存档</h2>
         <div class="card-body stack">
           <div class="list-head">
             <span class="badge" id="remote-count">0 个存档</span>
-            <input class="input" id="filter-input" style="max-width:190px;min-height:38px" type="text" placeholder="筛选名称">
+            <input class="input" id="filter-input" style="max-width:190px;min-height:38px;font-size:13px" type="text" placeholder="筛选名称">
             <label class="opt"><input type="checkbox" id="deep-toggle">含子目录</label>
             <span class="spacer"></span>
             <button class="btn btn-sm" id="btn-select-all" type="button">全选</button>
@@ -420,9 +522,9 @@ a { color: #22d3ee; }
           </div>
           <div class="list list-scroll" id="remote-list"></div>
           <div class="row">
-            <button class="btn btn-mint" id="btn-zip" type="button" data-primary-action disabled>📦 打包 ZIP 下载所选</button>
-            <button class="btn" id="btn-one-by-one" type="button" disabled>逐个下载到本地</button>
-            <button class="btn btn-danger btn-sm" id="btn-delete" type="button" disabled>删除所选</button>
+            <button class="btn btn-mint" id="btn-zip" type="button" data-primary-action disabled>打包 ZIP 下载所选</button>
+            <button class="btn" id="btn-one-by-one" type="button" disabled><svg class="ic"><use href="#i-download"/></svg>逐个下载到本地</button>
+            <button class="btn btn-danger btn-sm" id="btn-delete" type="button" disabled><svg class="ic ic-sm"><use href="#i-trash"/></svg>删除所选</button>
           </div>
           <div class="progress"><i id="down-bar"></i></div>
           <div class="log" id="export-log"></div>
@@ -430,36 +532,35 @@ a { color: #22d3ee; }
       </section>
 
       <!-- SECTION: shortcuts -->
-      <section class="card" style="margin-top:16px">
-        <h2 class="section-title"><span class="idx">4</span>仓库里的存档目录<span class="spacer"></span><span class="hint">按游戏一键切过去</span></h2>
+      <section class="card" style="margin-top:var(--sp-lg)">
+        <h2 class="section-title"><svg class="ic"><use href="#i-db"/></svg>仓库里的存档目录<span class="spacer"></span><span class="hint">按游戏一键切过去</span></h2>
         <div class="card-body"><div class="repo-chips" id="save-shortcuts"></div></div>
       </section>
 
       <!-- SECTION: recent -->
-      <section class="card" style="margin-top:16px">
-        <h2 class="section-title"><span class="idx">5</span>最近使用的存储位置</h2>
+      <section class="card" style="margin-top:var(--sp-lg)">
+        <h2 class="section-title"><svg class="ic"><use href="#i-clock"/></svg>最近使用的存储位置</h2>
         <div class="card-body"><div class="repo-chips" id="recent-chips"></div></div>
       </section>
     </div>
   </main>
 
   <!-- SECTION: help -->
-  <section class="card" style="margin-top:16px">
-    <h2 class="section-title"><span class="idx">i</span>使用说明</h2>
+  <section class="card" style="margin-top:var(--sp-lg)">
+    <h2 class="section-title"><svg class="ic"><use href="#i-info"/></svg>使用说明</h2>
     <div class="card-body">
       <div class="help-grid">
-        <div class="help-item"><h4>两种同步方式</h4><p><b>本站同步（推荐）</b>：读写全部经由 <span class="mono">lucky-chip-sync</span> Worker 代理，GitHub 令牌只存在 Worker 的 secret 里，页面只发送管理员密码，输一次就长期生效。<b>浏览器直连</b>：令牌存在你这台设备的 localStorage，不发第三方，换设备要重填一次。两种方式在「同步方式与凭据」面板里随时切换。</p></div>
-        <div class="help-item"><h4>为什么不能把令牌写进页面</h4><p>本页是公开站点上的静态文件，令牌一旦内嵌，任何人查看源码就能拿到你仓库的写权限，包括改写和删除其他玩家的存档。所以令牌只能待在服务端 secret 或本机浏览器里，前端密码门也挡不住读源码的人——密码校验必须发生在 Worker 内。</p></div>
-        <div class="help-item"><h4>写入走什么接口</h4><p>上传走 Git Data API（blob → tree → commit → ref），一次提交可带多个存档文件，不受 Contents 接口 1MB 限制；单个文件建议不超过 25MB，超限由 GitHub 拒绝。</p></div>
-        <div class="help-item"><h4>存档安全</h4><p>GitHub 免费版私有仓库不支持大文件与 Git LFS 免费额度，重要存档建议双备份；本页面是纯前端，不搭服务端，也不记录你的任何数据。</p></div>
-        <div class="help-item"><h4>接口限流</h4><p>匿名调用每小时 60 次，带 Token 每小时 5000 次。右上角实时显示剩余次数，触顶时等待整点窗口重置即可。</p></div>
-        <div class="help-item"><h4>公共设备用完请清除</h4><p>本页在公开站点上任何人都能打开，凭据本身不内嵌在页面里：Token 只写进当前浏览器的 localStorage，管理员密码也只在提交时发一次。在网吧、借他人手机等场景用完，请打开「同步方式与凭据」点「清除本机凭据」，把两类凭据一起抹掉。</p></div>
-        <div class="help-item"><h4>和 Game5 游戏内自动同步</h4><p>同一个 <span class="mono">lucky-chip-sync</span> Worker 现在承担两件事：原有的游戏内自动同步（<span class="mono">Game5Saves/{用户名}/save.json</span>、<span class="mono">Game5Accounts/…</span>，接口与行为一字未改）和本页的管理代理（新增 <span class="mono">/proxy</span> 通道，只放行白名单端点、且仓库被锁死在你自己的仓库上）。Game3、Game4 那些没有自动同步的目录，用本页手动备份即可。</p></div>
+        <div class="help-item"><h4><svg class="ic ic-sm"><use href="#i-key"/></svg>两种同步方式</h4><p><b>本站同步（推荐）</b>：读写全部经由 <span class="mono">lucky-chip-sync</span> Worker 代理，GitHub 令牌只存在 Worker 的 secret 里，页面只发送管理员密码，输一次就长期生效。<b>浏览器直连</b>：令牌存在你这台设备的 localStorage，不发第三方，换设备要重填一次。两种方式在右上角面板里随时切换。</p></div>
+        <div class="help-item"><h4><svg class="ic ic-sm"><use href="#i-info"/></svg>为什么不能把令牌写进页面</h4><p>本页是公开站点上的静态文件，令牌一旦内嵌，任何人查看源码就能拿到你仓库的写权限，包括改写和删除其他玩家的存档。所以令牌只能待在服务端 secret 或本机浏览器里，前端密码门也挡不住读源码的人。</p></div>
+        <div class="help-item"><h4><svg class="ic ic-sm"><use href="#i-upload"/></svg>写入走什么接口</h4><p>上传走 Git Data API（blob → tree → commit → ref），一次提交可带多个存档文件，不受 Contents 接口 1MB 限制；单个文件建议不超过 25MB，超限由 GitHub 拒绝。</p></div>
+        <div class="help-item"><h4><svg class="ic ic-sm"><use href="#i-clock"/></svg>接口限流</h4><p>匿名调用每小时 60 次，带令牌每小时 5000 次。顶部统计卡实时显示剩余次数，触顶时等待整点窗口重置即可。</p></div>
+        <div class="help-item"><h4><svg class="ic ic-sm"><use href="#i-trash"/></svg>公共设备用完请清除</h4><p>本页在公开站点上任何人都能打开，凭据本身不内嵌在页面里：令牌只写进当前浏览器的 localStorage，管理员密码也只在提交时发一次。在网吧、借他人手机等场景用完，请点「清除本机凭据」。</p></div>
+        <div class="help-item"><h4><svg class="ic ic-sm"><use href="#i-pad"/></svg>和 Game5 游戏内自动同步</h4><p>同一个 Worker 现在承担两件事：原有的游戏内自动同步（<span class="mono">Game5Saves/{用户名}/save.json</span>、<span class="mono">Game5Accounts/…</span>，接口与行为一字未改）和本页的管理代理（新增 <span class="mono">/proxy</span> 通道，只放行白名单端点、且仓库被锁死在你自己的仓库上）。</p></div>
       </div>
     </div>
   </section>
 
-  <p class="page-foot">存档同步台 · 单文件页面，放在仓库根目录即可通过 <span class="mono">https://yunyu-ca.github.io/saves.html</span> 访问 · 浏览器直连 GitHub REST API</p>
+  <p class="page-foot">存档同步台 · 单文件页面 · 浏览器直连 GitHub REST API，或经由本站 Worker 代理</p>
 </div>
 
 <div class="toast-wrap" id="toast-wrap"></div>
@@ -467,7 +568,7 @@ a { color: #22d3ee; }
 <!-- SECTION: modal-token -->
 <div class="overlay hidden" id="token-modal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="token-modal-title">
-    <div class="modal-head"><h3 id="token-modal-title">同步方式与凭据</h3><button class="modal-close" type="button" id="btn-token-close">✕</button></div>
+    <div class="modal-head"><h3 id="token-modal-title">同步方式与凭据</h3><button class="modal-close" type="button" id="btn-token-close"><svg class="ic"><use href="#i-close"/></svg></button></div>
     <div class="modal-body stack">
       <div class="field">
         <label>用哪种方式读写仓库</label>
@@ -479,17 +580,17 @@ a { color: #22d3ee; }
       <div class="field" id="key-field">
         <label for="key-input">管理员密码（只发送到你自己的 Worker，由服务端比对）</label>
         <input class="input mono" id="key-input" type="password" autocomplete="off" spellcheck="false" placeholder="与 Worker secret 里 ADMIN_PASSWORD 一致">
-        <div class="hint" style="margin-top:8px">Worker 地址 <span class="mono" id="worker-url"></span> · 连通状态 <span class="badge" id="worker-state">未探测</span> <button class="btn btn-sm btn-ghost" id="btn-ping" type="button">重新探测</button></div>
+        <div class="hint" style="margin-top:var(--sp-sm)">Worker 地址 <span class="mono" id="worker-url"></span> · 连通状态 <span class="badge" id="worker-state">未探测</span> <button class="btn btn-sm btn-ghost" id="btn-ping" type="button">重新探测</button></div>
       </div>
       <div class="field hidden" id="token-field">
         <label for="token-input">Personal Access Token（仅存在本机浏览器）</label>
         <input class="input mono" id="token-input" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_... 或 ghp_...">
       </div>
       <div class="subtle-box">
-        <ol class="steps">
+        <ol class="steps-list">
           <li>Cloudflare Workers → <code>lucky-chip-sync</code> → 粘贴仓库里新版 <code>cloudflare-worker/worker.js</code> → Deploy</li>
-          <li>Settings → Secrets → 添加 <code>GITHUB_TOKEN</code>（细粒度 PAT，仅本仓库 Contents: read and write）</li>
-          <li>再添加 <code>ADMIN_PASSWORD</code>（建议 20 位以上随机串），Variables 里保留 <code>REPO_OWNER</code> / <code>REPO_NAME</code></li>
+          <li>Secrets 添加 <code>GITHUB_TOKEN</code>（细粒度 PAT，仅本仓库 Contents: read and write）</li>
+          <li>再添加 <code>ADMIN_PASSWORD</code>（建议 20 位以上随机串），Variables 保留 <code>REPO_OWNER</code> / <code>REPO_NAME</code></li>
           <li>回到本页选「本站同步」，把管理员密码填一次即可长期生效</li>
         </ol>
       </div>
@@ -504,8 +605,8 @@ a { color: #22d3ee; }
 
 <!-- SECTION: modal-confirm -->
 <div class="overlay hidden" id="confirm-modal">
-  <div class="modal" style="width:min(440px,100%)" role="dialog" aria-modal="true">
-    <div class="modal-head"><h3 id="confirm-title">确认操作</h3><button class="modal-close" type="button" id="btn-confirm-close">✕</button></div>
+  <div class="modal" style="width:min(460px,100%)" role="dialog" aria-modal="true">
+    <div class="modal-head"><h3 id="confirm-title">确认操作</h3><button class="modal-close" type="button" id="btn-confirm-close"><svg class="ic"><use href="#i-close"/></svg></button></div>
     <div class="modal-body"><div class="hint hint-strong" id="confirm-text"></div></div>
     <div class="modal-foot"><button class="btn" type="button" id="btn-confirm-no">取消</button><button class="btn btn-danger" type="button" id="btn-confirm-yes">确认</button></div>
   </div>
@@ -513,11 +614,12 @@ a { color: #22d3ee; }
 
 <!-- SECTION: templates -->
 <template id="tpl-repo-chip"><button class="repo-chip" type="button"><span class="nm"></span><span class="priv hidden">私有</span></button></template>
-<template id="tpl-staged-row"><div class="list-row"><span class="row-main"><div class="row-name"></div><div class="row-sub"><span data-role="size"></span><span data-role="relpath"></span><span data-role="tag"></span></div></span><span class="row-act"><button class="row-x" type="button" title="移除">✕</button></span></div></template>
-<template id="tpl-remote-row"><div class="list-row"><input class="ck" type="checkbox"><span class="row-main"><div class="row-name"></div><div class="row-sub"><span data-role="size"></span><span data-role="mtime"></span><span data-role="sha"></span><span data-role="big"></span></div></span><span class="row-act"><button class="row-x" type="button" title="单独下载">⬇</button></span></div></template>
+<template id="tpl-staged-row"><div class="list-row"><span class="row-main"><div class="row-name"></div><div class="row-sub"><span data-role="size"></span><span data-role="relpath"></span><span data-role="tag"></span></div></span><span class="row-act"><button class="row-x" type="button" title="移除"><svg class="ic ic-sm"><use href="#i-close"/></svg></button></span></div></template>
+<template id="tpl-remote-row"><div class="list-row"><input class="ck" type="checkbox"><span class="row-main"><div class="row-name"></div><div class="row-sub"><span data-role="size"></span><span data-role="mtime"></span><span data-role="sha"></span><span data-role="big"></span></div></span><span class="row-act"><button class="row-x" type="button" title="单独下载"><svg class="ic ic-sm"><use href="#i-download"/></svg></button></span></div></template>
 <template id="tpl-log-line"><div class="log-line"><span class="t"></span><span class="m"></span></div></template>
 
 <script>
+
 "use strict";
 /* SECTION: js-utils */
 const API = "https://api.github.com";
@@ -911,6 +1013,7 @@ async function selectRepo(owner, repo, refHint, pathHint) {
   if (pathHint) { S.selDir = pathHint; $("path-out").textContent = "/" + pathHint; refreshRemote(); paintTree(); }
   $("connect-hint").textContent = "已连接 " + owner + "/" + repo + " · 分支 " + S.ref + "，左侧目录树已展开，点选一个目录作为存储位置。";
   toast("仓库已连接", "ok");
+  updateSteps();
   loadOwnerRepos(owner);
 }
 async function loadOwnerRepos(owner) {
@@ -946,7 +1049,7 @@ function renderRepoInfo(info) {
 async function loadTree(ref) {
   if (!S.owner || !S.repo) { toast("请先连接仓库", "err"); return; }
   S.ref = ref || S.ref || S.defaultBranch || "main";
-  $("tree").textContent = "";
+  renderSkeleton("tree", 6);
   $("connect-hint").textContent = "正在读取 " + S.owner + "/" + S.repo + " @ " + S.ref + " 的目录结构…";
   S.entries = new Map(); S.children = new Map(); S.truncated = false;
   var data;
@@ -1001,7 +1104,7 @@ function subDirs(dir) {
   var only = $("only-saves") && $("only-saves").checked;
   S.entries.forEach(function (v) {
     if (v.type !== "tree" || dirOf(v.path) !== dir) return;
-    if (only && countFiles(v.path) === 0) return;
+    if (only && (SAVE_SKIP.test(v.path) || countSaves(v.path) === 0)) return;
     out.push(v);
   });
   out.sort(function (a, b) { return a.path.localeCompare(b.path); });
@@ -1039,8 +1142,9 @@ function buildNode(dirPath, isRoot) {
   var c2 = document.createElement("span"); c2.className = "tree-ico";
   var c3 = document.createElement("span"); c3.className = "tree-label";
   var c4 = document.createElement("span"); c4.className = "tree-count";
-  c1.textContent = kids.length ? (S.expanded.has(dirPath) ? "▾" : "▸") : "·";
-  c2.textContent = isRoot ? "🏠" : "📁";
+  if (kids.length) c1.appendChild(svgIcon(S.expanded.has(dirPath) ? "chev-down" : "chev-right", "ic ic-sm"));
+  else c1.style.visibility = "hidden";
+  c2.appendChild(svgIcon(isRoot ? "home" : (S.expanded.has(dirPath) ? "folder-open" : "folder"), "ic ic-sm"));
   c3.textContent = isRoot ? "/ （仓库根目录）" : baseOf(dirPath);
   var n = countFiles(dirPath);
   c4.textContent = n ? n + " 存档" : (kids.length ? kids.length + " 目录" : "");
@@ -1083,6 +1187,7 @@ function chooseDir(dirPath) {
   refreshRemote();
   syncUploadBtn();
   renderDefaultMsg();
+  updateSteps();
 }
 function renderRecent() {
   var host = $("recent-chips");
@@ -1131,6 +1236,7 @@ function refreshRemote() {
   list.sort(function (a, b) { return a.path.localeCompare(b.path); });
   S.remote = list;
   paintRemote();
+  updateSteps();
 }
 function paintRemote() {
   var host = $("remote-list");
@@ -1139,9 +1245,9 @@ function paintRemote() {
   var shown = S.remote.filter(function (v) { return !kw || v.path.toLowerCase().indexOf(kw) >= 0; });
   $("remote-count").textContent = shown.length + " 个存档" + (kw ? "（已筛选）" : "");
   if (!S.owner) {
-    host.appendChild(emptyBox("🔌", "先在上方连接仓库，目录树出来后点选一个文件夹"));
+    host.appendChild(emptyBox("plug", "先在上方连接仓库，目录树出来后点选一个文件夹"));
   } else if (!shown.length) {
-    host.appendChild(emptyBox("📂", "/" + (S.selDir || "") + " 下没有存档文件，可切换目录或勾选「含子目录」"));
+    host.appendChild(emptyBox("folder-open", "/" + (S.selDir || "") + " 下没有存档文件，可切换目录或勾选「含子目录」"));
   }
   shown.forEach(function (v) {
     var row = make("tpl-remote-row", host);
@@ -1163,13 +1269,48 @@ function paintRemote() {
   });
   syncExportBtn();
 }
+function svgIcon(name, cls) {
+  var NS = "http://www.w3.org/2000/svg";
+  var s = document.createElementNS(NS, "svg");
+  s.setAttribute("class", cls || "ic");
+  var u = document.createElementNS(NS, "use");
+  u.setAttribute("href", "#i-" + name);
+  s.appendChild(u);
+  return s;
+}
 function emptyBox(ico, text) {
   var d = document.createElement("div");
   d.className = "empty";
-  var i = document.createElement("span"); i.className = "em-ico"; i.textContent = ico;
-  var t = document.createElement("span"); t.textContent = text;
-  d.appendChild(i); d.appendChild(t);
+  d.appendChild(svgIcon(ico, "em-ic"));
+  var t = document.createElement("span"); t.className = "txt"; t.textContent = text;
+  d.appendChild(t);
   return d;
+}
+function renderSkeleton(hostId, n) {
+  var host = $(hostId);
+  if (!host) return;
+  host.textContent = "";
+  var widths = ["w80", "w60", "w40"];
+  for (var i = 0; i < n; i++) {
+    var d = document.createElement("div");
+    d.className = "skeleton-line " + widths[i % 3];
+    host.appendChild(d);
+  }
+}
+function updateSteps() {
+  var done = [!!(S.owner && S.repo), !!(S.owner && S.entries.size), S.staged.length > 0 || S.checked.size > 0 || S.remote.length > 0];
+  var steps = document.querySelectorAll(".step");
+  var lines = document.querySelectorAll(".step-line");
+  for (var i = 0; i < steps.length; i++) {
+    steps[i].classList.toggle("done", !!done[i]);
+    steps[i].classList.toggle("active", !done[i] && (i === 0 || !!done[i - 1]));
+  }
+  for (var k = 0; k < lines.length; k++) lines[k].classList.toggle("done", !!done[k]);
+  var set = function (id, val) { var el = $(id); if (el) el.textContent = val; };
+  set("stat-entries", S.entries.size ? String(S.entries.size) : "—");
+  set("stat-saves", S.owner ? String(countFiles(S.selDir)) : "—");
+  set("stat-staged", String(S.staged.length));
+  set("stat-mode", S.owner ? (S.mode === "worker" ? "本站代理" : "浏览器直连") : "未连接");
 }
 function canWrite() {
   return S.mode === "worker" ? !!S.adminKey : !!S.token;
@@ -1179,7 +1320,7 @@ function syncExportBtn() {
   $("btn-zip").disabled = S.busy || !n;
   $("btn-one-by-one").disabled = S.busy || !n;
   $("btn-delete").disabled = S.busy || !n || !canWrite();
-  $("btn-zip").textContent = n ? "📦 打包 ZIP 下载 " + n + " 个" : "📦 打包 ZIP 下载所选";
+  $("btn-zip").textContent = n ? "打包 ZIP 下载 " + n + " 个" : "打包 ZIP 下载所选";
 }
 function syncUploadBtn() {
   var ok = !!S.owner && !!S.repo && S.staged.length > 0;
@@ -1321,7 +1462,7 @@ function renderStaged() {
   var target = currentTarget();
   var total = 0;
   if (!S.staged.length) {
-    host.appendChild(emptyBox("🗂", "还没有选择存档文件。选好文件、在左侧勾选存储位置，就能一键导入仓库。"));
+    host.appendChild(emptyBox("cloud-up", "还没有选择存档文件。选好文件、在左侧勾选存储位置，就能一键导入仓库。"));
   }
   S.staged.forEach(function (st, idx) {
     total += st.file.size || 0;
@@ -1340,6 +1481,7 @@ function renderStaged() {
   $("staged-count").textContent = S.staged.length + " 个文件 · " + fmtSize(total);
   syncUploadBtn();
   renderDefaultMsg();
+  updateSteps();
 }
 function renderDefaultMsg() {
   var box = $("commit-msg");
@@ -1708,8 +1850,10 @@ async function init() {
   } catch (e) { /* 恢复历史位置失败则保持根目录 */ }
 }
 document.addEventListener("DOMContentLoaded", init);
+window.addEventListener("focus", function () { if (S.owner) updateSteps(); });
 /* SECTION: js-end */
 /* 脚本在后续分块中补齐 */
+
 </script>
 </body>
 </html>
