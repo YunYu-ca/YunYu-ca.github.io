@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>存档同步台 · YunYu 的像素游戏厅</title>
+<style>
+/* SECTION: reset-and-tokens */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+:root {
+  --bg: #0b0d18;
+  --bg-2: #12152a;
+  --card: rgba(23, 27, 51, .82);
+  --card-2: rgba(31, 36, 66, .7);
+  --line: rgba(124, 92, 255, .26);
+  --line-soft: rgba(255, 255, 255, .08);
+  --violet: #7c5cff;
+  --violet-soft: rgba(124, 92, 255, .16);
+  --mint: #29e0b5;
+  --amber: #ffc14d;
+  --rose: #ff6b81;
+  --text: #edf0ff;
+  --text-2: #a8b0d6;
+  --text-3: #6f789f;
+  --radius: 16px;
+  --shadow: 0 18px 40px rgba(4, 6, 16, .55);
+  --font: "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "SF Mono", "JetBrains Mono", Consolas, monospace;
+}
+body {
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--bg);
+  background-image:
+    radial-gradient(900px 520px at 12% -8%, rgba(124, 92, 255, .3), transparent 62%),
+    radial-gradient(760px 480px at 92% 4%, rgba(41, 224, 181, .18), transparent 60%),
+    linear-gradient(180deg, #0b0d18 0%, #0d1022 55%, #090b14 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  line-height: 1.55;
+  -webkit-text-size-adjust: 100%;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; border: 0; background: none; }
+a { color: var(--mint); text-decoration: none; }
+a:active { color: #7df3d4; }
+.hidden { display: none !important; }
+.mono { font-family: var(--mono); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* SECTION: layout */
+.app { max-width: 1280px; margin: 0 auto; padding: 20px 16px 56px; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+}
+.card-pad { padding: 18px; }
+.stack > * + * { margin-top: 14px; }
+.grid-main { display: grid; grid-template-columns: 380px 1fr; gap: 16px; align-items: start; }
+.grid-side { position: sticky; top: 14px; }
+
+/* SECTION: header */
+.topbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 4px 2px 18px; }
+.logo { width: 46px; height: 46px; flex: none; border-radius: 14px; background: linear-gradient(140deg, var(--violet), #4a2fd6 60%, var(--mint)); display: grid; place-items: center; font-size: 24px; box-shadow: 0 10px 24px rgba(124, 92, 255, .4); }
+.brand-text h1 { margin: 0; font-size: 21px; letter-spacing: .5px; }
+.brand-text p { margin: 2px 0 0; font-size: 12.5px; color: var(--text-2); }
+.topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; font-size: 12.5px; background: var(--card); border: 1px solid var(--line-soft); color: var(--text-2); white-space: nowrap; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); flex: none; }
+.dot.on { background: var(--mint); box-shadow: 0 0 8px rgba(41, 224, 181, .8); }
+.dot.off { background: var(--rose); }
+
+/* SECTION: controls */
+.btn { min-height: 44px; padding: 0 18px; border-radius: 12px; font-size: 15px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--line-soft); background: var(--card-2); color: var(--text); transition: transform .14s ease, box-shadow .14s ease, background .14s ease; }
+.btn:hover { background: rgba(48, 55, 98, .9); }
+.btn:active { transform: translateY(1px) scale(.99); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-primary { background: linear-gradient(135deg, #8a6bff, #5b3ce0); border-color: rgba(160, 135, 255, .55); box-shadow: 0 10px 26px rgba(96, 62, 224, .45); }
+.btn-primary:hover { background: linear-gradient(135deg, #9b7fff, #6a49f0); }
+.btn-mint { background: linear-gradient(135deg, #2ee0b6, #12a684); color: #05231b; border-color: rgba(41, 224, 181, .5); box-shadow: 0 10px 26px rgba(23, 180, 140, .32); }
+.btn-ghost { background: transparent; }
+.btn-danger { background: rgba(255, 107, 129, .13); border-color: rgba(255, 107, 129, .45); color: #ffb3bd; }
+.btn-sm { min-height: 36px; padding: 0 12px; font-size: 13px; border-radius: 10px; font-weight: 500; }
+.btn-block { width: 100%; }
+.field { display: block; }
+.field > label { display: block; font-size: 13px; color: var(--text-2); margin-bottom: 7px; font-weight: 600; }
+.input, .select { width: 100%; min-height: 46px; padding: 11px 14px; font-size: 16px; border-radius: 12px; background: rgba(9, 11, 22, .72); border: 1px solid var(--line-soft); color: var(--text); }
+.input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--violet); box-shadow: 0 0 0 3px var(--violet-soft); }
+.input::placeholder { color: var(--text-3); font-size: 14px; }
+.textarea { width: 100%; min-height: 66px; padding: 11px 14px; font-size: 14px; border-radius: 12px; background: rgba(9, 11, 22, .72); border: 1px solid var(--line-soft); resize: vertical; }
+.row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.row > .field { flex: 1 1 200px; min-width: 0; }
+.hint { font-size: 12.5px; color: var(--text-3); }
+.hint-strong { color: var(--text-2); }
+.section-title { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 15.5px; font-weight: 700; }
+.section-title .idx { width: 22px; height: 22px; border-radius: 7px; background: var(--violet-soft); color: #c9b8ff; font-size: 12px; display: grid; place-items: center; font-family: var(--mono); flex: none; }
+.card > .section-title { padding: 18px 18px 0; }
+.card > .section-title + .card-body { padding-top: 12px; }
+.card-body { padding: 18px; }
+.card-body + .card-foot { border-top: 1px solid var(--line-soft); padding: 14px 18px; }
+.subtle-box { background: rgba(9, 11, 22, .5); border: 1px solid var(--line-soft); border-radius: 12px; padding: 12px 14px; }
+.opt-list { display: flex; gap: 8px; flex-wrap: wrap; }
+.opt { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 13px; border-radius: 11px; border: 1px solid var(--line-soft); background: rgba(9, 11, 22, .5); font-size: 13.5px; cursor: pointer; }
+.opt input { width: 16px; height: 16px; accent-color: var(--violet); }
+.opt.sel { border-color: var(--violet); background: var(--violet-soft); }
+
+/* SECTION: repo-list */
+.repo-chips { display: flex; flex-wrap: wrap; gap: 8px; max-height: 168px; overflow: auto; }
+.repo-chip { min-height: 40px; padding: 6px 13px; border-radius: 999px; border: 1px solid var(--line-soft); background: rgba(9, 11, 22, .55); font-size: 13px; color: var(--text-2); display: inline-flex; align-items: center; gap: 7px; }
+.repo-chip:hover { border-color: var(--violet); color: var(--text); }
+.repo-chip.active { background: var(--violet-soft); border-color: var(--violet); color: #e6deff; font-weight: 600; }
+.repo-chip .priv { font-size: 10.5px; padding: 1px 6px; border-radius: 6px; background: rgba(255, 193, 77, .16); color: var(--amber); }
+
+/* SECTION: tree */
+.tree { max-height: 46vh; overflow: auto; padding: 4px 6px 6px; }
+.tree-node { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 8px; border-radius: 10px; cursor: pointer; }
+.tree-node:hover { background: rgba(255, 255, 255, .05); }
+.tree-node.sel { background: var(--violet-soft); box-shadow: inset 0 0 0 1px var(--violet); }
+.tree-caret { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-size: 11px; color: var(--text-3); flex: none; }
+.tree-caret:hover { background: rgba(255, 255, 255, .08); color: var(--text); }
+.tree-ico { width: 20px; flex: none; text-align: center; }
+.tree-label { flex: 1 1 auto; min-width: 0; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree-count { font-size: 11.5px; color: var(--text-3); font-family: var(--mono); flex: none; }
+.tree-children { margin-left: 14px; padding-left: 10px; border-left: 1px dashed rgba(124, 92, 255, .3); }
+.tree-empty { padding: 18px 12px; text-align: center; color: var(--text-3); font-size: 13px; }
+.path-bar { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12.5px; color: var(--mint); background: rgba(41, 224, 181, .08); border: 1px solid rgba(41, 224, 181, .28); border-radius: 10px; padding: 9px 12px; word-break: break-all; }
+.path-bar .lbl { font-family: var(--font); color: var(--text-2); font-size: 12.5px; flex: none; }
+
+/* SECTION: tabs */
+.tabs { display: flex; gap: 8px; margin: 16px 0 14px; padding: 6px; border-radius: 14px; background: var(--card); border: 1px solid var(--line-soft); }
+.tab { flex: 1 1 0; min-height: 46px; border-radius: 10px; font-size: 15px; font-weight: 600; color: var(--text-2); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.tab.active { background: linear-gradient(135deg, rgba(124, 92, 255, .35), rgba(41, 224, 181, .16)); color: var(--text); box-shadow: inset 0 0 0 1px var(--line); }
+.tab .k { font-size: 11.5px; font-weight: 500; color: var(--text-3); }
+
+/* SECTION: dropzone */
+.drop { border: 1.5px dashed rgba(124, 92, 255, .45); border-radius: 14px; padding: 26px 18px; text-align: center; background: rgba(124, 92, 255, .07); }
+.drop.over { border-color: var(--mint); background: rgba(41, 224, 181, .1); }
+.drop .big { font-size: 15.5px; font-weight: 700; }
+.drop .small { font-size: 12.5px; color: var(--text-2); margin-top: 5px; }
+.drop-btns { display: flex; gap: 10px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+
+/* SECTION: lists */
+.list { display: flex; flex-direction: column; gap: 8px; }
+.list-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: rgba(9, 11, 22, .55); border: 1px solid var(--line-soft); }
+.list-row .ck { width: 20px; height: 20px; accent-color: var(--mint); flex: none; }
+.row-main { flex: 1 1 auto; min-width: 0; }
+.row-name { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-sub { font-size: 11.5px; color: var(--text-3); font-family: var(--mono); margin-top: 2px; display: flex; gap: 10px; flex-wrap: wrap; }
+.row-act { flex: none; display: flex; gap: 6px; }
+.row-x { width: 32px; height: 32px; border-radius: 9px; color: var(--text-3); font-size: 16px; display: grid; place-items: center; }
+.row-x:hover { background: rgba(255, 107, 129, .16); color: var(--rose); }
+.list-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.list-head .spacer, .spacer { margin-left: auto; }
+.list-scroll { max-height: 40vh; overflow: auto; }
+.badge { font-size: 11px; padding: 2px 8px; border-radius: 7px; background: var(--violet-soft); color: #cbbcff; font-family: var(--mono); }
+.badge.warn { background: rgba(255, 193, 77, .15); color: var(--amber); }
+.badge.ok { background: rgba(41, 224, 181, .14); color: var(--mint); }
+.badge.err { background: rgba(255, 107, 129, .15); color: #ffa4b0; }
+.empty { text-align: center; padding: 30px 16px; color: var(--text-3); font-size: 13.5px; }
+.empty .em-ico { font-size: 26px; display: block; margin-bottom: 8px; opacity: .7; }
+
+/* SECTION: progress-log */
+.progress { height: 8px; border-radius: 999px; background: rgba(255, 255, 255, .08); overflow: hidden; }
+.progress > i { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--violet), var(--mint)); transition: width .25s ease; }
+.log { max-height: 200px; overflow: auto; display: flex; flex-direction: column; gap: 6px; font-family: var(--mono); font-size: 12px; }
+.log-line { display: flex; gap: 8px; padding: 6px 9px; border-radius: 9px; background: rgba(9, 11, 22, .5); border-left: 3px solid var(--text-3); word-break: break-all; }
+.log-line.ok { border-left-color: var(--mint); }
+.log-line.err { border-left-color: var(--rose); }
+.log-line.info { border-left-color: var(--violet); }
+.log-line .t { color: var(--text-3); flex: none; }
+
+/* SECTION: modal */
+.overlay { position: fixed; inset: 0; background: rgba(4, 6, 14, .72); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 16px; z-index: 60; }
+.modal { width: min(560px, 100%); max-height: 88vh; overflow: auto; background: #141830; border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+.modal-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px; border-bottom: 1px solid var(--line-soft); }
+.modal-head h3 { margin: 0; font-size: 16.5px; }
+.modal-body { padding: 18px; }
+.modal-foot { padding: 14px 18px; border-top: 1px solid var(--line-soft); display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.modal-close { margin-left: auto; width: 36px; height: 36px; border-radius: 10px; color: var(--text-2); font-size: 18px; }
+.modal-close:hover { background: rgba(255, 255, 255, .08); }
+ol.steps { margin: 0; padding-left: 20px; font-size: 13px; color: var(--text-2); }
+ol.steps li { margin-bottom: 7px; }
+ol.steps code { font-family: var(--mono); font-size: 12px; color: var(--mint); background: rgba(41, 224, 181, .1); padding: 1px 5px; border-radius: 5px; }
+.kv { display: grid; grid-template-columns: 96px 1fr; gap: 6px 10px; font-size: 13px; }
+.kv dt { color: var(--text-3); }
+.kv dd { margin: 0; word-break: break-all; }
+
+/* SECTION: toast */
+.toast-wrap { position: fixed; right: 14px; bottom: 14px; display: flex; flex-direction: column; gap: 8px; z-index: 90; max-width: min(420px, calc(100vw - 28px)); }
+.toast { background: #1b2040; border: 1px solid var(--line); border-radius: 12px; padding: 11px 14px; font-size: 13.5px; box-shadow: var(--shadow); animation: pop .2s ease; }
+.toast.ok { border-color: rgba(41, 224, 181, .6); }
+.toast.err { border-color: rgba(255, 107, 129, .6); }
+@keyframes pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* SECTION: footer-help */
+.help-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.help-item { padding: 14px; border-radius: 12px; background: rgba(9, 11, 22, .5); border: 1px solid var(--line-soft); }
+.help-item h4 { margin: 0 0 6px; font-size: 13.5px; color: var(--text); }
+.help-item p { margin: 0; font-size: 12.5px; color: var(--text-2); }
+.page-foot { margin-top: 22px; text-align: center; font-size: 12px; color: var(--text-3); }
+
+/* SECTION: responsive */
+@media (max-width: 900px) {
+  .grid-main { grid-template-columns: 1fr; }
+  .grid-side { position: static; }
+  .tree { max-height: 34vh; }
+  .topbar-actions { width: 100%; margin-left: 0; }
+}
+@media (max-width: 520px) {
+  .app { padding: 14px 12px 44px; }
+  .brand-text h1 { font-size: 18.5px; }
+  .row > .field { flex: 1 1 100%; }
+  .row .btn { width: 100%; }
+  .tab .k { display: none; }
+  .list-scroll, .tree { max-height: none; }
+  .kv { grid-template-columns: 1fr; gap: 2px 0; }
+  .modal-foot .btn { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+/* SECTION: site-theme */
+:root {
+  --bg: #0b0b13;
+  --bg-2: #14141f;
+  --card: rgba(20, 20, 31, .94);
+  --card-2: rgba(32, 32, 48, .9);
+  --line: #2a2a3c;
+  --line-soft: rgba(255, 215, 0, .16);
+  --violet: #ffd700;
+  --violet-soft: rgba(255, 215, 0, .14);
+  --mint: #22d3ee;
+  --amber: #4a9eff;
+  --rose: #ff3d6e;
+  --text: #e9e9f2;
+  --text-2: #a8a8c0;
+  --text-3: #6a6a82;
+  --shadow: 0 14px 34px rgba(5, 5, 10, .7);
+}
+body {
+  background-color: #0b0b13;
+  background-image:
+    radial-gradient(820px 460px at 8% -10%, rgba(255, 215, 0, .12), transparent 62%),
+    radial-gradient(700px 420px at 94% 0%, rgba(34, 211, 238, .13), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .022) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .022) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, #0b0b13, #0d0d17 60%, #08080e);
+}
+.card { border-color: var(--line); border-radius: 10px; }
+.btn { border-radius: 8px; border: 2px solid #2a2a3c; box-shadow: 0 4px 0 rgba(5, 5, 10, .75); }
+.btn:active { box-shadow: 0 1px 0 rgba(5, 5, 10, .75); }
+.btn-primary { background: linear-gradient(180deg, #ffe45c, #e8b900); color: #14141f; border-color: #ffd700; box-shadow: 0 5px 0 rgba(120, 92, 0, .8); }
+.btn-primary:hover { background: linear-gradient(180deg, #fff08a, #f5c832); }
+.btn-mint { background: linear-gradient(180deg, #4fe3f7, #0eb6d4); color: #04202a; border-color: #22d3ee; box-shadow: 0 5px 0 rgba(8, 90, 110, .8); }
+.btn-danger { background: rgba(255, 61, 110, .16); border-color: #ff3d6e; color: #ffb8c6; }
+.input, .select, .textarea { border: 2px solid #2a2a3c; background: #0d0d17; border-radius: 8px; }
+.input:focus, .select:focus, .textarea:focus { border-color: #ffd700; box-shadow: 0 0 0 3px rgba(255, 215, 0, .18); }
+.tabs { border-color: var(--line); border-radius: 10px; }
+.tab.active { background: linear-gradient(135deg, rgba(255, 215, 0, .26), rgba(34, 211, 238, .16)); box-shadow: inset 0 0 0 2px rgba(255, 215, 0, .5); }
+.logo { border-radius: 8px; background: linear-gradient(140deg, #ffd700, #ff3d6e 70%, #22d3ee); box-shadow: 0 6px 0 rgba(120, 92, 0, .7); }
+.tree-children { border-left-color: rgba(255, 215, 0, .3); }
+.tree-node.sel { background: rgba(255, 215, 0, .13); box-shadow: inset 0 0 0 2px var(--violet); }
+.drop { border-color: rgba(255, 215, 0, .45); background: rgba(255, 215, 0, .05); }
+.drop.over { border-color: #22d3ee; background: rgba(34, 211, 238, .1); }
+.repo-chip.active, .opt.sel { background: rgba(255, 215, 0, .16); border-color: #ffd700; color: #ffe9a8; }
+.badge { background: rgba(255, 215, 0, .14); color: #ffe9a8; }
+.section-title .idx { background: rgba(255, 215, 0, .16); color: #ffd700; }
+.path-bar { color: #7ee9f7; background: rgba(34, 211, 238, .08); border-color: rgba(34, 211, 238, .35); }
+.progress > i { background: linear-gradient(90deg, #ffd700, #22d3ee); }
+.log-line.ok { border-left-color: #22d3ee; }
+.log-line.err { border-left-color: #ff3d6e; }
+.log-line.info { border-left-color: #ffd700; }
+.overlay { background: rgba(4, 4, 10, .8); }
+.modal { background: #14141f; border-color: #2a2a3c; border-radius: 12px; }
+.toast { background: #1a1a28; border-color: #2a2a3c; }
+a { color: #22d3ee; }
+.brand-text h1 { font-family: var(--mono); letter-spacing: 1px; }
+.site-nav { display: flex; gap: 8px; flex-wrap: wrap; margin: -4px 0 16px; }
+.site-nav a { min-height: 38px; display: inline-flex; align-items: center; padding: 0 13px; border: 2px solid #2a2a3c; border-radius: 8px; background: rgba(20, 20, 31, .9); color: #a8a8c0; font-size: 13px; }
+.site-nav a:hover { color: #ffd700; border-color: #ffd700; }
+.site-nav a.cur { color: #ffe9a8; border-color: rgba(255, 215, 0, .55); background: rgba(255, 215, 0, .1); }
+.auto-note { color: #7ee9f7; }
+.subtle-box.sec { border-color: rgba(255, 61, 110, .4); background: rgba(255, 61, 110, .07); }
+/* site-theme 覆盖块结束 */
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SECTION: header -->
+  <header class="topbar">
+    <div class="logo" aria-hidden="true">🎮</div>
+    <div class="brand-text">
+      <h1>存档同步台</h1>
+      <p>YunYu 的像素游戏厅 · 用你的 GitHub 仓库当存档盘：导入备份、导出取回</p>
+    </div>
+    <div class="topbar-actions">
+      <button class="chip" id="token-chip" type="button"><span class="dot off" id="token-dot"></span><span id="token-state">未配置 Token</span></button>
+      <span class="chip" id="api-chip">API 余量 <span class="mono" id="rate-num">—</span></span>
+    </div>
+  </header>
+
+  <!-- SECTION: site-nav -->
+  <nav class="site-nav" aria-label="站内导航">
+    <a href="Game.html">← 返回游戏厅</a>
+    <a href="game5/">幸运筹码乐园 Game5</a>
+    <a href="game3.html">Game3</a>
+    <a href="game1.html">Game1</a>
+    <span class="chip" id="source-chip" style="min-height:38px">本页仓库 <span class="mono" id="source-repo">检测中…</span></span>
+  </nav>
+
+  <!-- SECTION: connect -->
+  <section class="card" id="connect-card">
+    <h2 class="section-title"><span class="idx">1</span>连接仓库</h2>
+    <div class="card-body stack">
+      <div class="row">
+        <div class="field" style="flex:1 1 320px">
+          <label for="repo-input">GitHub 仓库地址 / 用户名</label>
+          <input class="input mono" id="repo-input" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="https://github.com/YunYu-ca/YunYu-ca.github.io">
+        </div>
+        <button class="btn btn-primary" id="btn-connect" type="button">连接并展开</button>
+      </div>
+      <div class="hint" id="connect-hint">支持三种写法：完整仓库 URL、<span class="hint-strong">用户名/仓库名</span>、或只写<span class="hint-strong">用户名</span>（自动列出该账号的全部仓库供你勾选）。读取公开仓库不需要 Token，写入存档才需要。</div>
+      <div class="field hidden" id="repo-list-field">
+        <label>该账号的仓库列表（点选即切换）</label>
+        <div class="repo-chips" id="repo-chips"></div>
+      </div>
+      <div class="row hidden" id="branch-row">
+        <div class="field" style="flex:1 1 200px">
+          <label for="branch-select">分支</label>
+          <select class="select" id="branch-select"></select>
+        </div>
+        <div class="field hidden" style="flex:1 1 200px" id="sub-field">
+          <label for="sub-input">子目录（可选）</label>
+          <input class="input mono" id="sub-input" type="text" placeholder="saves" autocomplete="off">
+        </div>
+      </div>
+      <div class="subtle-box hidden" id="repo-info">
+        <dl class="kv" id="repo-info-kv"></dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: tabs -->
+  <nav class="tabs" role="tablist">
+    <button class="tab active" id="tab-import" role="tab" type="button">⬆️ 导入存档<span class="k">本地 → 仓库</span></button>
+    <button class="tab" id="tab-export" role="tab" type="button">⬇️ 导出存档<span class="k">仓库 → 本地</span></button>
+  </nav>
+
+  <!-- SECTION: main-grid -->
+  <main class="grid-main">
+
+    <!-- SECTION: tree-panel -->
+    <aside class="grid-side">
+      <section class="card">
+        <h2 class="section-title"><span class="idx">2</span>勾选存储位置<span class="spacer"></span><label class="opt" style="min-height:32px;font-size:12.5px"><input type="checkbox" id="only-saves">只看有存档的目录</label><button class="btn btn-sm btn-ghost" id="btn-newdir" type="button">+ 新目录</button><button class="btn btn-sm btn-ghost" id="btn-refreshtree" type="button">刷新</button></h2>
+        <div class="card-body stack">
+          <div class="tree" id="tree" aria-label="仓库目录树"></div>
+          <div class="path-bar"><span class="lbl">当前位置</span><span id="path-out">/</span></div>
+        </div>
+      </section>
+    </aside>
+
+    <div>
+      <!-- SECTION: panel-import -->
+      <section class="card" id="panel-import">
+        <h2 class="section-title"><span class="idx">3</span>选择本地存档文件</h2>
+        <div class="card-body stack">
+          <div class="drop" id="drop">
+            <div class="big">把存档文件拖到这里</div>
+            <div class="small">支持多文件与整个存档文件夹（会保留文件夹内的层级）</div>
+            <div class="drop-btns">
+              <button class="btn btn-mint" id="btn-files" type="button">选择文件</button>
+              <button class="btn" id="btn-dir" type="button">选择文件夹</button>
+              <button class="btn btn-ghost btn-sm" id="btn-clear-files" type="button">清空</button>
+            </div>
+            <input class="sr-only" id="picker-files" type="file" multiple>
+            <input class="sr-only" id="picker-dir" type="file" multiple webkitdirectory directory>
+          </div>
+          <div>
+            <div class="list-head">
+              <span class="badge" id="staged-count">0 个文件 · 0 B</span>
+              <span class="spacer"></span>
+              <span class="hint">目录前缀（追加到存储位置后）</span>
+              <input class="input mono" id="prefix-input" style="max-width:190px;min-height:38px" type="text" placeholder="saves-2026">
+            </div>
+            <div class="list list-scroll" id="staged-list"></div>
+          </div>
+          <div class="opt-list" id="conflict-opts">
+            <label class="opt sel"><input type="radio" name="conflict" value="overwrite" checked>覆盖同名文件</label>
+            <label class="opt"><input type="radio" name="conflict" value="skip">跳过同名文件</label>
+            <label class="opt"><input type="radio" name="conflict" value="stamp">同名自动加时间戳</label>
+          </div>
+          <div class="field">
+            <label for="commit-msg">提交说明</label>
+            <textarea class="textarea mono" id="commit-msg" spellcheck="false"></textarea>
+          </div>
+          <div class="progress"><i id="up-bar"></i></div>
+          <button class="btn btn-primary btn-block" id="btn-upload" type="button" data-primary-action disabled>🚀 上传到仓库</button>
+          <div class="log" id="upload-log"></div>
+        </div>
+      </section>
+
+      <!-- SECTION: panel-export -->
+      <section class="card hidden" id="panel-export">
+        <h2 class="section-title"><span class="idx">3</span>当前位置的存档</h2>
+        <div class="card-body stack">
+          <div class="list-head">
+            <span class="badge" id="remote-count">0 个存档</span>
+            <input class="input" id="filter-input" style="max-width:190px;min-height:38px" type="text" placeholder="筛选名称">
+            <label class="opt"><input type="checkbox" id="deep-toggle">含子目录</label>
+            <span class="spacer"></span>
+            <button class="btn btn-sm" id="btn-select-all" type="button">全选</button>
+            <button class="btn btn-sm" id="btn-select-none" type="button">清空选择</button>
+          </div>
+          <div class="list list-scroll" id="remote-list"></div>
+          <div class="row">
+            <button class="btn btn-mint" id="btn-zip" type="button" data-primary-action disabled>📦 打包 ZIP 下载所选</button>
+            <button class="btn" id="btn-one-by-one" type="button" disabled>逐个下载到本地</button>
+            <button class="btn btn-danger btn-sm" id="btn-delete" type="button" disabled>删除所选</button>
+          </div>
+          <div class="progress"><i id="down-bar"></i></div>
+          <div class="log" id="export-log"></div>
+        </div>
+      </section>
+
+      <!-- SECTION: shortcuts -->
+      <section class="card" style="margin-top:16px">
+        <h2 class="section-title"><span class="idx">4</span>仓库里的存档目录<span class="spacer"></span><span class="hint">按游戏一键切过去</span></h2>
+        <div class="card-body"><div class="repo-chips" id="save-shortcuts"></div></div>
+      </section>
+
+      <!-- SECTION: recent -->
+      <section class="card" style="margin-top:16px">
+        <h2 class="section-title"><span class="idx">5</span>最近使用的存储位置</h2>
+        <div class="card-body"><div class="repo-chips" id="recent-chips"></div></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- SECTION: help -->
+  <section class="card" style="margin-top:16px">
+    <h2 class="section-title"><span class="idx">i</span>使用说明</h2>
+    <div class="card-body">
+      <div class="help-grid">
+        <div class="help-item"><h4>Token 怎么来</h4><p>GitHub → Settings → Developer settings → <b>Personal access tokens</b> → Fine-grained token，Repository access 选你的仓库，Permissions 里 <b>Contents</b> 设为 Read and write。Token 只保存在这台设备的浏览器里，页面不会把它发给任何第三方。</p></div>
+        <div class="help-item"><h4>写入走什么接口</h4><p>上传走 Git Data API（blob → tree → commit → ref），一次提交可带多个存档文件，不受 Contents 接口 1MB 限制；单个文件建议不超过 25MB，超限由 GitHub 拒绝。</p></div>
+        <div class="help-item"><h4>存档安全</h4><p>GitHub 免费版私有仓库不支持大文件与 Git LFS 免费额度，重要存档建议双备份；本页面是纯前端，不搭服务端，也不记录你的任何数据。</p></div>
+        <div class="help-item"><h4>接口限流</h4><p>匿名调用每小时 60 次，带 Token 每小时 5000 次。右上角实时显示剩余次数，触顶时等待整点窗口重置即可。</p></div>
+        <div class="help-item"><h4>公共设备务必清 Token</h4><p>本页部署在公开站点上，任何人都能打开，但 Token 只写进你当前浏览器的 localStorage，不会上传或内嵌在页面里。在网吧、手机借用他人设备等场景用完，请点 Token 面板里的「清除本机 Token」。</p></div>
+        <div class="help-item"><h4>和 Game5 自动云存档的关系</h4><p>Game5 里已有的 <span class="mono">lucky-chip-sync</span> Worker 负责游戏内自动同步（<span class="mono">Game5Saves/{用户名}/save.json</span>），密钥在服务端。本页是它的补充：手动查看、批量导出、跨游戏备份，以及处理 Game3、Game4 那些没有 Worker 覆盖的存档目录。两者写入同一批路径，互不冲突。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="page-foot">存档同步台 · 单文件页面，放在仓库根目录即可通过 <span class="mono">https://yunyu-ca.github.io/saves.html</span> 访问 · 浏览器直连 GitHub REST API</p>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<!-- SECTION: modal-token -->
+<div class="overlay hidden" id="token-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="token-modal-title">
+    <div class="modal-head"><h3 id="token-modal-title">配置 GitHub Token</h3><button class="modal-close" type="button" id="btn-token-close">✕</button></div>
+    <div class="modal-body stack">
+      <div class="field">
+        <label for="token-input">Personal Access Token（仅存在本机浏览器）</label>
+        <input class="input mono" id="token-input" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_... 或 ghp_...">
+      </div>
+      <div class="subtle-box">
+        <ol class="steps">
+          <li>打开 <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener">Fine-grained tokens 创建页</a></li>
+          <li>Repository access 选 <code>Only select repositories</code>，勾选你的存档仓库</li>
+          <li>Permissions → <code>Contents</code> → <code>Read and write</code></li>
+          <li>生成后粘贴到上方输入框，点「保存并验证」</li>
+        </ol>
+      </div>
+      <div class="hint">只想从私有仓库导出存档时，同样需要 Token（只读权限即可）。</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" type="button" id="btn-token-clear">清除本机 Token</button>
+      <button class="btn btn-primary" type="button" id="btn-token-save">保存并验证</button>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: modal-confirm -->
+<div class="overlay hidden" id="confirm-modal">
+  <div class="modal" style="width:min(440px,100%)" role="dialog" aria-modal="true">
+    <div class="modal-head"><h3 id="confirm-title">确认操作</h3><button class="modal-close" type="button" id="btn-confirm-close">✕</button></div>
+    <div class="modal-body"><div class="hint hint-strong" id="confirm-text"></div></div>
+    <div class="modal-foot"><button class="btn" type="button" id="btn-confirm-no">取消</button><button class="btn btn-danger" type="button" id="btn-confirm-yes">确认</button></div>
+  </div>
+</div>
+
+<!-- SECTION: templates -->
+<template id="tpl-repo-chip"><button class="repo-chip" type="button"><span class="nm"></span><span class="priv hidden">私有</span></button></template>
+<template id="tpl-staged-row"><div class="list-row"><span class="row-main"><div class="row-name"></div><div class="row-sub"><span data-role="size"></span><span data-role="relpath"></span><span data-role="tag"></span></div></span><span class="row-act"><button class="row-x" type="button" title="移除">✕</button></span></div></template>
+<template id="tpl-remote-row"><div class="list-row"><input class="ck" type="checkbox"><span class="row-main"><div class="row-name"></div><div class="row-sub"><span data-role="size"></span><span data-role="mtime"></span><span data-role="sha"></span><span data-role="big"></span></div></span><span class="row-act"><button class="row-x" type="button" title="单独下载">⬇</button></span></div></template>
+<template id="tpl-log-line"><div class="log-line"><span class="t"></span><span class="m"></span></div></template>
+
+<script>
+"use strict";
+/* SECTION: js-utils */
+const API = "https://api.github.com";
+const LS_TOKEN = "***";
+const LS_REPO = "ghsave.repo";
+const LS_DIR = "ghsave.dir";
+const LS_RECENT = "ghsave.recent";
+const DEFAULT_REPO = "YunYu-ca/YunYu-ca.github.io";
+
+const $ = function (id) { return document.getElementById(id); };
+const S = {
+  owner: "", repo: "", ref: "", defaultBranch: "", repoPrivate: false,
+  entries: new Map(), children: new Map(), truncated: false,
+  selDir: "", staged: [], remote: [], checked: new Set(), busy: false,
+  token: "", lastCommitMsg: "", commitUrl: ""
+};
+try { S.token = localStorage.getItem(LS_TOKEN) || ""; } catch (e) { S.token = ""; }
+
+function fmtSize(n) {
+  if (n === undefined || n === null || isNaN(n)) return "大小未知";
+  if (n < 1024) return n + " B";
+  if (n < 1048576) return (n / 1024).toFixed(1) + " KB";
+  if (n < 1073741824) return (n / 1048576).toFixed(2) + " MB";
+  return (n / 1073741824).toFixed(2) + " GB";
+}
+function pad(n) { return String(n).padStart(2, "0"); }
+function hms() { var d = new Date(); return pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds()); }
+function stampNum() {
+  var d = new Date();
+  return "" + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + "-" + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+}
+function jp(dir, name) { return dir ? dir + "/" + name : name; }
+function dirOf(p) { var i = p.lastIndexOf("/"); return i < 0 ? "" : p.slice(0, i); }
+function baseOf(p) { var i = p.lastIndexOf("/"); return i < 0 ? p : p.slice(i + 1); }
+function extOf(p) { var b = baseOf(p); var i = b.lastIndexOf("."); return i > 0 ? b.slice(i + 1).toLowerCase() : ""; }
+function addSlash(p) { if (!p || p === "/") return ""; p = p.replace(/^\/+|\/+$/g, ""); return p; }
+
+function make(tplId, host) {
+  var node = $(tplId).content.firstElementChild.cloneNode(true);
+  if (host) host.appendChild(node);
+  return node;
+}
+function toast(msg, kind) {
+  var box = $("toast-wrap");
+  var t = document.createElement("div");
+  t.className = "toast" + (kind ? " " + kind : "");
+  t.textContent = msg;
+  box.appendChild(t);
+  setTimeout(function () { t.style.opacity = "0"; t.style.transition = "opacity .3s"; }, 3600);
+  setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 4000);
+}
+function log(who, msg, kind) {
+  var line = make("tpl-log-line", $(who));
+  if (kind) line.classList.add(kind);
+  line.querySelector(".t").textContent = hms();
+  line.querySelector(".m").textContent = msg;
+  $(who).scrollTop = $(who).scrollHeight;
+  while ($(who).children.length > 160) $(who).removeChild($(who).firstChild);
+}
+function setBar(id, ratio) { $(id).style.width = Math.max(0, Math.min(100, ratio * 100)) + "%"; }
+function lock(on) {
+  S.busy = on;
+  ["btn-connect", "btn-upload", "btn-zip", "btn-one-by-one", "btn-delete", "btn-refreshtree"].forEach(function (k) {
+    var b = $(k); if (b) b.disabled = !!on;
+  });
+  if (!on) { syncUploadBtn(); syncExportBtn(); }
+}
+
+/* SECTION: js-api */
+class ApiError extends Error {
+  constructor(status, payload) {
+    super(ApiError.explain(status, payload));
+    this.status = status;
+    this.payload = payload;
+  }
+  static explain(status, payload) {
+    var raw = "";
+    if (payload && typeof payload === "object") {
+      raw = payload.message || "";
+      if (payload.errors && payload.errors.length) raw += " · " + payload.errors.map(function (e) { return e.message || e.code || ""; }).join("；");
+    } else if (typeof payload === "string") raw = payload.slice(0, 200);
+    if (status === 401) return "Token 无效或已过期（401），请重新生成并保存";
+    if (status === 403) return "被拒绝（403）：Token 权限不足，或触发接口限流。" + raw;
+    if (status === 404) return "找不到内容（404）：仓库 / 分支 / 路径不存在；若是私有仓库，需要先配置 Token";
+    if (status === 422) return "GitHub 拒绝该写法（422）：" + raw;
+    if (status === 451) return "该仓库因法务原因不可访问（451）";
+    if (status >= 500) return "GitHub 服务异常（" + status + "），稍后重试";
+    return "请求失败（" + status + "）" + (raw ? "：" + raw : "");
+  }
+}
+function updateRate(res) {
+  var left = res.headers.get("x-ratelimit-remaining");
+  var max = res.headers.get("x-ratelimit-limit");
+  if (left !== null) $("rate-num").textContent = left + (max ? " / " + max : "");
+}
+async function api(path, opt) {
+  opt = opt || {};
+  var headers = { "Accept": opt.raw ? "application/vnd.github.raw" : "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
+  if (S.token) headers.Authorization = "Bearer " + S.token;
+  var body;
+  if (opt.body !== undefined) { headers["Content-Type"] = "application/json"; body = JSON.stringify(opt.body); }
+  var res;
+  try {
+    res = await fetch(API + path, { method: opt.method || "GET", headers: headers, body: body });
+  } catch (e) {
+    throw new Error("网络请求失败：可能是浏览器离线、网络不通或被扩展拦截");
+  }
+  updateRate(res);
+  if (res.status === 204 || res.status === 205) return null;
+  var data;
+  if (opt.raw) {
+    var buf = await res.arrayBuffer();
+    if (res.ok) { data = new Uint8Array(buf); }
+    else {
+      var txt = "";
+      try { txt = new TextDecoder("utf-8", { fatal: false }).decode(buf); } catch (eDec) { txt = ""; }
+      try { data = JSON.parse(txt); } catch (eJson) { data = txt.slice(0, 200); }
+    }
+  } else {
+    var ct = res.headers.get("content-type") || "";
+    data = ct.indexOf("json") >= 0 ? await res.json() : await res.text();
+  }
+  if (!res.ok) throw new ApiError(res.status, data);
+  return data;
+}
+async function fetchAllPages(path, pick) {
+  var out = [], page = 1;
+  while (page <= 5) {
+    var sep = path.indexOf("?") >= 0 ? "&" : "?";
+    var chunk = await api(path + sep + "per_page=100&page=" + page);
+    var arr = pick ? pick(chunk) : chunk;
+    if (!Array.isArray(arr) || !arr.length) break;
+    out = out.concat(arr);
+    if (arr.length < 100) break;
+    page++;
+  }
+  return out;
+}
+function bufferToBase64(u8) {
+  var chunk = 0x8000, s = "";
+  for (var i = 0; i < u8.length; i += chunk) {
+    s += String.fromCharCode.apply(null, u8.subarray(i, i + chunk));
+  }
+  return btoa(s);
+}
+function blobToU8(file) {
+  return new Promise(function (resolve, reject) {
+    var fr = new FileReader();
+    fr.onload = function () { resolve(new Uint8Array(fr.result)); };
+    fr.onerror = function () { reject(new Error("读取本地文件失败：" + file.name)); };
+    fr.readAsArrayBuffer(file);
+  });
+}
+
+/* SECTION: js-token */
+function paintTokenState() {
+  var on = !!S.token;
+  $("token-dot").className = "dot " + (on ? "on" : "off");
+  $("token-state").textContent = on ? "Token 已配置" : "未配置 Token";
+  $("api-chip").title = on ? "已认证调用，每小时上限 5000 次" : "匿名调用，每小时上限 60 次";
+}
+function requireToken(action) {
+  if (S.token) return true;
+  toast("写入仓库需要 Token，请先配置", "err");
+  openTokenModal(action);
+  return false;
+}
+function openTokenModal() {
+  $("token-input").value = S.token || "";
+  $("token-modal").classList.remove("hidden");
+  setTimeout(function () { $("token-input").focus(); }, 40);
+}
+async function saveToken() {
+  var v = $("token-input").value.trim();
+  if (!v) { toast("请输入 Token 内容", "err"); return; }
+  try {
+    var prev = S.token;
+    S.token = v;
+    var me = await api("/user");
+    localStorage.setItem(LS_TOKEN, v);
+    $("token-modal").classList.add("hidden");
+    paintTokenState();
+    toast("已验证，当前账号：" + (me.login || "") + (me.name ? "（" + me.name + "）" : ""), "ok");
+    log("upload-log", "Token 验证通过，账号 " + me.login, "ok");
+    if (S.owner) await loadTree(S.ref || S.defaultBranch);
+  } catch (e) {
+    S.token = "";
+    paintTokenState();
+    toast(e.message, "err");
+  }
+}
+function clearToken() {
+  try { localStorage.removeItem(LS_TOKEN); } catch (e) { }
+  S.token = "";
+  $("token-input").value = "";
+  paintTokenState();
+  toast("已清除本机保存的 Token", "ok");
+}
+
+/* SECTION: js-connect */
+function parseInput(text) {
+  var t = (text || "").trim().replace(/\.git$/, "").replace(/\/+$/, "");
+  if (!t) return null;
+  var m = t.match(/github\.com\/([^/\s]+)\/([^/\s]+)(?:\/tree\/([^/\s]+)\/?(.*))?$/i);
+  if (m) return { kind: "repo", owner: m[1], repo: m[2], ref: m[3] || "", path: addSlash(m[4] || "") };
+  var m2 = t.match(/github\.com\/([^/\s]+)$/i);
+  if (m2) return { kind: "user", owner: m2[1] };
+  var segs = t.split("/").filter(Boolean);
+  if (segs.length >= 2) return { kind: "repo", owner: segs[0], repo: segs[1], ref: "", path: addSlash(segs.slice(3).join("/")) };
+  return { kind: "user", owner: segs[0] };
+}
+async function connect(explicit) {
+  var parsed = parseInput($("repo-input").value);
+  if (!parsed) { toast("请先填写仓库地址或用户名", "err"); return; }
+  lock(true);
+  try {
+    if (parsed.kind === "user") {
+      $("connect-hint").textContent = "正在展开 " + parsed.owner + " 的仓库列表…";
+      var repos = await fetchAllPages("/users/" + parsed.owner + "/repos?sort=updated", function (d) { return d.repositories || d; });
+      renderRepoChips(parsed.owner, repos);
+      var target = repos.filter(function (r) { return r.name.endsWith(".github.io"); })[0] || repos[0];
+      if (target) {
+        $("connect-hint").textContent = "共展开 " + repos.length + " 个仓库，已默认选中 " + target.full_name + "，可点上方列表切换。";
+        await selectRepo(target.owner.login, target.name, parsed.ref, parsed.path);
+      } else {
+        $("connect-hint").textContent = parsed.owner + " 名下没有找到可读仓库。";
+      }
+    } else {
+      await selectRepo(parsed.owner, parsed.repo, parsed.ref, parsed.path);
+    }
+  } catch (e) {
+    $("connect-hint").textContent = "连接失败：" + e.message;
+    if (e.status === 404 && !S.token) $("connect-hint").textContent += "（私有仓库需先配置 Token）";
+    toast("连接失败", "err");
+  } finally {
+    lock(false);
+  }
+}
+function renderRepoChips(owner, repos) {
+  var host = $("repo-chips");
+  host.textContent = "";
+  repos.slice(0, 120).forEach(function (r) {
+    var chip = make("tpl-repo-chip", host);
+    chip.querySelector(".nm").textContent = r.name;
+    if (r.private) chip.querySelector(".priv").classList.remove("hidden");
+    if (r.owner && r.owner.login) chip.dataset.owner = r.owner.login;
+    chip.dataset.repo = r.name;
+    if (r.name === S.repo) chip.classList.add("active");
+    chip.addEventListener("click", function () {
+      if (S.busy) return;
+      host.querySelectorAll(".repo-chip").forEach(function (c) { c.classList.remove("active"); });
+      chip.classList.add("active");
+      lock(true);
+      selectRepo(chip.dataset.owner || owner, chip.dataset.repo, "", "")
+        .catch(function (e) { toast(e.message, "err"); })
+        .then(function () { lock(false); });
+    });
+  });
+  $("repo-list-field").classList.remove("hidden");
+  $("repo-list-field").dataset.owner = owner;
+}
+async function selectRepo(owner, repo, refHint, pathHint) {
+  S.owner = owner; S.repo = repo;
+  var info = await api("/repos/" + owner + "/" + repo);
+  if (info && info.owner && info.owner.login) { owner = S.owner = info.owner.login; }
+  if (info && info.name) { repo = S.repo = info.name; }
+  S.defaultBranch = info.default_branch || "main";
+  S.repoPrivate = !!info.private;
+  S.ref = refHint || S.defaultBranch;
+  try { localStorage.setItem(LS_REPO, owner + "/" + repo); } catch (e) { }
+  $("repo-input").value = "https://github.com/" + owner + "/" + repo;
+  renderRepoInfo(info);
+  var list = await fetchAllPages("/repos/" + owner + "/" + repo + "/branches", function (d) { return Array.isArray(d) ? d : []; });
+  var sel = $("branch-select");
+  sel.textContent = "";
+  (list.length ? list : [{ name: S.defaultBranch }]).forEach(function (b) {
+    var o = document.createElement("option");
+    o.value = b.name; o.textContent = b.name;
+    if (b.name === S.ref) o.selected = true;
+    sel.appendChild(o);
+  });
+  if (!$("branch-select").value) $("branch-select").value = S.ref;
+  $("branch-row").classList.remove("hidden");
+  $("sub-field").classList.toggle("hidden", !pathHint);
+  $("sub-input").value = pathHint || "";
+  await loadTree(S.ref);
+  if (pathHint) { S.selDir = pathHint; $("path-out").textContent = "/" + pathHint; refreshRemote(); paintTree(); }
+  $("connect-hint").textContent = "已连接 " + owner + "/" + repo + " · 分支 " + S.ref + "，左侧目录树已展开，点选一个目录作为存储位置。";
+  toast("仓库已连接", "ok");
+  loadOwnerRepos(owner);
+}
+async function loadOwnerRepos(owner) {
+  if ($("repo-list-field").dataset.owner === owner) return;
+  try {
+    var repos = await fetchAllPages("/users/" + owner + "/repos?sort=updated", function (d) { return d.repositories || d; });
+    if (!repos.length) return;
+    renderRepoChips(owner, repos);
+    if ($("connect-hint").textContent.indexOf("共展开") < 0) {
+      $("connect-hint").textContent = "已连接 " + owner + "/" + S.repo + "，并展开该账号的 " + repos.length + " 个仓库供点选切换。";
+    }
+  } catch (e) { /* 仓库列表展开失败不影响主流程 */ }
+}
+function renderRepoInfo(info) {
+  var host = $("repo-info-kv");
+  host.textContent = "";
+  var rows = [
+    ["仓库", info.full_name + (info.private ? "（私有）" : "（公开）")],
+    ["默认分支", info.default_branch || "—"],
+    ["占用", fmtSize((info.size || 0) * 1024) + " · " + (info.disk_usage_type || "Git 对象")],
+    ["最近更新", (info.pushed_at || info.updated_at || "—").replace("T", " ").replace("Z", " UTC")],
+    ["写入账号", S.token ? "已配置 Token" : "未配置 Token（只能读取）"]
+  ];
+  rows.forEach(function (pair) {
+    var dt = document.createElement("dt"); dt.textContent = pair[0];
+    var dd = document.createElement("dd"); dd.textContent = pair[1];
+    host.appendChild(dt); host.appendChild(dd);
+  });
+  $("repo-info").classList.remove("hidden");
+}
+
+/* SECTION: js-tree */
+async function loadTree(ref) {
+  if (!S.owner || !S.repo) { toast("请先连接仓库", "err"); return; }
+  S.ref = ref || S.ref || S.defaultBranch || "main";
+  $("tree").textContent = "";
+  $("connect-hint").textContent = "正在读取 " + S.owner + "/" + S.repo + " @ " + S.ref + " 的目录结构…";
+  S.entries = new Map(); S.children = new Map(); S.truncated = false;
+  var data;
+  try {
+    data = await api("/repos/" + S.owner + "/" + S.repo + "/git/trees/" + encodeURIComponent(S.ref) + "?recursive=1");
+  } catch (e) {
+    if (e.status === 404) { await loadTreeShallowFallback(); } else { throw e; }
+  }
+  if (data) {
+    (data.tree || []).forEach(function (it) { indexEntry(it.path, it.type, it.sha, it.size); });
+    S.truncated = !!data.truncated;
+  }
+  if (S.selDir && !S.entries.has(S.selDir)) {
+    var stillDir = Array.from(S.entries.values()).some(function (v) { return v.type === "tree" && v.path === S.selDir; });
+    if (!stillDir) S.selDir = "";
+  }
+  paintTree();
+  refreshRemote();
+  renderRecent();
+  renderSaveShortcuts();
+  var fileCount = countFiles("");
+  $("connect-hint").textContent = "目录已展开：" + S.entries.size + " 个条目，其中存档文件 " + fileCount + " 个"
+    + (S.truncated ? "（仓库内容较多，深层目录请点左侧三角逐层展开）" : "") + "。";
+}
+function loadTreeShallowFallback() {
+  S.selDir = "";
+  return api("/repos/" + S.owner + "/" + S.repo + "/contents").then(function (arr) {
+    (arr || []).forEach(function (it) { indexEntry(it.path, it.type === "dir" ? "tree" : "blob", it.sha, it.size); });
+    S.truncated = true;
+    paintTree(); refreshRemote(); renderRecent();
+    $("connect-hint").textContent = "未能一次性展开仓库（可能是空仓库或路径过深），已按第一层显示。";
+  });
+}
+function indexEntry(path, type, sha, size) {
+  if (!path) return;
+  S.entries.set(path, { path: path, type: type, sha: sha, size: (typeof size === "number" ? size : undefined) });
+  var d = dirOf(path);
+  if (!S.children.has(d)) S.children.set(d, []);
+  var kids = S.children.get(d);
+  if (kids.indexOf(path) < 0) kids.push(path);
+}
+function countFiles(dir) {
+  var n = 0;
+  S.entries.forEach(function (v) {
+    if (v.type !== "blob") return;
+    if (dir === "" || v.path === dir || v.path.slice(0, dir.length + 1) === dir + "/") n++;
+  });
+  return n;
+}
+function subDirs(dir) {
+  var out = [];
+  var only = $("only-saves") && $("only-saves").checked;
+  S.entries.forEach(function (v) {
+    if (v.type !== "tree" || dirOf(v.path) !== dir) return;
+    if (only && countFiles(v.path) === 0) return;
+    out.push(v);
+  });
+  out.sort(function (a, b) { return a.path.localeCompare(b.path); });
+  return out;
+}
+function filesIn(dir) {
+  var out = [];
+  S.entries.forEach(function (v) { if (v.type === "blob" && dirOf(v.path) === dir) out.push(v); });
+  out.sort(function (a, b) { return a.path.localeCompare(b.path); });
+  return out;
+}
+if (!S.expanded) S.expanded = new Set();
+
+function paintTree() {
+  var host = $("tree");
+  host.textContent = "";
+  var rootRow = buildNode("", true);
+  host.appendChild(rootRow.self);
+  if (S.expanded.has("") || subDirs("").length) host.appendChild(extendBox(""));
+  if (!S.entries.size) {
+    var empty = document.createElement("div");
+    empty.className = "tree-empty";
+    empty.textContent = "这个分支还没有内容。导入存档上传成功后会自动创建目录。";
+    host.appendChild(empty);
+  }
+  paintTreeSelection();
+}
+function buildNode(dirPath, isRoot) {
+  var kids = subDirs(dirPath);
+  var self = document.createElement("div");
+  self.className = "tree-node";
+  self.tabIndex = 0;
+  self.dataset.path = dirPath;
+  var c1 = document.createElement("span"); c1.className = "tree-caret";
+  var c2 = document.createElement("span"); c2.className = "tree-ico";
+  var c3 = document.createElement("span"); c3.className = "tree-label";
+  var c4 = document.createElement("span"); c4.className = "tree-count";
+  c1.textContent = kids.length ? (S.expanded.has(dirPath) ? "▾" : "▸") : "·";
+  c2.textContent = isRoot ? "🏠" : "📁";
+  c3.textContent = isRoot ? "/ （仓库根目录）" : baseOf(dirPath);
+  var n = countFiles(dirPath);
+  c4.textContent = n ? n + " 存档" : (kids.length ? kids.length + " 目录" : "");
+  if (isRoot) c3.style.fontWeight = "700";
+  self.appendChild(c1); self.appendChild(c2); self.appendChild(c3); self.appendChild(c4);
+  self.addEventListener("click", function () { chooseDir(dirPath); });
+  self.addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); chooseDir(dirPath); } });
+  c1.addEventListener("click", function (ev) {
+    ev.stopPropagation();
+    if (!kids.length) return;
+    if (S.expanded.has(dirPath)) S.expanded.delete(dirPath); else S.expanded.add(dirPath);
+    paintTree();
+  });
+  return { self: self };
+}
+function extendBox(dirPath) {
+  var box = document.createElement("div");
+  box.className = "tree-children";
+  subDirs(dirPath).forEach(function (k) {
+    var child = buildNode(k.path, false);
+    box.appendChild(child.self);
+    if (S.expanded.has(k.path)) box.appendChild(extendBox(k.path));
+  });
+  return box;
+}
+function paintTreeSelection() {
+  document.querySelectorAll(".tree-node").forEach(function (n) {
+    n.classList.toggle("sel", (n.dataset.path || "") === S.selDir);
+  });
+  $("path-out").textContent = "/" + (S.selDir || "");
+}
+function chooseDir(dirPath) {
+  S.selDir = dirPath || "";
+  S.checked = new Set();
+  if (dirPath !== "") S.expanded.add(dirPath);
+  try { localStorage.setItem(LS_DIR, S.selDir); } catch (e) { }
+  pushRecent(S.selDir);
+  paintTree();
+  renderSaveShortcuts();
+  refreshRemote();
+  syncUploadBtn();
+  renderDefaultMsg();
+}
+function renderRecent() {
+  var host = $("recent-chips");
+  host.textContent = "";
+  var list = getRecent();
+  if (!list.length) {
+    var p = document.createElement("span");
+    p.className = "hint";
+    p.textContent = "还没有历史记录。勾选过一次存储位置后，这里会出现快捷入口。";
+    host.appendChild(p);
+    return;
+  }
+  list.forEach(function (p) {
+    var chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "repo-chip" + (p === S.selDir ? " active" : "");
+    chip.textContent = p === "" ? "/ （根目录）" : "/" + p;
+    chip.addEventListener("click", function () { chooseDir(p); });
+    host.appendChild(chip);
+  });
+}
+function getRecent() {
+  try { return JSON.parse(localStorage.getItem(LS_RECENT) || "[]"); } catch (e) { return []; }
+}
+function pushRecent(dir) {
+  var list = getRecent().filter(function (x) { return x !== dir; });
+  list.unshift(dir);
+  list = list.slice(0, 10);
+  try { localStorage.setItem(LS_RECENT, JSON.stringify(list)); } catch (e) { }
+  renderRecent();
+}
+
+/* SECTION: js-remote */
+function refreshRemote() {
+  var deep = $("deep-toggle").checked;
+  var dir = S.selDir;
+  var list = [];
+  if (deep) {
+    S.entries.forEach(function (v) {
+      if (v.type !== "blob") return;
+      if (dir === "" || v.path.slice(0, dir.length + 1) === dir + "/") list.push(v);
+    });
+  } else {
+    list = filesIn(dir);
+  }
+  list.sort(function (a, b) { return a.path.localeCompare(b.path); });
+  S.remote = list;
+  paintRemote();
+}
+function paintRemote() {
+  var host = $("remote-list");
+  var kw = $("filter-input").value.trim().toLowerCase();
+  host.textContent = "";
+  var shown = S.remote.filter(function (v) { return !kw || v.path.toLowerCase().indexOf(kw) >= 0; });
+  $("remote-count").textContent = shown.length + " 个存档" + (kw ? "（已筛选）" : "");
+  if (!S.owner) {
+    host.appendChild(emptyBox("🔌", "先在上方连接仓库，目录树出来后点选一个文件夹"));
+  } else if (!shown.length) {
+    host.appendChild(emptyBox("📂", "/" + (S.selDir || "") + " 下没有存档文件，可切换目录或勾选「含子目录」"));
+  }
+  shown.forEach(function (v) {
+    var row = make("tpl-remote-row", host);
+    row.dataset.sha = v.sha;
+    row.dataset.path = v.path;
+    row.querySelector(".row-name").textContent = baseOf(v.path);
+    row.querySelector('[data-role="size"]').textContent = fmtSize(v.size);
+    row.querySelector('[data-role="mtime"]').textContent = dirOf(v.path) === S.selDir ? "本目录" : "子目录内";
+    row.querySelector('[data-role="sha"]').textContent = "sha " + String(v.sha).slice(0, 8);
+    var big = row.querySelector('[data-role="big"]');
+    if (typeof v.size === "number" && v.size > 25 * 1048576) { big.textContent = "超 25MB"; big.className = "badge warn"; }
+    var ck = row.querySelector(".ck");
+    ck.checked = S.checked.has(v.path);
+    ck.addEventListener("change", function () {
+      if (ck.checked) S.checked.add(v.path); else S.checked.delete(v.path);
+      syncExportBtn();
+    });
+    row.querySelector(".row-x").addEventListener("click", function () { downloadOne(v); });
+  });
+  syncExportBtn();
+}
+function emptyBox(ico, text) {
+  var d = document.createElement("div");
+  d.className = "empty";
+  var i = document.createElement("span"); i.className = "em-ico"; i.textContent = ico;
+  var t = document.createElement("span"); t.textContent = text;
+  d.appendChild(i); d.appendChild(t);
+  return d;
+}
+function syncExportBtn() {
+  var n = S.checked.size;
+  $("btn-zip").disabled = S.busy || !n;
+  $("btn-one-by-one").disabled = S.busy || !n;
+  $("btn-delete").disabled = S.busy || !n || !S.token;
+  $("btn-zip").textContent = n ? "📦 打包 ZIP 下载 " + n + " 个" : "📦 打包 ZIP 下载所选";
+}
+function syncUploadBtn() {
+  var ok = !!S.owner && !!S.repo && S.staged.length > 0;
+  $("btn-upload").disabled = S.busy || !ok;
+}
+function checkedEntries() {
+  return S.remote.filter(function (v) { return S.checked.has(v.path); });
+}
+function downloadOne(entry) {
+  return api("/repos/" + S.owner + "/" + S.repo + "/git/blobs/" + entry.sha, { raw: true })
+    .then(function (u8) {
+      saveBlob(new Blob([u8], { type: "application/octet-stream" }), baseOf(entry.path));
+      log("export-log", "已下载 " + baseOf(entry.path) + "（" + fmtSize(u8.length) + "）", "ok");
+    })
+    .catch(function (e) { log("export-log", "下载失败 " + baseOf(entry.path) + "：" + e.message, "err"); toast("下载失败", "err"); });
+}
+function saveBlob(blob, name) {
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+}
+async function downloadAllOneByOne() {
+  var items = checkedEntries();
+  if (!items.length) return;
+  lock(true);
+  for (var i = 0; i < items.length; i++) {
+    await downloadOne(items[i]);
+    setBar("down-bar", (i + 1) / items.length);
+    await new Promise(function (r) { setTimeout(r, 400); });
+  }
+  toast("已触发 " + items.length + " 个下载，若被拦截请在浏览器允许下载多个文件", "ok");
+  lock(false);
+}
+async function downloadZip() {
+  var items = checkedEntries();
+  if (!items.length) return;
+  lock(true);
+  setBar("down-bar", 0);
+  try {
+    var collected = [];
+    for (var i = 0; i < items.length; i++) {
+      var u8 = await api("/repos/" + S.owner + "/" + S.repo + "/git/blobs/" + items[i].sha, { raw: true });
+      collected.push({ name: stripRepoPrefix(items[i].path), data: u8 });
+      setBar("down-bar", (i + 1) / (items.length + 1));
+      log("export-log", "已取回 " + items[i].path + " · " + fmtSize(u8.length), "info");
+    }
+    var zipName = (S.selDir ? baseOf(S.selDir) : S.repo) + "-saves-" + stampNum() + ".zip";
+    saveBlob(makeZip(collected), zipName);
+    setBar("down-bar", 1);
+    log("export-log", "已打包 " + collected.length + " 个存档 → " + zipName, "ok");
+    toast("ZIP 已生成并开始下载", "ok");
+  } catch (e) {
+    log("export-log", "打包失败：" + e.message, "err");
+    toast("打包失败：" + e.message, "err");
+  } finally {
+    lock(false);
+  }
+}
+function stripRepoPrefix(p) {
+  var dir = S.selDir;
+  if (dir && p.slice(0, dir.length + 1) === dir + "/") return p.slice(dir.length + 1);
+  return p;
+}
+
+/* SECTION: js-zip */
+var CRC_T = (function () {
+  var t = new Uint32Array(256);
+  for (var i = 0; i < 256; i++) { var c = i; for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); t[i] = c >>> 0; }
+  return t;
+})();
+function crc32(u8) {
+  var c = 0xFFFFFFFF;
+  for (var i = 0; i < u8.length; i++) c = CRC_T[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function dosStamp(d) {
+  var t = (d.getHours() << 11) | (d.getMinutes() << 5) | Math.floor(d.getSeconds() / 2);
+  var dt = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  return { time: t & 0xFFFF, date: dt & 0xFFFF };
+}
+function makeZip(items) {
+  var enc = new TextEncoder();
+  var d = dosStamp(new Date());
+  var parts = [], central = [], offset = 0, cdSize = 0;
+  items.forEach(function (it) {
+    var nb = enc.encode(it.name), size = it.data.length, crc = crc32(it.data);
+    var lh = new Uint8Array(30 + nb.length), lv = new DataView(lh.buffer);
+    lv.setUint32(0, 0x04034b50, true); lv.setUint16(4, 20, true); lv.setUint16(6, 0x0800, true);
+    lv.setUint16(8, 0, true); lv.setUint16(10, d.time, true); lv.setUint16(12, d.date, true);
+    lv.setUint32(14, crc, true); lv.setUint32(18, size, true); lv.setUint32(22, size, true);
+    lv.setUint16(26, nb.length, true); lv.setUint16(28, 0, true);
+    lh.set(nb, 30);
+    var ch = new Uint8Array(46 + nb.length), cv = new DataView(ch.buffer);
+    cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true);
+    cv.setUint16(8, 0x0800, true); cv.setUint16(12, d.time, true); cv.setUint16(14, d.date, true);
+    cv.setUint32(16, crc, true); cv.setUint32(20, size, true); cv.setUint32(24, size, true);
+    cv.setUint16(28, nb.length, true); cv.setUint32(42, offset, true);
+    ch.set(nb, 46);
+    parts.push(lh, it.data); central.push(ch);
+    offset += lh.length + size; cdSize += ch.length;
+  });
+  var eo = new Uint8Array(22), ev = new DataView(eo.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(8, items.length, true); ev.setUint16(10, items.length, true);
+  ev.setUint32(12, cdSize, true); ev.setUint32(16, offset, true);
+  return new Blob(parts.concat(central).concat([eo]), { type: "application/zip" });
+}
+/* SECTION: js-import */
+function currentTarget() {
+  var prefix = addSlash($("prefix-input").value);
+  if (S.selDir && prefix) return S.selDir + "/" + prefix;
+  return S.selDir || prefix || "";
+}
+function findBlob(dir, name) {
+  var hit = null;
+  S.entries.forEach(function (v) { if (v.type === "blob" && dirOf(v.path) === dir && baseOf(v.path) === name) hit = v; });
+  return hit;
+}
+async function addFiles(list) {
+  var arr = Array.isArray(list) ? list : [];
+  if (!arr.length) return;
+  var seen = new Set(S.staged.map(function (s) { return s.rel + "@" + s.file.size; }));
+  var added = 0;
+  arr.forEach(function (it) {
+    if (!it || !it.file) return;
+    var key = it.rel + "@" + it.file.size;
+    if (seen.has(key)) return;
+    seen.add(key);
+    S.staged.push(it); added++;
+  });
+  renderStaged();
+  if (added) toast("已加入 " + added + " 个文件，共 " + S.staged.length + " 个待上传", "ok");
+}
+function renderStaged() {
+  var host = $("staged-list");
+  host.textContent = "";
+  var target = currentTarget();
+  var total = 0;
+  if (!S.staged.length) {
+    host.appendChild(emptyBox("🗂", "还没有选择存档文件。选好文件、在左侧勾选存储位置，就能一键导入仓库。"));
+  }
+  S.staged.forEach(function (st, idx) {
+    total += st.file.size || 0;
+    var row = make("tpl-staged-row", host);
+    row.querySelector(".row-name").textContent = baseOf(st.rel);
+    row.querySelector('[data-role="size"]').textContent = fmtSize(st.file.size);
+    row.querySelector('[data-role="relpath"]').textContent = target ? jp(target, st.rel) : st.rel;
+    var tag = row.querySelector('[data-role="tag"]');
+    var dup = findBlob(dirOf(jp(target, st.rel)), baseOf(st.rel));
+    if (dup) { tag.textContent = "仓库已存在"; tag.className = "badge warn"; }
+    st.path = jp(target, st.rel);
+    var x = row.querySelector(".row-x");
+    x.textContent = "✕";
+    x.addEventListener("click", function () { S.staged.splice(idx, 1); renderStaged(); });
+  });
+  $("staged-count").textContent = S.staged.length + " 个文件 · " + fmtSize(total);
+  syncUploadBtn();
+  renderDefaultMsg();
+}
+function renderDefaultMsg() {
+  var box = $("commit-msg");
+  if (box.dataset.dirty === "1") return;
+  var dir = currentTarget();
+  box.value = "导入游戏存档 → " + (dir || "/") + "（" + S.staged.length + " 个文件 · " + hms() + "）";
+}
+function walkEntry(entry, prefix, out) {
+  return new Promise(function (resolve) {
+    if (entry.isFile) {
+      entry.file(function (f) { out.push({ file: f, rel: prefix + f.name }); resolve(); }, function () { resolve(); });
+    } else if (entry.isDirectory) {
+      var reader = entry.createReader();
+      var collected = [];
+      var readBatch = function () {
+        reader.readEntries(function (batch) {
+          if (!batch.length) {
+            var chain = Promise.resolve();
+            collected.forEach(function (kid) {
+              chain = chain.then(function () { return walkEntry(kid, prefix + entry.name + "/", out); });
+            });
+            chain.then(resolve);
+          } else { collected = collected.concat(Array.prototype.slice.call(batch)); readBatch(); }
+        }, function () { resolve(); });
+      };
+      readBatch();
+    } else resolve();
+  });
+}
+async function fromDataTransfer(dt) {
+  var out = [];
+  var entries = [];
+  if (dt.items && dt.items.length) {
+    Array.prototype.slice.call(dt.items).forEach(function (it) {
+      if (it.kind !== "file") return;
+      var e = it.webkitGetAsEntry && it.webkitGetAsEntry();
+      if (e) entries.push(e);
+    });
+  }
+  if (entries.length) {
+    for (var i = 0; i < entries.length; i++) await walkEntry(entries[i], "", out);
+    return out;
+  }
+  if (dt.files && dt.files.length) {
+    Array.prototype.slice.call(dt.files).forEach(function (f) { out.push({ file: f, rel: f.webkitRelativePath || f.name }); });
+  }
+  return out;
+}
+function buildPlan() {
+  var target = currentTarget();
+  var policy = "overwrite";
+  var picked = document.querySelector('input[name="conflict"]:checked');
+  if (picked) policy = picked.value;
+  var plan = [], skipped = [];
+  S.staged.forEach(function (st) {
+    var dir = dirOf(st.rel) ? jp(target, dirOf(st.rel)) : target;
+    var name = baseOf(st.rel);
+    if (findBlob(dir, name)) {
+      if (policy === "skip") { skipped.push({ path: jp(dir, name), why: "同名已存在，已跳过" }); return; }
+      if (policy === "stamp") {
+        var dot = name.lastIndexOf(".");
+        name = dot > 0 ? name.slice(0, dot) + "-" + stampNum() + name.slice(dot) : name + "-" + stampNum();
+      }
+    }
+    plan.push({ file: st.file, path: jp(dir, name) });
+  });
+  return { plan: plan, skipped: skipped, target: target, policy: policy };
+}
+async function upload() {
+  if (!S.owner || !S.repo) { toast("请先在上方连接仓库", "err"); return; }
+  if (!S.staged.length) { toast("还没有选择要导入的存档文件", "err"); return; }
+  if (!requireToken("upload")) return;
+  var made = buildPlan();
+  if (!made.plan.length) { toast("按当前冲突策略没有需要上传的文件", "err"); return; }
+  lock(true);
+  setBar("up-bar", 0.02);
+  var branch = String(S.ref).split("/").map(encodeURIComponent).join("/");
+  try {
+    var commitSha = "", baseTree = "";
+    var isEmpty = false;
+    try {
+      var ref = await api("/repos/" + S.owner + "/" + S.repo + "/git/ref/heads/" + branch);
+      commitSha = ref.object.sha;
+      var commit = await api("/repos/" + S.owner + "/" + S.repo + "/git/commits/" + commitSha);
+      baseTree = commit.tree.sha;
+    } catch (e) {
+      if (e.status === 404) { isEmpty = true; log("upload-log", "分支为空仓库，将创建首个提交", "info"); } else throw e;
+    }
+    var tree = [];
+    for (var i = 0; i < made.plan.length; i++) {
+      var p = made.plan[i];
+      if (p.file.size > 100 * 1048576) throw new Error("文件过大（GitHub 上限 100MB）：" + baseOf(p.path));
+      var u8 = await blobToU8(p.file);
+      var blobSha = u8.length ? (await api("/repos/" + S.owner + "/" + S.repo + "/git/blobs", { method: "POST", body: { content: bufferToBase64(u8), encoding: "base64" } })).sha : "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391";
+      tree.push({ path: p.path, mode: "100644", type: "blob", sha: blobSha });
+      setBar("up-bar", 0.02 + 0.78 * ((i + 1) / made.plan.length));
+      log("upload-log", "已编码 " + p.path + " · " + fmtSize(p.file.size), "info");
+    }
+    made.skipped.forEach(function (s) { log("upload-log", s.path + " · " + s.why, "info"); });
+    var newTree = await api("/repos/" + S.owner + "/" + S.repo + "/git/trees", {
+      method: "POST", body: baseTree ? { base_tree: baseTree, tree: tree } : { tree: tree }
+    });
+    var msg = $("commit-msg").value.trim() || ("导入游戏存档 → " + (made.target || "/"));
+    var newCommit = await api("/repos/" + S.owner + "/" + S.repo + "/git/commits", {
+      method: "POST",
+      body: commitSha ? { message: msg, parents: [commitSha], tree: newTree.sha } : { message: msg, tree: newTree.sha }
+    });
+    if (isEmpty) {
+      await api("/repos/" + S.owner + "/" + S.repo + "/git/refs", { method: "POST", body: { ref: "refs/heads/" + S.ref, sha: newCommit.sha } });
+    } else {
+      await api("/repos/" + S.owner + "/" + S.repo + "/git/refs/heads/" + branch, { method: "PATCH", body: { sha: newCommit.sha } });
+    }
+    setBar("up-bar", 1);
+    S.commitUrl = newCommit.html_url || "";
+    log("upload-log", "提交成功 " + String(newCommit.sha).slice(0, 8) + "，写入 " + tree.length + " 个文件到 /" + (made.target || ""), "ok");
+    if (S.commitUrl) log("upload-log", "可在 GitHub 查看：" + S.commitUrl, "ok");
+    toast("已导入仓库：" + tree.length + " 个存档文件", "ok");
+    S.staged = [];
+    $("prefix-input").value = "";
+    $("commit-msg").dataset.dirty = "0";
+    await loadTree(S.ref);
+    renderStaged();
+  } catch (e) {
+    setBar("up-bar", 0);
+    log("upload-log", "上传失败：" + e.message, "err");
+    toast("上传失败：" + e.message, "err");
+    if (e.status === 401 || e.status === 403) openTokenModal();
+  } finally {
+    lock(false);
+    renderStaged();
+  }
+}
+
+/* SECTION: js-delete */
+function confirmBox(title, text) {
+  return new Promise(function (resolve) {
+    $("confirm-title").textContent = title;
+    $("confirm-text").textContent = text;
+    $("confirm-modal").classList.remove("hidden");
+    var done = function (val) {
+      $("confirm-modal").classList.add("hidden");
+      $("btn-confirm-yes").removeEventListener("click", yes);
+      $("btn-confirm-no").removeEventListener("click", no);
+      $("btn-confirm-close").removeEventListener("click", no);
+      resolve(val);
+    };
+    var yes = function () { done(true); };
+    var no = function () { done(false); };
+    $("btn-confirm-yes").addEventListener("click", yes);
+    $("btn-confirm-no").addEventListener("click", no);
+    $("btn-confirm-close").addEventListener("click", no);
+  });
+}
+async function deleteSelected() {
+  var items = checkedEntries();
+  if (!items.length) return;
+  if (!requireToken("delete")) return;
+  var ok = await confirmBox("删除仓库存档",
+    "将从 " + S.owner + "/" + S.repo + " 的 " + S.ref + " 分支删除 " + items.length + " 个文件。这是一次 Git 提交，历史里仍可找回，但仓库当前版本会消失。确定继续？");
+  if (!ok) return;
+  lock(true);
+  var branch = String(S.ref).split("/").map(encodeURIComponent).join("/");
+  try {
+    var ref = await api("/repos/" + S.owner + "/" + S.repo + "/git/ref/heads/" + branch);
+    var commit = await api("/repos/" + S.owner + "/" + S.repo + "/git/commits/" + ref.object.sha);
+    var tree = items.map(function (v) { return { path: v.path, mode: "100644", type: "blob", sha: null }; });
+    var newTree = await api("/repos/" + S.owner + "/" + S.repo + "/git/trees", { method: "POST", body: { base_tree: commit.tree.sha, tree: tree } });
+    var newCommit = await api("/repos/" + S.owner + "/" + S.repo + "/git/commits", {
+      method: "POST", body: { message: "删除存档 " + items.length + " 个（" + (S.selDir || "/") + "）", parents: [ref.object.sha], tree: newTree.sha }
+    });
+    await api("/repos/" + S.owner + "/" + S.repo + "/git/refs/heads/" + branch, { method: "PATCH", body: { sha: newCommit.sha } });
+    log("export-log", "已删除 " + items.length + " 个文件，提交 " + String(newCommit.sha).slice(0, 8), "ok");
+    toast("已删除并提交", "ok");
+    S.checked = new Set();
+    await loadTree(S.ref);
+  } catch (e) {
+    log("export-log", "删除失败：" + e.message, "err");
+    toast("删除失败：" + e.message, "err");
+  } finally {
+    lock(false);
+  }
+}
+
+/* SECTION: js-shortcuts */
+var SAVE_SKIP = /^(assets|cloudflare-worker|node_modules|\.github|docs|dist|game\d+|saves?\.backup)$/i;
+function renderSaveShortcuts() {
+  var host = $("save-shortcuts");
+  if (!host) return;
+  host.textContent = "";
+  var list = [];
+  subDirs("").forEach(function (top) {
+    if (SAVE_SKIP.test(top.path) || countSaves(top.path) === 0) return;
+    list.push(top.path);
+    subDirs(top.path).forEach(function (kid) {
+      if (countSaves(kid.path) > 0) list.push(kid.path);
+    });
+  });
+  if (!list.length) {
+    var p = document.createElement("span");
+    p.className = "hint";
+    p.textContent = "还没有在仓库里找到含存档文件的目录。上传一次存档后，这里会出现按游戏分组的快捷入口。";
+    host.appendChild(p);
+    return;
+  }
+  list.slice(0, 24).forEach(function (path) {
+    var chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "repo-chip" + (path === S.selDir ? " active" : "");
+    chip.textContent = "/" + path + " · " + countSaves(path) + " 个存档";
+    chip.addEventListener("click", function () {
+      chooseDir(path);
+      toast("存储位置已切到 /" + path, "ok");
+    });
+    host.appendChild(chip);
+  });
+}
+
+/* SECTION: js-events */
+function switchTab(which) {
+  var isImport = which === "import";
+  $("tab-import").classList.toggle("active", isImport);
+  $("tab-export").classList.toggle("active", !isImport);
+  $("panel-import").classList.toggle("hidden", !isImport);
+  $("panel-export").classList.toggle("hidden", isImport);
+  if (!isImport) refreshRemote();
+}
+function bindEvents() {
+  $("btn-connect").addEventListener("click", function () { connect(); });
+  $("repo-input").addEventListener("keydown", function (ev) { if (ev.key === "Enter") connect(); });
+  $("branch-select").addEventListener("change", function () {
+    S.ref = this.value;
+    lock(true); loadTree(S.ref).catch(function (e) { toast(e.message, "err"); }).then(function () { lock(false); });
+  });
+  $("sub-input").addEventListener("change", function () { chooseDir(addSlash(this.value)); });
+  $("btn-refreshtree").addEventListener("click", function () {
+    lock(true); loadTree(S.ref).catch(function (e) { toast(e.message, "err"); }).then(function () { lock(false); });
+  });
+  $("btn-newdir").addEventListener("click", function () {
+    switchTab("import");
+    $("prefix-input").focus();
+    toast("Git 不保存空目录：在这里填新目录名，上传后会自动创建", "ok");
+  });
+  $("only-saves").addEventListener("change", paintTree);
+  $("token-chip").addEventListener("click", openTokenModal);
+  $("btn-token-close").addEventListener("click", function () { $("token-modal").classList.add("hidden"); });
+  $("btn-token-save").addEventListener("click", saveToken);
+  $("btn-token-clear").addEventListener("click", clearToken);
+  $("tab-import").addEventListener("click", function () { switchTab("import"); });
+  $("tab-export").addEventListener("click", function () { switchTab("export"); });
+
+  $("btn-files").addEventListener("click", function () { $("picker-files").click(); });
+  $("btn-dir").addEventListener("click", function () { $("picker-dir").click(); });
+  $("btn-clear-files").addEventListener("click", function () { S.staged = []; renderStaged(); });
+  $("picker-files").addEventListener("change", function () {
+    addFiles(Array.prototype.slice.call(this.files || []).map(function (f) { return { file: f, rel: f.webkitRelativePath || f.name }; }));
+    this.value = "";
+  });
+  $("picker-dir").addEventListener("change", function () {
+    addFiles(Array.prototype.slice.call(this.files || []).map(function (f) { return { file: f, rel: f.webkitRelativePath || f.name }; }));
+    this.value = "";
+  });
+  var drop = $("drop");
+  ["dragenter", "dragover"].forEach(function (t) {
+    drop.addEventListener(t, function (ev) { ev.preventDefault(); drop.classList.add("over"); });
+  });
+  ["dragleave", "drop"].forEach(function (t) {
+    drop.addEventListener(t, function (ev) { ev.preventDefault(); drop.classList.remove("over"); });
+  });
+  drop.addEventListener("drop", async function (ev) {
+    ev.preventDefault();
+    var list = await fromDataTransfer(ev.dataTransfer || {});
+    if (!list.length) { toast("没有识别到可上传的文件", "err"); return; }
+    addFiles(list);
+  });
+  $("prefix-input").addEventListener("input", function () { renderStaged(); });
+  $("commit-msg").addEventListener("input", function () { this.dataset.dirty = "1"; });
+  document.querySelectorAll('input[name="conflict"]').forEach(function (r) {
+    r.addEventListener("change", function () {
+      document.querySelectorAll("#conflict-opts .opt").forEach(function (o) { o.classList.remove("sel"); });
+      r.closest(".opt").classList.add("sel");
+      renderStaged();
+    });
+  });
+  $("btn-upload").addEventListener("click", upload);
+  $("deep-toggle").addEventListener("change", refreshRemote);
+  $("filter-input").addEventListener("input", paintRemote);
+  $("btn-select-all").addEventListener("click", function () {
+    var kw = $("filter-input").value.trim().toLowerCase();
+    S.remote.filter(function (v) { return !kw || v.path.toLowerCase().indexOf(kw) >= 0; })
+      .forEach(function (v) { S.checked.add(v.path); });
+    paintRemote();
+  });
+  $("btn-select-none").addEventListener("click", function () { S.checked = new Set(); paintRemote(); });
+  $("btn-zip").addEventListener("click", downloadZip);
+  $("btn-one-by-one").addEventListener("click", downloadAllOneByOne);
+  $("btn-delete").addEventListener("click", deleteSelected);
+}
+
+/* SECTION: js-init */
+/* SECTION: js-selfhost */
+var SAVE_EXT = ["json", "sav", "save", "dat", "bak", "txt", "xml", "profile", "state"];
+function countSaves(dir) {
+  var n = 0;
+  S.entries.forEach(function (v) {
+    if (v.type !== "blob") return;
+    if (dir !== "" && v.path.slice(0, dir.length + 1) !== dir + "/") return;
+    if (SAVE_EXT.indexOf(extOf(v.path)) >= 0) n++;
+  });
+  return n;
+}
+async function detectRepoFromHost() {
+  try {
+    var h = (location.hostname || "").toLowerCase();
+    var m = h.match(/^([a-z0-9_-]+)\.github\.io$/);
+    if (!m) return "";
+    var user = m[1];
+    var segs = (location.pathname || "").split("/").filter(Boolean);
+    var first = segs.length > 1 ? segs[0] : "";
+    if (first) {
+      try {
+        var hit = await api("/repos/" + user + "/" + first);
+        if (hit && hit.full_name) return user + "/" + hit.name;
+      } catch (e) { /* 第一段不是仓库名，说明是站内子目录 */ }
+    }
+    return user + "/" + (user + ".github.io");
+  } catch (e) { return ""; }
+}
+async function init() {
+  paintTokenState();
+  renderRecent();
+  renderSaveShortcuts();
+  renderStaged();
+  refreshRemote();
+  bindEvents();
+  var detected = await detectRepoFromHost();
+  var saved = "";
+  try { saved = localStorage.getItem(LS_REPO) || ""; } catch (e) { saved = ""; }
+  var target = saved || detected || DEFAULT_REPO;
+  $("repo-input").value = "https://github.com/" + target;
+  $("source-repo").textContent = target;
+  $("source-chip").title = (detected && target === detected)
+    ? "由访问域名 https://" + location.hostname + " 自动识别，可直接在上方改仓库"
+    : "当前手动指定的仓库";
+  $("connect-hint").textContent = (detected && target === detected)
+    ? "已按访问域名识别本页所在仓库 " + target + "，正在自动连接…"
+    : "正在自动连接 " + target + " …";
+  await connect(true);
+  try {
+    var last = localStorage.getItem(LS_DIR) || "";
+    if (last && !S.selDir) {
+      var hit = Array.from(S.entries.values()).some(function (v) { return v.type === "tree" && v.path === last; });
+      if (hit) { chooseDir(last); toast("已回到上次使用的存储位置 /" + last, "ok"); }
+    }
+  } catch (e) { /* 恢复历史位置失败则保持根目录 */ }
+}
+document.addEventListener("DOMContentLoaded", init);
+/* SECTION: js-end */
+/* 脚本在后续分块中补齐 */
+</script>
+</body>
+</html>
