@@ -2,587 +2,635 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>钓鱼乐园 Fishing Paradise</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>钓鱼乐园 · 第一人称 | FISHING PARADISE</title>
 <style>
-  :root{
-    --bg:#0b1b2b; --panel:#11283d; --panel2:#0d2032; --line:#7fd1ff;
-    --gold:#ffd76a; --txt:#e8f4ff; --muted:#8fb3cc; --danger:#ff6b6b;
-    --ok:#7ee0a3;
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#0b2a3d; font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; }
+  #wrap { position:fixed; inset:0; }
+  #cvs { display:block; width:100%; height:100%; touch-action:none; cursor:crosshair; }
+
+  /* ===== HUD ===== */
+  #hud { position:absolute; top:12px; left:12px; display:flex; gap:10px; flex-wrap:wrap; z-index:10; pointer-events:none; }
+  .chip { background:rgba(8,28,45,.72); color:#dff3ff; border:1px solid rgba(120,200,255,.35); border-radius:12px; padding:6px 12px; font-size:13px; backdrop-filter:blur(4px); box-shadow:0 2px 8px rgba(0,0,0,.3); }
+  .chip b { color:#ffd866; font-weight:700; }
+  .chip .lb { color:#ff9d5c; font-weight:700; }
+
+  #topBar { position:absolute; top:10px; right:12px; display:flex; gap:8px; z-index:12; }
+  .btn { pointer-events:auto; background:rgba(8,28,45,.78); color:#e6f6ff; border:1px solid rgba(120,200,255,.4); border-radius:10px; padding:7px 12px; font-size:13px; cursor:pointer; backdrop-filter:blur(4px); box-shadow:0 2px 6px rgba(0,0,0,.3); }
+  .btn:hover { background:rgba(20,50,75,.9); }
+  .btn.primary { background:#2f7ea8; border-color:#5fb6e0; }
+  .btn.danger { color:#ffc0b8; border-color:rgba(255,120,100,.5); }
+
+  /* ===== 提示 ===== */
+  #prompt { position:absolute; top:34%; left:50%; transform:translate(-50%,-50%); z-index:11; color:#fff; font-size:26px; font-weight:800; text-align:center; text-shadow:0 2px 12px rgba(0,0,0,.8); pointer-events:none; opacity:0; transition:opacity .25s; letter-spacing:2px; }
+  #prompt.show { opacity:1; }
+  #subPrompt { position:absolute; top:46%; left:50%; transform:translate(-50%,0); z-index:11; color:#cdeeff; font-size:15px; text-align:center; text-shadow:0 1px 8px rgba(0,0,0,.8); pointer-events:none; opacity:0; transition:opacity .25s; }
+  #subPrompt.show { opacity:1; }
+
+  /* ===== 收线对抗条 ===== */
+  #fight { position:absolute; left:50%; bottom:130px; transform:translateX(-50%); width:min(340px,80%); z-index:11; display:none; }
+  #fight.show { display:block; }
+  #fightLabel { color:#fff; font-size:13px; margin-bottom:5px; text-align:center; text-shadow:0 1px 6px rgba(0,0,0,.8); }
+  #fightTrack { height:16px; border-radius:9px; background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.35); overflow:hidden; position:relative; }
+  #fightFill { height:100%; width:0%; background:linear-gradient(90deg,#ff5a3c,#ffd866 50%,#4cd97b); border-radius:8px; transition:width .08s linear; }
+  #fightMark { position:absolute; top:-3px; bottom:-3px; width:3px; background:#fff; box-shadow:0 0 6px #fff; left:50%; }
+
+  /* ===== 排行榜 ===== */
+  #leaderboard { position:absolute; top:56px; right:12px; width:250px; background:rgba(8,28,45,.82); border:1px solid rgba(120,200,255,.35); border-radius:14px; color:#e6f6ff; z-index:11; backdrop-filter:blur(6px); box-shadow:0 4px 20px rgba(0,0,0,.4); overflow:hidden; }
+  #lbHead { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:rgba(0,0,0,.25); }
+  #lbHead .t { font-weight:800; font-size:14px; }
+  #lbLive { font-size:11px; color:#9fe8a0; }
+  #lbLive.off { color:#ff9d9d; }
+  #lbList { max-height:340px; overflow-y:auto; }
+  .lb-row { display:flex; align-items:center; gap:8px; padding:7px 12px; font-size:13px; border-top:1px solid rgba(255,255,255,.06); }
+  .lb-row .rk { width:22px; text-align:center; color:#9cc9e6; font-weight:700; }
+  .lb-row.top .rk { color:#ffd866; }
+  .lb-row .nm { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .lb-row .sc { color:#ffd866; font-weight:700; }
+  .lb-row.me { background:rgba(47,126,168,.35); }
+  #lbEmpty { padding:16px; text-align:center; color:#9cc9e6; font-size:13px; }
+
+  /* ===== 设置 ===== */
+  #settingsOverlay { position:fixed; inset:0; background:rgba(4,16,26,.7); display:none; align-items:center; justify-content:center; z-index:50; }
+  #settingsOverlay.show { display:flex; }
+  #settingsBox { background:#0e3a52; color:#e6f6ff; border:1px solid rgba(120,200,255,.4); border-radius:16px; width:min(400px,90%); padding:20px; box-shadow:0 10px 40px rgba(0,0,0,.6); }
+  #settingsBox h2 { font-size:18px; margin-bottom:4px; }
+  #settingsBox .sub { font-size:12px; color:#9cc9e6; margin-bottom:14px; }
+  #settingsBox label { display:block; font-size:13px; margin:10px 0 4px; color:#cdeeff; }
+  #settingsBox input { width:100%; padding:9px 11px; border-radius:8px; border:1px solid rgba(120,200,255,.4); background:rgba(0,0,0,.3); color:#fff; font-size:14px; }
+  #settingsBox input:focus { outline:none; border-color:#5fb6e0; }
+  #settingsBox .row { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  #settingsBox .row .btn { flex:1; min-width:100px; text-align:center; }
+  #setNote { font-size:12px; color:#ffd866; margin-top:10px; min-height:16px; }
+  #settingsBox .tip { font-size:11px; color:#8fb8d0; margin-top:10px; line-height:1.5; }
+
+  #toast { position:absolute; left:50%; bottom:20px; transform:translateX(-50%); background:rgba(8,28,45,.9); color:#dff3ff; border:1px solid rgba(120,200,255,.4); border-radius:10px; padding:9px 16px; font-size:14px; z-index:60; opacity:0; transition:opacity .25s; pointer-events:none; }
+  #toast.show { opacity:1; }
+
+  /* ===== 移动端排行榜抽屉 ===== */
+  @media (max-width:760px) {
+    #leaderboard { top:auto; right:0; bottom:0; left:0; width:auto; border-radius:14px 14px 0 0; transform:translateY(calc(100% - 34px)); transition:transform .3s; }
+    #leaderboard.open { transform:translateY(0); }
+    #lbList { max-height:220px; }
+    #lbHandle { display:block; text-align:center; color:#9cc9e6; font-size:12px; padding:2px; cursor:pointer; }
   }
-  *{box-sizing:border-box; margin:0; padding:0;}
-  html,body{height:100%;}
-  body{
-    background:radial-gradient(1200px 600px at 50% -10%, #163a57, #0b1b2b 70%);
-    color:var(--txt);
-    font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-    overflow:hidden;
-  }
-  #app{display:flex; flex-direction:column; height:100%;}
-  header{
-    display:flex; align-items:center; gap:12px;
-    padding:10px 16px; background:rgba(10,26,40,.85); border-bottom:1px solid #1c3a55;
-  }
-  .logo{display:flex; align-items:center; gap:10px; font-weight:800; font-size:18px;}
-  .logo .fish{font-size:22px;}
-  .grow{flex:1;}
-  .hud{display:flex; gap:14px; font-size:13px;}
-  .hud b{color:var(--gold);}
-  .btn{
-    border:1px solid #2c5578; background:linear-gradient(#1a3b58,#122c42);
-    color:var(--txt); padding:6px 14px; border-radius:8px; cursor:pointer;
-    font-size:13px; transition:.15s;
-  }
-  .btn:hover{background:#1d4362; border-color:#3a6b96;}
-  .btn.primary{background:linear-gradient(#0f7a54,#0a5c3f); border-color:#1aa06c;}
-  .btn.danger{background:linear-gradient(#7a2430,#591b22); border-color:#a33;}
-  .btn.ghost{background:transparent; border-color:#24425f;}
-  .iconbtn{
-    width:36px; height:36px; border-radius:8px; border:1px solid #2c5578;
-    background:#122c42; color:var(--txt); font-size:18px; cursor:pointer; line-height:1;
-  }
-  #wrap{flex:1; display:flex; position:relative; min-height:0;}
-  #stage{flex:1; position:relative; min-width:0;}
-  canvas{display:block; width:100%; height:100%;}
-  /* HUD overlays on stage */
-  .pill{
-    position:absolute; top:12px; padding:6px 12px; border-radius:20px;
-    background:rgba(8,22,36,.75); border:1px solid #1f4160; font-size:13px;
-  }
-  #baitPill{left:12px;}
-  #bestPill{right:12px;}
-  #leaderboard{
-    width:300px; background:rgba(9,22,36,.94); border-left:1px solid #1f4160;
-    display:flex; flex-direction:column; overflow:hidden;
-  }
-  #lbHead{padding:12px 14px; font-weight:800; border-bottom:1px solid #1f4160; display:flex; align-items:center; gap:8px;}
-  #lbHead .live{color:var(--ok); font-size:11px; font-weight:600;}
-  #lbList{flex:1; overflow-y:auto; padding:8px;}
-  .lbRow{display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; margin-bottom:4px;}
-  .lbRow.me{background:#1a3f2c; border:1px solid #2e7d54;}
-  .lbRow:not(.me){background:#0d2032; border:1px solid #17324b;}
-  .lbRank{width:24px; text-align:center; font-weight:800; color:var(--gold);}
-  .lbRank.g1{color:#ffd700}.lbRank.g2{color:#c0c0c0}.lbRank.g3{color:#cd7f32}
-  .lbName{flex:1; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  .lbScore{font-weight:800; color:var(--gold);}
-  .lbStat{font-size:11px; color:var(--muted); margin-left:6px;}
-  #lbEmpty{color:var(--muted); font-size:13px; padding:16px; text-align:center;}
-  /* modal */
-  .overlay{
-    position:fixed; inset:0; background:rgba(3,10,18,.72); backdrop-filter:blur(3px);
-    display:none; align-items:center; justify-content:center; z-index:50; padding:16px;
-  }
-  .overlay.open{display:flex;}
-  .modal{
-    width:min(460px,100%); background:var(--panel); border:1px solid #2a4c6d; border-radius:14px;
-    padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.5);
-  }
-  .modal h3{font-size:17px; margin-bottom:16px; display:flex; align-items:center; gap:8px;}
-  .field{margin-bottom:14px;}
-  .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px;}
-  .field input{
-    width:100%; padding:9px 12px; border-radius:8px; border:1px solid #2c5578;
-    background:#0a1a2a; color:var(--txt); font-size:14px;
-  }
-  .field input:focus{outline:none; border-color:var(--line);}
-  .field .hint{font-size:11px; color:var(--muted); margin-top:5px; line-height:1.5;}
-  .row{display:flex; gap:10px; margin-top:6px;}
-  .row .btn{flex:1;}
-  .note{font-size:11px; color:var(--muted); margin-top:12px; line-height:1.6;}
-  /* bite prompt */
-  #prompt{
-    position:absolute; left:50%; top:40%; transform:translate(-50%,-50%);
-    display:none; font-size:20px; font-weight:900; color:#fff; text-shadow:0 0 12px #ff9; z-index:20;
-  }
-  #prompt .go{color:#ffd76a;}
-  #prompt.show{display:block; animation:pulse .5s infinite alternate;}
-  @keyframes pulse{from{transform:translate(-50%,-50%) scale(1)}to{transform:translate(-50%,-50%) scale(1.08)}}
-  #toast{
-    position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:80;
-    background:rgba(8,22,36,.95); border:1px solid #2a5578; padding:10px 18px; border-radius:20px;
-    font-size:13px; opacity:0; transition:opacity .3s; pointer-events:none; max-width:90vw; text-align:center;
-  }
-  #toast.show{opacity:1;}
-  @media(max-width:760px){ #leaderboard{width:100%; position:absolute; right:0; top:0; bottom:0; z-index:30; transform:translateX(100%); transition:.25s;} #leaderboard.open{transform:none;} #lbToggle{display:block!important;} }
-  #lbToggle{display:none;}
+  #lbHandle { display:none; }
+  @media (min-width:761px) { #lbHandle { display:none; } }
 </style>
 </head>
 <body>
-<div id="app">
-  <header>
-    <div class="logo"><span class="fish">🐟</span><span>钓鱼乐园</span></div>
-    <div class="grow"></div>
-    <div class="hud">
-      <span>🪙 <b id="hCoins">0</b></span>
-      <span>🐠 <b id="hScore">0</b></span>
-      <span>最佳 <b id="hBest">0</b></span>
-    </div>
-    <button class="btn ghost" id="lbToggle" onclick="toggleLB()">🏆 排行</button>
-    <button class="btn" onclick="openSettings()">⚙️ 设置</button>
-    <button class="btn danger" onclick="handleExit()">退出</button>
-  </header>
+<div id="wrap">
+  <canvas id="cvs"></canvas>
 
-  <div id="wrap">
-    <div id="stage">
-      <canvas id="cvs"></canvas>
-      <div class="pill" id="baitPill">🎣 鱼饵：<b id="baitNum">∞</b></div>
-      <div class="pill" id="bestPill" style="display:none">🏆 最高分 <b id="bestNum">0</b></div>
-      <div id="prompt"><span class="go">咬钩了！</span><br>快收杆！</div>
-    </div>
-
-    <aside id="leaderboard">
-      <div id="lbHead">🏆 实时排行榜 <span class="live" id="lbLive">● 连接中</span></div>
-      <div id="lbList"><div id="lbEmpty">配置 GitHub Token 后即可查看/更新排行榜</div></div>
-    </aside>
+  <div id="hud">
+    <div class="chip">金币 <b id="hCoins">0</b></div>
+    <div class="chip">得分 <b id="hScore">0</b></div>
+    <div class="chip">最佳 <span class="lb" id="hBest">0</span></div>
+    <div class="chip" id="hFishes">🐟 <b id="hCount">0</b> 条</div>
   </div>
-</div>
 
-<div class="overlay" id="settingsOverlay">
-  <div class="modal">
-    <h3>⚙️ 设置</h3>
-    <div class="field">
-      <label>玩家名（用于存档到 Game5Saves/{玩家名}/save.json）</label>
-      <input id="inpUser" placeholder="输入一个玩家名，如 lh3778">
-    </div>
-    <div class="field">
-      <label>GitHub Token（用于自动存档到本仓库）</label>
-      <input id="inpToken" type="password" placeholder="ghp_… 或 github_pat_…" autocomplete="off">
-      <div class="hint">Token 只存在你的浏览器 localStorage，用于把存档/排行榜写进 YunYu-ca.github.io 仓库（需对仓库有 Contents 读写权限）。<b>请勿在公共设备上使用。</b></div>
-    </div>
-    <div class="row">
-      <button class="btn primary" onclick="saveConfig()">保存配置</button>
-      <button class="btn" onclick="pushSave()">立即保存存档</button>
-      <button class="btn" onclick="pullSave()">从云端恢复</button>
-    </div>
-    <div class="row">
-      <button class="btn" onclick="refreshLB()">刷新排行榜</button>
-      <button class="btn" onclick="closeSettings()">关闭</button>
-    </div>
-    <div class="note" id="setNote">当前状态：未配置 Token / 未登录</div>
+  <div id="topBar">
+    <button class="btn" id="btnSettings">⚙️ 设置</button>
+    <button class="btn danger" id="btnExit">退出</button>
   </div>
-</div>
 
-<div id="toast"></div>
+  <div id="prompt"></div>
+  <div id="subPrompt"></div>
+
+  <div id="fight">
+    <div id="fightLabel">保持拉力，别让鱼挣脱！</div>
+    <div id="fightTrack"><div id="fightFill"></div><div id="fightMark"></div></div>
+  </div>
+
+  <div id="leaderboard">
+    <div id="lbHandle" onclick="toggleLB()">▲ 实时排行榜（点此展开/收起）</div>
+    <div id="lbHead">
+      <span class="t">🏆 实时排行榜</span>
+      <span id="lbLive">● 实时</span>
+    </div>
+    <div id="lbList"></div>
+    <div id="lbEmpty" style="display:none;">暂无数据，配置 Token 后自动刷新</div>
+  </div>
+
+  <div id="settingsOverlay">
+    <div id="settingsBox">
+      <h2>⚙️ 游戏设置</h2>
+      <div class="sub">配置玩家名与 GitHub Token，实现云端自动存档与排行榜</div>
+      <label>玩家名（用于存档文件夹 Game5Saves/&lt;玩家名&gt;）</label>
+      <input id="inpUser" type="text" placeholder="例如 lh3778" autocomplete="off">
+      <label>GitHub Token（需对该仓库有 Contents 读写权限）</label>
+      <input id="inpToken" type="password" placeholder="ghp_xxxxxxxx" autocomplete="off">
+      <div class="row">
+        <button class="btn primary" onclick="saveSettings()">保存配置</button>
+        <button class="btn" onclick="saveNow()">立即保存存档</button>
+      </div>
+      <div class="row">
+        <button class="btn" onclick="loadCloud()">从云端恢复</button>
+        <button class="btn" onclick="refreshLB()">刷新排行榜</button>
+      </div>
+      <div id="setNote"></div>
+      <div class="tip">Token 仅保存在你浏览器本地（localStorage）。存档写入仓库 Game5Saves/玩家名/save.json，排行榜写入 Game1Data/leaderboard.json。</div>
+      <div class="row"><button class="btn" onclick="closeSettings()">关闭</button></div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
 
 <script>
+(function(){
 "use strict";
-/* ================= 常量 ================= */
-const REPO_OWNER = "YunYu-ca", REPO_NAME = "YunYu-ca.github.io";
-const REPO = REPO_OWNER + "/" + REPO_NAME;
-const ARCADE = "https://" + REPO_OWNER + ".github.io/Game.html";
-const LS_USER = "game1_user", LS_TOKEN = "game1_token";
-const LB_PATH = "Game1Data/leaderboard.json";       // 排行榜文件
-const savePath = u => "Game5Saves/" + encodeURIComponent(u) + "/save.json"; // 存档文件（与 Game5 同文件夹）
+/* ================= 元素 ================= */
+var $=function(id){return document.getElementById(id);};
+var cvs=$('cvs'), ctx=cvs.getContext('2d');
+var hCoins=$('hCoins'), hScore=$('hScore'), hBest=$('hBest'), hCount=$('hCount');
+var promptEl=$('prompt'), subEl=$('subPrompt'), fightEl=$('fight'), fightFill=$('fightFill');
+var lbList=$('lbList'), lbEmpty=$('lbEmpty'), lbLive=$('lbLive');
+var toastEl=$('toast');
+var W=0,H=0,DPR=1;
 
-/* ================= 玩家状态 ================= */
-const player = {
-  username: "", best: 0, score: 0, coins: 0, catches: 0, rare: 0, updatedAt: null
-};
-let dirty = false;          // 是否有未保存的进度
+/* ================= 配置与存档 ================= */
+var LS_USER='game1_user', LS_TOKEN='game1_token';
+var API_BASE='https://api.github.com/repos/YunYu-ca/YunYu-ca.github.io';
+var SAVE_PATH='Game5Saves';          // 与 Game5 共用存档文件夹
+var LB_PATH='Game1Data/leaderboard.json';
 
-/* ================= GitHub API（Token 直连） ================= */
-function getToken(){ return localStorage.getItem(LS_TOKEN) || ""; }
-function getUser(){ return localStorage.getItem(LS_USER) || ""; }
-function hasAuth(){ return !!getToken() && !!getUser(); }
-function b64(s){ return btoa(unescape(encodeURIComponent(s))); }
-async function gh(method, path, body){
-  const token = getToken();
-  if(!token) throw new Error("未配置 Token");
-  const res = await fetch("https://api.github.com/repos/" + REPO + "/contents/" + path, {
-    method,
-    headers: {
-      "Authorization": "Bearer " + token,
-      "Accept": "application/vnd.github+json",
-      "Content-Type": "application/json",
-      "X-GitHub-Api-Version": "2022-11-28"
-    },
-    body: body ? JSON.stringify(body) : undefined
+var cfg={user:'',token:''};
+try{ cfg.user=localStorage.getItem(LS_USER)||''; cfg.token=localStorage.getItem(LS_TOKEN)||''; }catch(e){}
+
+/* 玩家数据 */
+var P={ coins:0, score:0, best:0, catches:0, rareFish:0 };
+var dirty=false;
+
+function saveSettings(){
+  var u=$('inpUser').value.trim(), t=$('inpToken').value.trim();
+  if(!u){ note('请填写玩家名'); return; }
+  cfg.user=u; cfg.token=t;
+  try{ if(t)localStorage.setItem(LS_TOKEN,t); localStorage.setItem(LS_USER,u); }catch(e){}
+  note(u+'：配置已保存'+(t?'，Token 已写入本地':'，但未填 Token'));
+  if(t) refreshLB();
+}
+function closeSettings(){ $('settingsOverlay').classList.remove('show'); }
+function note(msg){ $('setNote').textContent=msg; }
+function toast(msg){ toastEl.textContent=msg; toastEl.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(function(){toastEl.classList.remove('show');},2400); }
+
+/* GitHub Contents API 读写 */
+function ghHeaders(extra){
+  var h={'Accept':'application/vnd.github+json','Content-Type':'application/json'};
+  if(cfg.token) h['Authorization']='Bearer '+cfg.token;
+  if(extra) for(var k in extra) h[k]=extra[k];
+  return h;
+}
+function ghGet(path){
+  return fetch(API_BASE+'/contents/'+path, {headers:ghHeaders()})
+    .then(function(r){ if(r.status===404) return null; if(!r.ok) throw new Error('GET '+r.status); return r.json(); });
+}
+function ghPut(path,content,sha){
+  var body={message:'[游戏自动存档] '+cfg.user+' '+new Date().toISOString(),content:content};
+  if(sha) body.sha=sha;
+  return fetch(API_BASE+'/contents/'+path,{method:'PUT',headers:ghHeaders(),body:JSON.stringify(body)})
+    .then(function(r){ if(!r.ok) throw new Error('PUT '+r.status); return r.json(); });
+}
+function b64(s){ try{ return btoa(unescape(encodeURIComponent(s))); }catch(e){ return btoa(s); } }
+function unb64(s){ try{ return decodeURIComponent(escape(atob(s))); }catch(e){ return atob(s); } }
+
+function packSave(){ return { username:cfg.user, savedAt:new Date().toISOString(), bestScore:P.best, totalScore:P.score, coins:P.coins, totalCatches:P.catches, rareFish:P.rareFish }; }
+
+/* 保存当前玩家存档到 Game5Saves/玩家名/save.json */
+function pushSave(){
+  if(!cfg.user||!cfg.token){ return Promise.reject(new Error('未配置玩家名或 Token')); }
+  var path=SAVE_PATH+'/'+encodeURIComponent(cfg.user)+'/save.json';
+  var data=packSave();
+  return ghGet(path).then(function(ex){
+    var sha = (ex && ex.sha) ? ex.sha : undefined;
+    return ghPut(path, b64(JSON.stringify(data,null,2)), sha);
+  }).then(function(){ dirty=false; return true; });
+}
+function saveNow(){
+  if(!cfg.user||!cfg.token){ note('请先配置玩家名与 Token'); return; }
+  note('正在保存…');
+  pushSave().then(function(){ note('✅ 已保存到 Game5Saves/'+cfg.user+'/save.json'); toast('存档已保存'); })
+    .catch(function(e){ note('保存失败：'+e.message); toast('保存失败：'+e.message); });
+}
+function loadCloud(){
+  if(!cfg.user||!cfg.token){ note('请先配置玩家名与 Token'); return; }
+  note('正在从云端恢复…');
+  ghGet(SAVE_PATH+'/'+encodeURIComponent(cfg.user)+'/save.json')
+    .then(function(ex){
+      if(!ex) throw new Error('云端没有该玩家存档');
+      var d=JSON.parse(unb64(ex.content));
+      P.coins=d.coins||0; P.score=d.totalScore||0; P.best=d.bestScore||0;
+      P.catches=d.totalCatches||0; P.rareFish=d.rareFish||0;
+      syncHUD(); dirty=false;
+      note('✅ 已恢复 '+cfg.user+' 的云端存档'); toast('云端存档已恢复');
+    }).catch(function(e){ note('恢复失败：'+e.message); toast('恢复失败：'+e.message); });
+}
+
+/* 排行榜：Game1Data/leaderboard.json（top50 by best） */
+function loadLB(){
+  return ghGet(LB_PATH).then(function(ex){
+    if(!ex) return [];
+    var arr=JSON.parse(unb64(ex.content));
+    return Array.isArray(arr)?arr:[];
   });
-  return res;
 }
-async function readGH(path){
-  const res = await gh("GET", path);
-  if(res.status === 404) return null;
-  if(!res.ok){ const e = await res.json().catch(()=>({})); throw new Error("读取失败: " + (e.message || res.status)); }
-  const j = await res.json();
-  return { content: decodeURIComponent(escape(atob(j.content.replace(/\n/g,"")))), sha: j.sha };
-}
-async function writeGH(path, content){
-  let sha;
-  const ex = await gh("GET", path);
-  if(ex.status === 200){ sha = (await ex.json()).sha; }
-  else if(ex.status !== 404){ const e = await ex.json().catch(()=>({})); throw new Error("写入失败: " + (e.message || ex.status)); }
-  const res = await gh("PUT", path, { message: "Game1 save " + path, content: b64(content), ...(sha ? { sha } : {}) });
-  if(!res.ok){ const e = await res.json().catch(()=>({})); throw new Error("写入失败: " + (e.message || res.status)); }
-  return res;
-}
-
-/* ================= 存档 ================= */
-function playerSnapshot(){
-  return {
-    username: player.username, savedAt: new Date().toISOString(),
-    bestScore: player.best, totalScore: player.score, coins: player.coins,
-    totalCatches: player.catches, rareFish: player.rare
-  };
-}
-async function pushSave(){  // 写 Game5Saves/{user}/save.json + 更新排行榜
-  if(!hasAuth()){ toast("请先在设置里配置玩家名和 Token"); return false; }
-  player.username = getUser(); player.updatedAt = new Date().toISOString();
-  try{
-    await writeGH(savePath(player.username), JSON.stringify(playerSnapshot(), null, 2));
-    await pushLeaderboard();
-    dirty = false;
-    toast("✅ 存档已保存到 Game5Saves/" + player.username + "/save.json");
-    return true;
-  }catch(e){ toast("❌ 保存失败：" + e.message); return false; }
-}
-async function pullSave(){
-  if(!hasAuth()){ toast("请先在设置里配置玩家名和 Token"); return; }
-  player.username = getUser();
-  try{
-    const f = await readGH(savePath(player.username));
-    if(!f){ toast("云端还没有这个玩家的存档"); return; }
-    const d = JSON.parse(f.content);
-    Object.assign(player, { best:d.bestScore||0, score:d.totalScore||0, coins:d.coins||0, catches:d.totalCatches||0, rare:d.rareFish||0 });
-    refreshHUD();
-    toast("✅ 已从云端恢复存档");
-  }catch(e){ toast("❌ 恢复失败：" + e.message); }
-}
-
-/* ================= 排行榜 ================= */
-let lbTimer = null;
-async function readLeaderboard(){
-  const f = await readGH(LB_PATH);
-  if(!f) return [];
-  const d = JSON.parse(f.content || "[]");
-  return Array.isArray(d) ? d : (Array.isArray(d.entries) ? d.entries : []);
-}
-async function pushLeaderboard(){
-  const token = getToken(); if(!token) return;
-  let list;
-  try{ list = await readLeaderboard(); }catch(e){ list = []; }
-  const mine = {
-    username: player.username, best: player.best, score: player.score,
-    coins: player.coins, catches: player.catches, rare: player.rare, updatedAt: new Date().toISOString()
-  };
-  const i = list.findIndex(x => x.username === player.username);
-  if(i >= 0) list[i] = mine; else list.push(mine);
-  list.sort((a,b) => (b.best - a.best) || (b.score - a.score));
-  await writeGH(LB_PATH, JSON.stringify(list.slice(0, 50)));
-  renderLB(list);
-  lbLive("● 在线");
-}
-async function refreshLB(){
-  if(!getToken()){ renderLB([]); lbLive("● 未连接"); return; }
-  try{
-    const list = await readLeaderboard();
-    renderLB(list); lbLive("● 在线");
-  }catch(e){ toast("排行榜读取失败：" + e.message); lbLive("● 离线"); }
-}
-function renderLB(list){
-  const el = document.getElementById("lbList");
-  if(!list || !list.length){ el.innerHTML = '<div id="lbEmpty">暂无排行数据</div>'; return; }
-  let html = "";
-  list.slice(0,20).forEach((x,i)=>{
-    const me = x.username === player.username ? " me" : "";
-    const cls = "lbRank" + (i<3 ? " g"+(i+1) : "");
-    html += '<div class="lbRow'+me+'"><span class="lbRank '+cls+'">'+(i+1)+'</span>' +
-            '<span class="lbName">'+(x.username || "?")+'</span>' +
-            '<span class="lbScore">'+fmt(x.best)+'</span>' +
-            '<span class="lbStat">🐠'+fmt(x.score||0)+' · 🪙'+fmt(x.coins||0)+'</span></div>';
+function writeLB(arr){
+  return ghGet(LB_PATH).then(function(ex){
+    var sha=(ex&&ex.sha)?ex.sha:undefined;
+    return ghPut(LB_PATH, b64(JSON.stringify(arr,null,2)), sha);
   });
-  el.innerHTML = html;
 }
-function lbLive(t){ const s = document.getElementById("lbLive"); if(s) s.textContent = t; }
-function fmt(n){ n = +n||0; return n.toLocaleString(); }
-
-/* ================= 钓鱼玩法（Canvas） ================= */
-const cvs = document.getElementById("cvs"), ctx = cvs.getContext("2d");
-let W=0, H=0, waterY=0;
-const fishTypes = [
-  {name:"小鱼", val:10, w:0.5,  color:"#7fc4e8"},
-  {name:"鲫鱼", val:20, w:0.3,  color:"#a9cfa0"},
-  {name:"鲈鱼", val:40, w:0.12, color:"#8fa9c9"},
-  {name:"鲤鱼", val:70, w:0.05, color:"#e8b96a"},
-  {name:"金鱼", val:120,w:0.02, color:"#ffd76a", rare:true},
-  {name:"金龙", val:300,w:0.008,color:"#ff9c3f", rare:true, legendary:true}
-];
-let phase = "idle";         // idle | cast | waiting | bite | reel
-let rod = { x:0, y:0, angle:0 };
-let bobber = { x:0, y:0, sx:0, sx2:0 };
-let castT = 0, waitT = 0, biteT = 0, reelT = 0;
-let bitePrompt = false, catchResult = null, animT = 0;
-let clouds = [], fishS = []; // 水中游鱼装饰
-const rng = (a,b)=>a+Math.random()*(b-a);
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-
-function resize(){
-  const r = cvs.parentElement.getBoundingClientRect();
-  W = Math.max(300, r.width); H = Math.max(300, r.height);
-  cvs.width = W; cvs.height = H;
-  waterY = H*0.62;
-  rod.x = W*0.5; rod.y = H*0.97;
-  initScenery();
+var lbThrottle=0;
+function updateLB(){
+  var now=Date.now();
+  if(now-lbThrottle<10000) return;   // 收杆后 10 秒节流
+  if(!cfg.user||!cfg.token) return;
+  lbThrottle=now;
+  loadLB().then(function(arr){
+    var self={name:cfg.user, best:P.best};
+    var found=false;
+    for(var i=0;i<arr.length;i++){ if(arr[i].name===cfg.user){ arr[i].best=Math.max(arr[i].best||0,self.best); found=true; break; } }
+    if(!found) arr.push(self);
+    arr.sort(function(a,b){ return (b.best||0)-(a.best||0); });
+    arr=arr.slice(0,50);
+    return writeLB(arr);
+  }).then(function(){ lbLive.textContent='● 实时'; lbLive.classList.remove('off'); refreshLB(); })
+    .catch(function(e){ lbLive.textContent='● 连接异常'; lbLive.classList.add('off'); });
 }
-function initScenery(){
-  clouds = Array.from({length:4},()=>({x:rng(0,W), y:rng(15,70), s:rng(40,80), v:rng(.1,.3)}));
-  fishS = Array.from({length:6},()=>({x:rng(0,W), y:rng(waterY+30, H-20), d:rng(.2,.6), dir:Math.random()<.5?-1:1, r:rng(5,9), c:["#4a6d8a","#5b8aa0","#6a9b8f"][Math.floor(rng(0,3))]}));
-}
-function cast(){
-  if(phase!=="idle") return;
-  phase="cast"; castT=0; bobber.sx = W*(rng(.22,.78)); bobber.sx2=bobber.sx+rng(-40,40);
-  bobber.x=W/2; bobber.y=H*0.4; bitePrompt=false; catchResult=null;
-}
-function bite(){
-  phase="bite"; biteT=0; bitePrompt=true;
-}
-function reel(){
-  if(phase!=="bite") return;
-  phase="reel"; reelT=0; bitePrompt=false;
-  const p = rollFish();
-  catchResult = p;
-}
-function rollFish(){
-  let r=Math.random(), acc=0;
-  for(const f of fishTypes){ acc+=f.w; if(r<=acc) return f; }
-  return fishTypes[0];
-}
-
-function update(dt){
-  animT += dt;
-  // 云
-  for(const c of clouds){ c.x += c.v*dt; if(c.x-W>c.s) c.x=-c.s; }
-  // 水下游鱼
-  for(const f of fishS){ f.x += f.dir*f.d*dt; if(f.x<-20)f.x=W+20; if(f.x>W+20)f.x=-20; }
-  if(phase==="cast"){
-    castT += dt;
-    const p = clamp(castT/0.9,0,1);
-    bobber.x = bobber.sx + (bobber.sx2-bobber.sx)*p;
-    bobber.y = H*0.4 + (waterY-20-H*0.4)*p;
-    if(p>=1){ phase="waiting"; waitT = rng(1.6,4.2); }
-  }else if(phase==="waiting"){
-    waitT -= dt;
-    if(waitT<=0) bite();
-  }else if(phase==="bite"){
-    biteT += dt;
-    if(biteT>3.2){ phase="idle"; bitePrompt=false; }  // 没来得及收杆，鱼跑了
-  }else if(phase==="reel"){
-    reelT += dt;
-    bobber.y -= dt*90;
-    if(reelT>0.7){ applyCatch(); phase="idle"; }
-  }
-}
-function applyCatch(){
-  const f = catchResult; if(!f) return;
-  player.score += f.val; player.coins += f.val; player.catches += 1;
-  if(f.rare) player.rare += 1;
-  if(player.score > player.best) player.best = player.score;
-  dirty = true;
-  refreshHUD();
-  toast(f.legendary ? ("🔥 钓到传说金龙！+" + f.val) : ("🐟 钓到" + f.name + "！+" + f.val));
-  // 实时排行榜：收杆后节流更新（让榜单尽量实时）
-  updateLBThrottled();
-}
-let lbLastPush = 0;
-function updateLBThrottled(){
-  const now = Date.now();
-  if(now - lbLastPush < 10000) return;   // 10 秒节流
-  lbLastPush = now;
-  if(hasAuth()) pushLeaderboard().catch(()=>{});
-}
-
-function draw(){
-  // 天空
-  const sky = ctx.createLinearGradient(0,0,0,waterY);
-  sky.addColorStop(0,"#5ba7d9"); sky.addColorStop(1,"#bfe3f5");
-  ctx.fillStyle=sky; ctx.fillRect(0,0,W,waterY);
-  // 太阳
-  ctx.fillStyle="rgba(255,240,180,.9)"; ctx.beginPath(); ctx.arc(W*0.82, H*0.14, 26, 0, 7); ctx.fill();
-  // 远山
-  ctx.fillStyle="#6aa0b8"; ctx.beginPath();
-  ctx.moveTo(0,waterY); ctx.lineTo(W*0.25,waterY-70); ctx.lineTo(W*0.5,waterY-30); ctx.lineTo(W*0.78,waterY-60); ctx.lineTo(W,waterY-15); ctx.lineTo(W,waterY); ctx.closePath(); ctx.fill();
-  // 云
-  ctx.fillStyle="rgba(255,255,255,.7)";
-  for(const c of clouds){ ctx.beginPath(); ctx.ellipse(c.x,c.y,c.s,c.s*0.35,0,0,7); ctx.fill(); ctx.beginPath(); ctx.ellipse(c.x-c.s*0.5,c.y+6,c.s*0.5,c.s*0.26,0,0,7); ctx.fill(); }
-  // 水
-  const wat = ctx.createLinearGradient(0,waterY,0,H);
-  wat.addColorStop(0,"#2e7ea8"); wat.addColorStop(1,"#134a6b");
-  ctx.fillStyle=wat; ctx.fillRect(0,waterY,W,H-waterY);
-  // 水面波纹
-  ctx.strokeStyle="rgba(255,255,255,.16)"; ctx.lineWidth=1;
-  for(let i=0;i<6;i++){
-    const y = waterY+10 + i*(H-waterY)/6;
-    ctx.beginPath();
-    for(let x=0;x<=W;x+=6){ const yy = y + Math.sin(x*0.02 + animT*1.2 + i)*3; x===0?ctx.moveTo(x,yy):ctx.lineTo(x,yy); }
-    ctx.stroke();
-  }
-  // 水下游鱼
-  for(const f of fishS){
-    ctx.save(); ctx.translate(f.x,f.y); if(f.dir<0) ctx.scale(-1,1);
-    ctx.fillStyle=f.c; ctx.beginPath(); ctx.ellipse(0,0,f.r*1.6,f.r,0,0,7); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(f.r*1.2,-f.r*0.8); ctx.lineTo(f.r*2.6,0); ctx.lineTo(f.r*1.2,f.r*0.8); ctx.closePath(); ctx.fill();
-    ctx.restore();
-  }
-  // 码头
-  ctx.fillStyle="#6b4a2f";
-  ctx.fillRect(W*0.42, waterY-8, W*0.16, H-waterY);
-  ctx.fillStyle="#7d5636";
-  for(let i=0;i<4;i++) ctx.fillRect(W*0.42+i*(W*0.16/4), waterY-20, 3, 14);
-  // 钓竿（从玩家到浮漂）
-  if(phase!=="idle"){
-    ctx.strokeStyle="#3a2b1c"; ctx.lineWidth=5; ctx.lineCap="round";
-    ctx.beginPath(); ctx.moveTo(rod.x,rod.y); ctx.quadraticCurveTo((rod.x+bobber.x)/2, rod.y-140, bobber.x, bobber.y); ctx.stroke();
-    ctx.strokeStyle="#c98a4b"; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(rod.x,rod.y); ctx.quadraticCurveTo((rod.x+bobber.x)/2, rod.y-140, bobber.x, bobber.y); ctx.stroke();
-    // 浮漂
-    ctx.fillStyle = (phase==="bite") ? "#ff4d4d" : (phase==="reel" ? "#ffd76a" : "#ff6a3c");
-    ctx.beginPath(); ctx.arc(bobber.x, bobber.y, phase==="bite" ? 7+Math.sin(animT*20)*2 : 5, 0, 7); ctx.fill();
-    ctx.fillStyle="#eee"; ctx.beginPath(); ctx.arc(bobber.x, bobber.y-3, 2.5, 0, 7); ctx.fill();
-    // 咬钩波纹
-    if(phase==="bite"){
-      ctx.strokeStyle="rgba(255,255,255,.5)"; ctx.lineWidth=2;
-      for(let i=0;i<2;i++){ const rr=10+i*8+((animT*30+i*20)%16); ctx.beginPath(); ctx.arc(bobber.x,bobber.y,rr,0,7); ctx.stroke(); }
+function refreshLB(){
+  if(!cfg.user||!cfg.token){ lbEmpty.style.display='block'; lbEmpty.textContent='配置 Token 后自动刷新排行榜'; lbList.innerHTML=''; return; }
+  loadLB().then(function(arr){
+    if(!arr.length){ lbEmpty.style.display='block'; lbEmpty.textContent='暂无数据，钓到鱼后会自动写入'; lbList.innerHTML=''; return; }
+    lbEmpty.style.display='none';
+    var html=''; var me=cfg.user;
+    var top=arr.slice(0,50);
+    for(var i=0;i<top.length;i++){
+      var r=top[i], isMe=(r.name===me);
+      html+='<div class="lb-row'+(i<3?' top':'')+(isMe?' me':'')+'">'+
+            '<span class="rk">'+(i+1)+'</span>'+
+            '<span class="nm">'+(isMe?'⭐ ':'')+esc(r.name)+'</span>'+
+            '<span class="sc">'+(r.best||0)+'</span></div>';
     }
-  } else {
-    // idle：竿静立
-    ctx.strokeStyle="#3a2b1c"; ctx.lineWidth=5; ctx.lineCap="round";
-    ctx.beginPath(); ctx.moveTo(rod.x,rod.y); ctx.quadraticCurveTo(rod.x+30, rod.y-90, rod.x-10, rod.y-120); ctx.stroke();
-    ctx.strokeStyle="#c98a4b"; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(rod.x,rod.y); ctx.quadraticCurveTo(rod.x+30, rod.y-90, rod.x-10, rod.y-120); ctx.stroke();
-  }
-  // 收杆成功提示
-  if(phase==="reel" && catchResult){
-    ctx.fillStyle="rgba(255,255,255,.9)"; ctx.font="bold 16px sans-serif"; ctx.textAlign="center";
-    ctx.fillText("+"+catchResult.val, bobber.x, Math.max(30,bobber.y-16));
-  }
+    lbList.innerHTML=html;
+  }).catch(function(e){ lbLive.textContent='● 读取失败'; lbLive.classList.add('off'); });
+}
+function esc(s){ return String(s).replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}); }
+
+/* ================= 鱼种 ================= */
+var FISH=[
+  {name:'小麦穗',emoji:'🐟',value:12,wMin:40,wMax:120,rare:0},
+  {name:'鲫鱼',  emoji:'🐠',value:22,wMin:120,wMax:400,rare:0},
+  {name:'鲈鱼',  emoji:'🐡',value:40,wMin:300,wMax:1200,rare:0},
+  {name:'鲤鱼',  emoji:'🐋',value:65,wMin:600,wMax:2500,rare:0},
+  {name:'锦鲤',  emoji:'🐬',value:120,wMin:800,wMax:3000,rare:1},
+  {name:'金龙·龙鲤',emoji:'🐉',value:300,wMin:1500,wMax:5000,rare:2}
+];
+function randFish(){
+  var r=Math.random();
+  var idx;
+  if(r<0.38) idx=0; else if(r<0.66) idx=1; else if(r<0.86) idx=2;
+  else if(r<0.97) idx=3; else if(r<0.995) idx=4; else idx=5;
+  return FISH[idx];
 }
 
-function frame(t){
-  const dt = Math.min(0.05, (t - (frame._t||t))/1000 || 0.016);
-  frame._t = t;
-  update(dt);
-  draw();
-  requestAnimationFrame(frame);
-}
-
-function refreshHUD(){
-  document.getElementById("hCoins").textContent = fmt(player.coins);
-  document.getElementById("hScore").textContent = fmt(player.score);
-  document.getElementById("hBest").textContent = fmt(player.best);
-  document.getElementById("bestNum").textContent = fmt(player.best);
-}
-function promptBite(){
-  const p = document.getElementById("prompt");
-  p.classList.toggle("show", bitePrompt && phase==="bite");
-}
+/* ================= 状态机 ================= */
+var ST={IDLE:0,CHARGING:1,FLYING:2,WAITING:3,BITING:4,REELING:5,RESULT:6};
+var st=ST.IDLE;
+var power=0, aimX=0.5;               // 蓄力 / 横向瞄准 0..1
+var bob={x:0,y:0,t:0,phase:0,landed:false};   // 浮漂
+var lineFrom={x:0,y:0};
+var currentFish=null;
+var fight={v:50,target:50,active:false};     // 收线对抗 0..100
+var resultTimer=0, catchFish=null;
+var biteAt=0;
+var rAF=0, last=0;
 
 /* ================= 输入 ================= */
-let casting=false;
-cvs.addEventListener("pointerdown", e=>{
-  const x = e.offsetX, y = e.offsetY;
-  // 点击浮漂附近 = 收杆
-  if(phase==="bite" && Math.hypot(x-bobber.x, y-bobber.y) < 80){ reel(); return; }
-  if(phase==="bite"){ reel(); return; }
-  if(phase==="idle"){ cast(); return; }
+function pressStart(e){
+  e.preventDefault();
+  if(st===ST.IDLE){ st=ST.CHARGING; power=0; }
+  else if(st===ST.WAITING){ startHook(); }
+  else if(st===ST.BITING){ startHook(); }
+}
+function pressMove(e){
+  var rect=cvs.getBoundingClientRect();
+  var x=(e.clientX!==undefined?e.clientX:e.touches[0].clientX)-rect.left;
+  aimX=Math.max(0,Math.min(1,x/rect.width));
+}
+function pressEnd(e){
+  e.preventDefault();
+  if(st===ST.CHARGING){ cast(); }
+}
+cvs.addEventListener('mousedown',pressStart);
+cvs.addEventListener('mousemove',pressMove);
+window.addEventListener('mouseup',pressEnd);
+cvs.addEventListener('touchstart',pressStart,{passive:false});
+cvs.addEventListener('touchmove',pressMove,{passive:false});
+window.addEventListener('touchend',pressEnd);
+window.addEventListener('keydown',function(e){
+  if(e.code==='Space'||e.code==='Enter'){ e.preventDefault(); if(st===ST.IDLE){st=ST.CHARGING;power=0;} else if(st===ST.WAITING||st===ST.BITING){startHook();} }
 });
-window.addEventListener("keydown", e=>{
-  if(e.key===" " || e.key==="Enter"){
-    if(phase==="bite") reel(); else if(phase==="idle") cast();
+window.addEventListener('keyup',function(e){
+  if(e.code==='Space'||e.code==='Enter'){ if(st===ST.CHARGING) cast(); }
+});
+
+/* ================= 玩法动作 ================= */
+function cast(){
+  var p=Math.min(1,Math.max(0.12,power));
+  var rect=cvs.getBoundingClientRect();
+  // 浮漂落点：由横向瞄准 + 蓄力决定距离
+  var dist=0.30+0.5*p;
+  var bx=aimX*W;
+  var by=H*(0.52+0.10*(1-p));       // 蓄力越大落得越远（水面更深处）
+  // 简化：让距离基于蓄力，落点在视野水面
+  var targetY=H*0.40 + dist*H*0.55;
+  bob.x=bx; bob.y=Math.min(targetY,H*0.86); bob.phase=0; bob.landed=false;
+  lineFrom={x:W*0.5,y:H*0.28};
+  bob.t=0;
+  st=ST.FLYING;
+  promptEl.textContent=''; subEl.textContent='';
+  setTimeout(function(){ if(st===ST.FLYING){ bob.landed=true; st=ST.WAITING; promptEl.textContent='等待鱼儿咬钩…'; subEl.textContent='浮漂下沉时点击收竿！'; promptEl.classList.add('show'); subEl.classList.add('show'); scheduleBite(); } }, 700);
+}
+function scheduleBite(){
+  setTimeout(function(){
+    if(st!==ST.WAITING) return;
+    currentFish=randFish();
+    st=ST.BITING; biteAt=Date.now();
+    promptEl.textContent='拉竿！'+currentFish.emoji+' 上钩了！';
+    subEl.textContent='快点击 / 按空格收竿！';
+  }, 1800+Math.random()*3600);
+}
+function startHook(){
+  if(st!==ST.WAITING&&st!==ST.BITING) return;
+  if(st===ST.WAITING){
+    // 抢竿：小概率空钩
+    promptEl.textContent='空钩……再等等';
+    subEl.textContent='';
+    st=ST.IDLE;
+    setTimeout(function(){ promptEl.classList.remove('show'); subEl.classList.remove('show'); },900);
+    return;
   }
-});
-// 收杆按钮逻辑：任何时候点击水面/浮漂都尝试收杆
-function tryReel(){ if(phase==="bite") reel(); }
+  // 进入收线对抗
+  st=ST.REELING;
+  fight.v=55; fight.target=55; fight.active=true;
+  fightEl.classList.add('show');
+  promptEl.textContent='和'+currentFish.name+'拔河！';
+  subEl.textContent='按住/点击收线，松手让鱼挣扎';
+  fightFill.style.width=fight.v+'%';
+}
+function finishHook(ok){
+  st=ST.RESULT; resultTimer=0;
+  fightEl.classList.remove('show');
+  if(ok){
+    var f=currentFish;
+    var w=Math.round(f.wMin+Math.random()*(f.wMax-f.wMin));
+    var pts=Math.round(f.value*(0.8+Math.random()*0.4));
+    P.coins+=f.value; P.score+=pts; P.catches+=1;
+    if(f.rare>0) P.rareFish+=1;
+    if(P.score>P.best) P.best=P.score;
+    catchFish={name:f.name,emoji:f.emoji,w:w,pts:pts,rare:f.rare};
+    promptEl.textContent='🎣 钓到 '+f.emoji+' '+f.name+'（'+w+'g）！ +'+pts;
+    subEl.textContent='金币 +'+f.value;
+    dirty=true;
+    syncHUD();
+    updateLB();
+  } else {
+    catchFish=null;
+    promptEl.textContent='鱼挣脱了……';
+    subEl.textContent='';
+  }
+  promptEl.classList.add('show'); subEl.classList.add('show');
+  currentFish=null;
+}
 
-/* ================= 设置 / 配置 ================= */
-function openSettings(){
-  document.getElementById("inpUser").value = getUser();
-  document.getElementById("inpToken").value = getToken();
-  document.getElementById("settingsOverlay").classList.add("open");
-  updateSetNote();
+/* ================= 更新循环 ================= */
+function update(dt){
+  // 蓄力
+  if(st===ST.CHARGING){ power=Math.min(1,power+dt*1.4); }
+  // 浮漂在飞行/水上
+  if(st===ST.FLYING||st===ST.WAITING||st===ST.BITING){
+    bob.phase+=dt*2.4;
+    bob.t+=dt;
+  }
+  // 咬钩窗口：2.5 秒内没收竿→回到等待
+  if(st===ST.BITING && Date.now()-biteAt>2500){
+    st=ST.WAITING; currentFish=null;
+    promptEl.textContent='鱼儿跑了，继续等待…';
+    scheduleBite();
+  }
+  // 收线对抗
+  if(st===ST.REELING && fight.active){
+    // 鱼挣扎：向 0 下拉
+    fight.v -= dt*9;
+    // 玩家按住收线
+    if(pressing) fight.v += dt*20;
+    fight.v=Math.max(0,Math.min(100,fight.v));
+    fightFill.style.width=fight.v+'%';
+    if(fight.v>=100){ finishHook(true); }
+    else if(fight.v<=0){ finishHook(false); }
+  }
+  // 结果停留
+  if(st===ST.RESULT){
+    resultTimer+=dt;
+    if(resultTimer>2.2){ st=ST.IDLE; promptEl.classList.remove('show'); subEl.classList.remove('show'); catchFish=null; }
+  }
 }
-function closeSettings(){ document.getElementById("settingsOverlay").classList.remove("open"); }
-function saveConfig(){
-  const u = document.getElementById("inpUser").value.trim();
-  const t = document.getElementById("inpToken").value.trim();
-  if(!u){ toast("请输入玩家名"); return; }
-  if(!t){ toast("请输入 GitHub Token"); return; }
-  localStorage.setItem(LS_USER, u);
-  localStorage.setItem(LS_TOKEN, t);
-  player.username = u;
-  updateSetNote();
-  toast("✅ 配置已保存，可立即保存存档");
+var pressing=false;
+window.addEventListener('mousedown',function(){pressing=true;});
+window.addEventListener('mouseup',function(){pressing=false;});
+window.addEventListener('touchstart',function(){pressing=true;},{passive:true});
+window.addEventListener('touchend',function(){pressing=false;},{passive:true});
+
+/* ================= 渲染（第一人称） ================= */
+function draw(t){
+  var w=W,h=H;
+  // 天空
+  var sky=ctx.createLinearGradient(0,0,0,h*0.55);
+  sky.addColorStop(0,'#3f8fc0'); sky.addColorStop(0.5,'#bfe3f5'); sky.addColorStop(1,'#e8f7ff');
+  ctx.fillStyle=sky; ctx.fillRect(0,0,w,h*0.55);
+  // 太阳
+  ctx.globalAlpha=0.95;
+  var sx=w*0.82, sy=h*0.12, sr=Math.min(w,h)*0.05;
+  var glow=ctx.createRadialGradient(sx,sy,0,sx,sy,sr*3);
+  glow.addColorStop(0,'rgba(255,240,190,0.9)'); glow.addColorStop(1,'rgba(255,240,190,0)');
+  ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(sx,sy,sr*3,0,6.283); ctx.fill();
+  ctx.fillStyle='#fff3c4'; ctx.beginPath(); ctx.arc(sx,sy,sr,0,6.283); ctx.fill();
+  // 云
+  ctx.fillStyle='rgba(255,255,255,0.85)';
+  for(var i=0;i<4;i++){
+    var cx=((w*0.2+i*0.24*w)+t*8)%(w+200)-100;
+    var cy=h*(0.07+i*0.06);
+    ellipse(cx,cy,44,16);
+    ellipse(cx+22,cy-8,30,12);
+    ellipse(cx-22,cy+2,26,10);
+  }
+  // 远山
+  ctx.fillStyle='#7fb39a';
+  ctx.beginPath(); ctx.moveTo(0,h*0.42);
+  for(var mx=0;mx<=w;mx+=w/24){ ctx.lineTo(mx,h*(0.42+0.05*Math.abs(Math.sin(mx*0.003+1.2)))); }
+  ctx.lineTo(w,h*0.44); ctx.lineTo(0,h*0.44); ctx.closePath(); ctx.fill();
+  // 水面
+  var wGrad=ctx.createLinearGradient(0,h*0.45,0,h);
+  wGrad.addColorStop(0,'#2e7ea8'); wGrad.addColorStop(0.6,'#1d5f86'); wGrad.addColorStop(1,'#12384f');
+  ctx.fillStyle=wGrad; ctx.fillRect(0,h*0.45,w,h*0.55);
+  // 水波
+  ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=1.4;
+  for(var wi=0;wi<9;wi++){
+    var y=h*(0.48+wi*0.05);
+    ctx.beginPath();
+    for(var wx=0;wx<=w;wx+=10){
+      var yy=y+Math.sin((wx*0.02+wi)+t*(1+wi*0.3))*3;
+      if(wx===0) ctx.moveTo(wx,yy); else ctx.lineTo(wx,yy);
+    }
+    ctx.stroke();
+  }
+  // 浮漂（在水面）
+  if(st!==ST.IDLE && st!==ST.CHARGING){
+    var bY=bob.y, dip=0;
+    if(st===ST.BITING){ dip=18*Math.abs(Math.sin(bob.phase*6)); }
+    else if(st===ST.WAITING){ dip=3*Math.sin(bob.phase*3); }
+    var bY2=bY+dip;
+    // 水面倒影涟漪
+    ctx.strokeStyle='rgba(255,255,255,0.4)';
+    ctx.beginPath(); ctx.arc(bob.x,bY,22,0,6.283); ctx.stroke();
+    ctx.beginPath(); ctx.arc(bob.x,bY,34,0,6.283); ctx.stroke();
+    // 浮漂本体
+    ctx.fillStyle='#ff5a3c'; ctx.beginPath(); ctx.arc(bob.x,bY2-5,7,0,6.283); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(bob.x,bY2-5,3,0,6.283); ctx.fill();
+    ctx.strokeStyle='#ff5a3c'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(bob.x,bY2-5); ctx.lineTo(bob.x,bY2-13); ctx.stroke();
+  }
+  // 鱼线：从竿尖到浮漂
+  if(st===ST.FLYING||st===ST.WAITING||st===ST.BITING||st===ST.REELING){
+    ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(lineFrom.x,lineFrom.y);
+    ctx.quadraticCurveTo(W*0.5,H*0.35,bob.x,bob.y-5);
+    ctx.stroke();
+  }
+  // 第一人称：岸堤 + 手 + 鱼竿
+  drawDockAndRod(h);
+
+  // 收线时显示鱼在水面扑腾
+  if(st===ST.REELING && currentFish){
+    ctx.font='26px sans-serif'; ctx.textAlign='center';
+    var fx=bob.x+Math.sin(t*14)*14, fy=bob.y-20;
+    ctx.fillStyle='#fff'; ctx.shadowColor='rgba(0,0,0,0.5)'; ctx.shadowBlur=8;
+    ctx.fillText(currentFish.emoji,fx,fy);
+    ctx.shadowBlur=0;
+  }
+  ctx.globalAlpha=1;
+  // 蓄力指示
+  if(st===ST.CHARGING){
+    ctx.fillStyle='rgba(255,214,102,'+(0.25+0.5*power)+')';
+    ctx.beginPath(); ctx.arc(W*0.5,H*0.30,10+power*40,0,6.283); ctx.fill();
+    ctx.fillStyle='#ffd866'; ctx.font='bold 14px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('松手抛竿！',W*0.5,H*0.18);
+  }
 }
-function updateSetNote(){
-  const el = document.getElementById("setNote");
-  if(hasAuth()) el.innerHTML = "当前玩家：<b>" + getUser() + "</b> ｜ Token 已配置 ✓ ｜ 可自动存档";
-  else el.innerHTML = "未配置 Token / 未登录";
+function ellipse(x,y,rx,ry){ ctx.beginPath(); ctx.ellipse(x,y,rx,ry,0,0,6.283); ctx.fill(); }
+function drawDockAndRod(h){
+  // 岸堤（下边缘第一人称木板）
+  var dTop=h*0.86;
+  var g=ctx.createLinearGradient(0,dTop,0,h);
+  g.addColorStop(0,'#7d5636'); g.addColorStop(1,'#4a2f1a');
+  ctx.fillStyle=g; ctx.fillRect(0,dTop,W,h-dTop);
+  ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=2;
+  for(var i=0;i<7;i++){ var y=dTop+6+i*((h-dTop-8)/7); ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  // 鱼竿（第一人称，从下方伸向水面）
+  var handX=W*0.5, handY=h*0.95;
+  var tipX=W*0.5, tipY=h*0.30;
+  // 竿身
+  ctx.strokeStyle='#3a2b1c'; ctx.lineWidth=9; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(handX,handY); ctx.quadraticCurveTo(handX+30,handY-120,tipX+40,tipY); ctx.stroke();
+  ctx.strokeStyle='#6b4a2f'; ctx.lineWidth=5;
+  ctx.beginPath(); ctx.moveTo(handX,handY); ctx.quadraticCurveTo(handX+30,handY-120,tipX+40,tipY); ctx.stroke();
+  // 手（简单剪影）
+  ctx.fillStyle='#c98a4b';
+  ctx.beginPath(); ctx.arc(handX-4,handY-6,15,0,6.283); ctx.fill();
+  ctx.beginPath(); ctx.arc(handX+16,handY-4,14,0,6.283); ctx.fill();
+  // 竿尖位置更新为世界坐标供鱼线使用
+  lineFrom={x:tipX+40,y:tipY};
 }
 
-/* ================= 退出确认流程 ================= */
-function handleExit(){
-  try{
-    if(confirm("是否确定保存存档？")){
-      pushSave().then(ok=>{ if(ok) doExit(); });   // 保存成功才退出；失败留在游戏可重试
-    }else if(confirm("是否确定不保存？未保存的进度将丢失")){
-      alert("当前存档记录将不会被保存");
+/* ================= 主循环 ================= */
+function loop(ts){
+  var dt=Math.min(0.05,(ts-last)/1000); last=ts;
+  update(dt);
+  draw(ts/1000);
+  rAF=requestAnimationFrame(loop);
+}
+function resize(){
+  DPR=window.devicePixelRatio||1;
+  W=window.innerWidth; H=window.innerHeight;
+  cvs.width=W*DPR; cvs.height=H*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  aimX=0.5;
+}
+window.addEventListener('resize',resize);
+
+/* ================= HUD ================= */
+function syncHUD(){
+  hCoins.textContent=fmt(P.coins);
+  hScore.textContent=fmt(P.score);
+  hBest.textContent=fmt(P.best);
+  hCount.textContent=P.catches;
+}
+function fmt(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+
+/* ================= 退出确认（用户锁定口径） ================= */
+function doExit(){ location.href='https://yunyu-ca.github.io/Game.html'; }
+function confirmExit(){
+  var ok=window.confirm('是否确定保存存档？');
+  if(ok){
+    if(cfg.token&&cfg.user){
+      pushSave().then(function(){ doExit(); }).catch(function(e){ alert('网络错误，保存失败'); });
+    } else {
       doExit();
     }
-    // 二次取消：留在游戏
-  }catch(e){ doExit(); }
+  } else {
+    var ok2=window.confirm('是否确定不保存？未保存的进度将丢失');
+    if(ok2){
+      alert('当前存档记录将不会被保存');
+      doExit();
+    }
+    // 否则留在游戏
+  }
 }
-function doExit(){
-  // 返回游戏大厅
-  window.location.href = ARCADE;
+$('btnExit').addEventListener('click',function(e){ e.stopPropagation(); confirmExit(); });
+$('btnSettings').addEventListener('click',function(e){ e.stopPropagation(); openSettings(); });
+function openSettings(){
+  $('inpUser').value=cfg.user;
+  $('inpToken').value=cfg.token;
+  $('settingsOverlay').classList.add('show');
 }
-window.addEventListener("beforeunload", e=>{
-  if(dirty && hasAuth()){
-    // 浏览器可能拦截 confirm，尽力而为：有未保存进度时尝试静默补存一次
+function toggleLB(){ $('leaderboard').classList.toggle('open'); }
+
+// beforeunload 尽力而为（浏览器可能拦截弹窗）
+window.addEventListener('beforeunload',function(e){
+  if(dirty && cfg.user && cfg.token){
     try{
-      const ok = confirm("是否确定保存存档？");
-      if(ok){ e.preventDefault(); e.returnValue=""; pushSave(); }
-    }catch(_){}
+      var ok=window.confirm('是否确定保存存档？');
+      if(ok){ pushSave(); }
+      else{
+        var ok2=window.confirm('是否确定不保存？未保存的进度将丢失');
+        if(ok2){ alert('当前存档记录将不会被保存'); }
+        else{ e.preventDefault(); e.returnValue=''; }
+      }
+    }catch(err){}
   }
 });
-window.addEventListener("pagehide", ()=>{});
-
-/* ================= 排行榜展示切换（移动端） ================= */
-function toggleLB(){ document.getElementById("leaderboard").classList.toggle("open"); }
-
-/* ================= Toast ================= */
-let toastTimer=null;
-function toast(msg){
-  const t = document.getElementById("toast");
-  t.textContent = msg; t.classList.add("show");
-  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove("show"), 2600);
-}
 
 /* ================= 启动 ================= */
-async function boot(){
-  // 恢复本地配置
-  player.username = getUser();
-  resize(); window.addEventListener("resize", resize);
-  refreshHUD();
-  // 从云端恢复该玩家存档（若有）
-  if(hasAuth()){
-    try{
-      const f = await readGH(savePath(player.username));
-      if(f){
-        const d = JSON.parse(f.content);
-        Object.assign(player, { best:d.bestScore||0, score:d.totalScore||0, coins:d.coins||0, catches:d.totalCatches||0, rare:d.rareFish||0 });
-        refreshHUD();
-      }
-    }catch(e){}
-  }
-  // 加载排行榜
-  refreshLB();
-  // 每 20 秒轮询排行榜 = 实时
-  setInterval(refreshLB, 20000);
-  requestAnimationFrame(frame);
-  // 每帧更新咬钩提示
-  setInterval(promptBite, 80);
-  updateSetNote();
-}
-boot();
+resize();
+requestAnimationFrame(function(ts){ last=ts; rAF=requestAnimationFrame(loop); });
+$('inpUser').value=cfg.user; $('inpToken').value=cfg.token;
+if(cfg.user) refreshLB();
+promptEl.textContent='第一人称钓鱼乐园 · 点击蓄力抛竿';
+subEl.textContent='按住瞄准 + 蓄力，松手抛出，浮漂下沉即收竿';
+promptEl.classList.add('show'); subEl.classList.add('show');
+setTimeout(function(){ promptEl.classList.remove('show'); subEl.classList.remove('show'); },2600);
+})();
 </script>
 </body>
 </html>
