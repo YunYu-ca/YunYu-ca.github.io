@@ -25,15 +25,16 @@
     },
     "killMilestones": {},
     "fishing": {
-      "score": 295,
-      "total": 3,
+      "score": 300,
+      "total": 4,
       "best": 0,
       "fish": {}
     },
     "treasure": {
       "leather_armor": 1,
       "legend_shield": 1,
-      "wind_talisman": 1
+      "wind_talisman": 1,
+      "wind_necklace": 1
     },
     "difficultyUnlock": {
       "fishing": true,
