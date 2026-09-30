@@ -58,54 +58,424 @@
   window.addEventListener('unhandledrejection',function(e){
     if(e.reason!=null)_cap(e.reason instanceof Error?e.reason:new Error(String(e.reason)));
   });
-})('KSlardarWeb');</script><script>const slardarScript = document.createElement('script');
-    slardarScript.src = 'https://lf3-short.ibytedapm.com/slardar/fe/sdk-web/browser.cn.js?bid=apaas_miaoda&globalName=KSlardarWeb';
-    slardarScript.crossOrigin = 'anonymous';
-    slardarScript.onload = function() {
-      if (window.KSlardarWeb) {
-        window.KSlardarWeb('context.merge', {
-          tenantId: window.tenantId ?? '',
-          appId: window.appId ?? '',
-          stack_version: "2.3.0",
-          app_type: 2,
-          arch_type: 0,
-        });
-        window.KSlardarWeb('init', {
-          bid: 'apaas_miaoda',
-          env: window.ENVIRONMENT || 'online',
-          userId: window.userId ?? '',
-        });
-        window.KSlardarWeb('start');
-        // Flush errors captured before the SDK finished loading
-        var buf = window.__slardarErrBuf || [];
-        window.__slardarErrBuf = [];
-        buf.forEach(function(err) {
-          window.KSlardarWeb('captureException', err instanceof Error ? err : new Error(String(err)), { source: 'pre-sdk-error', referrer: document.referrer || '' });
-        });
-      }
-    };
-    slardarScript.onerror = function() {
-      console.warn('Failed to load Slardar script');
-    };
-    document.head.appendChild(slardarScript);</script><script src="https://sf3-scmcdn-cn.feishucdn.com/obj/unpkg/byted/performance/0.2.3/dist/performance.iife.js" data-app-name="builderV3" crossorigin="anonymous" defer="defer"></script><script>(function (win, export_obj) {
-    win['LogAnalyticsObject'] = export_obj;
-    if (!win[export_obj]) {
-      function _collect() { _collect.q.push(arguments); }
-      _collect.q = _collect.q || [];
-      win[export_obj] = _collect;
-    }
-    win[export_obj].l = +new Date();
-  })(window, 'collectEvent');
-
-  const teaScript = document.createElement('script');
-  teaScript.src = 'https://lf3-cdn-tos.bytescm.com/obj/static/log-sdk/collect/5.1/collect.js';
-  teaScript.crossOrigin = 'anonymous';
-  teaScript.async = true;
-  teaScript.onerror = function() {
-    console.warn('Failed to load Tea script');
-  };
-  document.head.appendChild(teaScript);</script><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>线上农场种植游戏</title><script>try {
+})('KSlardarWeb');</script><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>线上农场种植游戏（本地独立版）</title><script>try {
       window.__platform__ = JSON.parse('{"csrfToken":"c1492e22285e209e1e8fb172cc004950fc06f6c2-1790779114","userId":"","appId":"app_17emqccrkjk","appName":"线上农场种植游戏","appAvatar":"https://miaoda.feishu.cn/aily/api/v1/files/static/2974332ce9d464f3c6faa12b87a531acc382ca0bd48e3b68b4d348e2cd9162cf_ve_miaoda?x-tos-process=image%2Fresize%2Cw_120%2Ch_120%2Cm_fixed%7Crounded-corners%2Cr_14%2Fformat%2Cpng","appDescription":"注册账号即可开垦地块种植作物，浇水施肥等待成熟收获赚金币升级，退出时自动保存进度，随时回到农场延续种植乐趣。","loginUrl":"/app/app_17emqccrkjk/runtime/page/login?redirect_uri=https%3A%2F%2F4kxftbp19qess.doubaoapps.com%2Fapp%2Fapp_17emqccrkjk","userType":"","tenantId":4349232290,"environment":"online","showBadge":true,"appPublished":{"status_code":1,"app_info":{"app_name":"线上农场种植游戏","app_avatar":"https://miaoda.feishu.cn/aily/api/v1/files/static/2974332ce9d464f3c6faa12b87a531acc382ca0bd48e3b68b4d348e2cd9162cf_ve_miaoda?x-tos-process\\u003dimage%2Fresize%2Cw_120%2Ch_120%2Cm_fixed%7Crounded-corners%2Cr_14%2Fformat%2Cpng","app_description":"注册账号即可开垦地块种植作物，浇水施肥等待成熟收获赚金币升级，退出时自动保存进度，随时回到农场延续种植乐趣。","show_badge":true},"app_runtime_extra":{"url":"https://4kxftbp19qess-aadkwcz6tmqgu.feishuapp.cn/suda/api/v1/workspaces/workspace_aadkwcz6tmqgu","bucket":{"default_bucket_id":"bucket_aadkwjzdplwlu"}}},"basename":"/app/app_17emqccrkjk"}');
     } catch (e) {
       console.error('Failed to parse __platform__', e);
-    }</script><script type="module" crossorigin src="./assets/index-DPB_SEnj.js"></script><link rel="modulepreload" crossorigin href="./assets/rolldown-runtime-hePW80VL.js"><link rel="modulepreload" crossorigin href="./assets/radix-CwIF97SI.js"><link rel="stylesheet" crossorigin href="./assets/index-9_j48Vgc.css"><meta property="og:title" content="线上农场种植游戏"><meta property="og:description" content="注册账号即可开垦地块种植作物，浇水施肥等待成熟收获赚金币升级，退出时自动保存进度，随时回到农场延续种植乐趣。"><meta property="og:image" content="https://miaoda.feishu.cn/aily/api/v1/files/static/2974332ce9d464f3c6faa12b87a531acc382ca0bd48e3b68b4d348e2cd9162cf_ve_miaoda?x-tos-process&#x3D;image%2Fresize%2Cw_120%2Ch_120%2Cm_fixed%7Crounded-corners%2Cr_14%2Fformat%2Cpng"><meta name="description" content="注册账号即可开垦地块种植作物，浇水施肥等待成熟收获赚金币升级，退出时自动保存进度，随时回到农场延续种植乐趣。"><link rel="icon" href="https://miaoda.feishu.cn/aily/api/v1/files/static/2974332ce9d464f3c6faa12b87a531acc382ca0bd48e3b68b4d348e2cd9162cf_ve_miaoda?x-tos-process&#x3D;image%2Fresize%2Cw_120%2Ch_120%2Cm_fixed%7Crounded-corners%2Cr_14%2Fformat%2Cpng"></head><body><div id="root"></div></body></html>
+    }</script>
+<script>
+/* ===== 本地独立版 API 拦截器：把所有 /api/auth/* 和 /api/game/* 请求改为本地处理 ===== */
+(function(){
+  var CROPS = {"crops":[{"id":"wheat","name":"小麦","seedPrice":10,"harvestGold":20,"growthTime":30,"unlockLevel":1,"expReward":5,"emoji":"🌾"},{"id":"carrot","name":"胡萝卜","seedPrice":25,"harvestGold":55,"growthTime":60,"unlockLevel":2,"expReward":12,"emoji":"🥕"},{"id":"corn","name":"玉米","seedPrice":60,"harvestGold":140,"growthTime":120,"unlockLevel":3,"expReward":30,"emoji":"🌽"},{"id":"tomato","name":"番茄","seedPrice":150,"harvestGold":360,"growthTime":240,"unlockLevel":5,"expReward":75,"emoji":"🍅"},{"id":"strawberry","name":"草莓","seedPrice":350,"harvestGold":850,"growthTime":480,"unlockLevel":8,"expReward":180,"emoji":"🍓"},{"id":"pumpkin","name":"南瓜","seedPrice":800,"harvestGold":2000,"growthTime":900,"unlockLevel":12,"expReward":450,"emoji":"🎃"},{"id":"lettuce","name":"生菜","seedPrice":35,"harvestGold":80,"growthTime":45,"unlockLevel":3,"expReward":8,"emoji":"🥬"},{"id":"pepper","name":"辣椒","seedPrice":80,"harvestGold":190,"growthTime":90,"unlockLevel":4,"expReward":20,"emoji":"🌶️"},{"id":"cucumber","name":"黄瓜","seedPrice":120,"harvestGold":300,"growthTime":150,"unlockLevel":6,"expReward":50,"emoji":"🥒"},{"id":"apple","name":"苹果","seedPrice":200,"harvestGold":500,"growthTime":180,"unlockLevel":5,"expReward":60,"emoji":"🍎"},{"id":"grape","name":"葡萄","seedPrice":400,"harvestGold":1000,"growthTime":300,"unlockLevel":6,"expReward":120,"emoji":"🍇"},{"id":"peach","name":"桃子","seedPrice":600,"harvestGold":1500,"growthTime":420,"unlockLevel":8,"expReward":200,"emoji":"🍑"},{"id":"cherry","name":"樱桃","seedPrice":900,"harvestGold":2200,"growthTime":600,"unlockLevel":10,"expReward":300,"emoji":"🍒"},{"id":"orange","name":"橙子","seedPrice":1200,"harvestGold":3000,"growthTime":720,"unlockLevel":12,"expReward":400,"emoji":"🍊"},{"id":"chicken","name":"小鸡","seedPrice":150,"harvestGold":400,"growthTime":120,"unlockLevel":7,"expReward":40,"emoji":"🐔"},{"id":"cow","name":"奶牛","seedPrice":500,"harvestGold":1200,"growthTime":300,"unlockLevel":8,"expReward":150,"emoji":"🐄"},{"id":"sheep","name":"绵羊","seedPrice":700,"harvestGold":1700,"growthTime":420,"unlockLevel":9,"expReward":220,"emoji":"🐑"},{"id":"bee","name":"蜂箱","seedPrice":1000,"harvestGold":2500,"growthTime":540,"unlockLevel":11,"expReward":350,"emoji":"🐝"},{"id":"goat","name":"山羊","seedPrice":1500,"harvestGold":3800,"growthTime":720,"unlockLevel":13,"expReward":500,"emoji":"🐐"},{"id":"moonflower","name":"月光花","seedPrice":300,"harvestGold":800,"growthTime":200,"unlockLevel":10,"expReward":100,"emoji":"🌸"},{"id":"starmushroom","name":"星辰蘑菇","seedPrice":600,"harvestGold":1600,"growthTime":350,"unlockLevel":11,"expReward":200,"emoji":"🍄"},{"id":"crystal_cabbage","name":"水晶白菜","seedPrice":1000,"harvestGold":2600,"growthTime":500,"unlockLevel":12,"expReward":320,"emoji":"💎"},{"id":"fire_chili","name":"火焰辣椒","seedPrice":1500,"harvestGold":3800,"growthTime":650,"unlockLevel":13,"expReward":450,"emoji":"🔥"},{"id":"rainbow_potato","name":"彩虹土豆","seedPrice":2000,"harvestGold":5000,"growthTime":800,"unlockLevel":15,"expReward":600,"emoji":"🥔"}]};
+  var SCENES = {"scenes":[{"id":"farm","name":"普通农田","description":"最基础的农田，适合新手种植常见作物","emoji":"🌾","unlockLevel":1,"unlockCost":0,"plotCount":9,"cropIds":["wheat","carrot","corn","tomato","strawberry","pumpkin"],"bgColor":"bg-green-50","plotColor":"bg-amber-800"},{"id":"greenhouse","name":"温室大棚","description":"温暖湿润的温室，生长速度 +20%，种植特色蔬果","emoji":"🏠","unlockLevel":3,"unlockCost":1000,"plotCount":6,"cropIds":["tomato","strawberry","lettuce","pepper","cucumber"],"bgColor":"bg-emerald-50","plotColor":"bg-emerald-700"},{"id":"orchard","name":"果园","description":"阳光充足的果园，种植果树收获丰厚奖励","emoji":"🍎","unlockLevel":5,"unlockCost":3000,"plotCount":6,"cropIds":["apple","grape","peach","cherry","orange"],"bgColor":"bg-rose-50","plotColor":"bg-amber-900"},{"id":"ranch","name":"牧场","description":"广阔的牧场，养殖动物获得特色产品","emoji":"🐄","unlockLevel":7,"unlockCost":5000,"plotCount":6,"cropIds":["chicken","cow","sheep","bee","goat"],"bgColor":"bg-yellow-50","plotColor":"bg-yellow-700"},{"id":"mystic","name":"神秘农田","description":"传送门另一端的神秘之地，生长着世间罕见的魔法作物","emoji":"🌌","unlockLevel":99,"unlockCost":999999,"plotCount":6,"cropIds":["moonflower","starmushroom","crystal_cabbage","fire_chili","rainbow_potato"],"bgColor":"bg-indigo-50","plotColor":"bg-indigo-800"}]};
+  var CONFIG = {"githubOwner":"local","githubRepo":"local","githubTokenMasked":"","configured":false,"adminPasswordSet":false,"source":"local"};
+
+  function safeGet(n,f){ try{ return localStorage.getItem(n)||f; }catch(e){ return f; } }
+  function currentUser(){ return safeGet('farm_game_username','本地玩家'); }
+
+  function buildDefaultSave(username){
+    var now = new Date().toISOString();
+    function makePlots(count, farmFlag){
+      var arr=[]; for(var i=0;i<count;i++){
+        var p = {id:i, unlocked:(i<3), crop:null, plantedAt:null, waterCount:0};
+        if(i>=3 && i<6) p.unlockCost=500;
+        if(farmFlag && i>=6){ p.unlockCost=2000; p.unlockLevel=5; }
+        arr.push(p);
+      }
+      return arr;
+    }
+    var defs = SCENES.scenes||[];
+    var scenes = {};
+    for(var k=0;k<defs.length;k++){
+      var s = defs[k], isFarm = (s.id==='farm');
+      scenes[s.id] = { unlocked:isFarm, plots:makePlots(s.plotCount,isFarm),
+        unlockedCrops:isFarm?['wheat']:[], inventory:{},
+        portal:{portalCount:0,pityCount:0}, harvestedCrops:{} };
+    }
+    var farm = scenes['farm'];
+    return { username:username, gold:100, level:1, exp:0, currentScene:'farm',
+      scenes:scenes, plots:farm.plots, inventory:farm.inventory,
+      unlockedCrops:farm.unlockedCrops, unlockedScenes:['farm'],
+      stats:{totalHarvests:0,totalPlanted:0,totalGoldEarned:0,inventoryTotal:0},
+      autoUnlocked:false, lastSaveTime:now };
+  }
+
+  function readLB(){ try{ var r=localStorage.getItem('farm_local_leaderboard'); return r?JSON.parse(r):[]; }catch(e){ return []; } }
+  function updLB(sd){
+    try{
+      var rows = readLB().filter(function(r){ return r.username!==sd.username; });
+      var totalInv=0, scenes=sd.scenes||{}, ks=Object.keys(scenes);
+      for(var i=0;i<ks.length;i++){ var inv=scenes[ks[i]].inventory||{}, ck=Object.keys(inv); for(var j=0;j<ck.length;j++) totalInv+=(inv[ck[j]]||0); }
+      rows.push({rank:0, username:sd.username, gold:sd.gold||0, level:sd.level||1,
+        totalHarvests:(sd.stats&&sd.stats.totalHarvests)||0, totalPlanted:(sd.stats&&sd.stats.totalPlanted)||0,
+        inventoryTotal:totalInv});
+      rows.sort(function(a,b){ return (b.gold||0)-(a.gold||0); });
+      for(var n=0;n<rows.length;n++) rows[n].rank=n+1;
+      localStorage.setItem('farm_local_leaderboard', JSON.stringify(rows));
+    }catch(e){}
+  }
+
+  function route(path, m, body){
+    var user = currentUser();
+    if(/\/api\/auth\/login$/.test(path)||/\/api\/auth\/register$/.test(path)){
+      var un=user; try{ var d=JSON.parse(body||'{}'); if(d.username) un=String(d.username); }catch(e){}
+      return {status:200, json:{success:true, token:'local-'+Date.now(), username:un, message:/login$/.test(path)?'登录成功':'注册成功'}};
+    }
+    if(/\/api\/game\/crops$/.test(path)) return {status:200, json:CROPS};
+    if(/\/api\/game\/scenes$/.test(path)) return {status:200, json:SCENES};
+    if(/\/api\/game\/config$/.test(path)){
+      if(m==='POST'){ try{ var dd=JSON.parse(body||'{}'); if(dd&&typeof dd==='object') CONFIG=Object.assign({},CONFIG,dd); }catch(e){} return {status:200, json:{success:true}}; }
+      return {status:200, json:CONFIG};
+    }
+    if(/\/api\/game\/load$/.test(path)){
+      var key='farm_save_'+user, sd=null;
+      try{ var raw=localStorage.getItem(key); if(raw) sd=JSON.parse(raw); }catch(e){}
+      if(!sd) sd=buildDefaultSave(user);
+      return {status:201, json:{success:true, message:'读取成功', saveData:sd, isNewGame:false, source:'local'}};
+    }
+    if(/\/api\/game\/save$/.test(path)){
+      try{ var dd=JSON.parse(body||'{}'); if(dd.saveData){ localStorage.setItem('farm_save_'+user, JSON.stringify(dd.saveData)); updLB(dd.saveData); } }catch(e){}
+      return {status:200, json:{success:true, message:'保存成功'}};
+    }
+    if(/\/api\/game\/leaderboard$/.test(path)) return {status:200, json:{entries:readLB(), metric:'gold'}};
+    if(/\/api\/game\/redeem$/.test(path)) return {status:200, json:{success:false, message:'本地版无兑换码功能'}};
+    return {status:404, json:{success:false, message:'not found'}};
+  }
+
+  function handleXHR(xhr, m, u, body){
+    var path; try{ path=new URL(u, location.href).pathname; }catch(e){ return false; }
+    if(path.indexOf('/api/game/')<0 && path.indexOf('/api/auth/')<0) return false;
+    var res; try{ res = route(path, String(m).toUpperCase(), body||''); }catch(e){ return false; }
+    var text = typeof res.json==='string'?res.json:JSON.stringify(res.json);
+    xhr.__intercepted = true;
+    try{ Object.defineProperty(xhr,'responseText',{configurable:true,get:function(){return text;}}); }catch(e){}
+    try{ Object.defineProperty(xhr,'response',{configurable:true,get:function(){return text;}}); }catch(e){}
+    try{ xhr.getAllResponseHeaders = function(){ return 'content-type: application/json\r\n'; }; }catch(e){}
+    xhr.status = res.status||200; xhr.statusText='OK'; xhr.readyState=4;
+    try{ if(typeof xhr.onreadystatechange==='function') xhr.onreadystatechange.call(xhr); }catch(e){}
+    try{ if(typeof xhr.onload==='function') xhr.onload.call(xhr); }catch(e){}
+    try{ if(typeof xhr.onloadend==='function') xhr.onloadend.call(xhr); }catch(e){}
+    try{ xhr.dispatchEvent(new Event('readystatechange')); xhr.dispatchEvent(new Event('load')); xhr.dispatchEvent(new Event('loadend')); }catch(e){}
+    return true;
+  }
+
+  var OR = window.XMLHttpRequest;
+  if(OR){
+    var _open=OR.prototype.open, _send=OR.prototype.send;
+    OR.prototype.open = function(m,u){ this.__m=m; this.__u=u; return _open.apply(this,arguments); };
+    OR.prototype.send = function(body){
+      if(handleXHR(this, this.__m, this.__u, body)) return;
+      return _send.apply(this,arguments);
+    };
+  }
+  var _fetch = window.fetch;
+  if(_fetch){
+    window.fetch = function(input, init){
+      var u = typeof input==='string'?input:(input&&input.url)||'';
+      var path; try{ path=new URL(u, location.href).pathname; }catch(e){ return _fetch.apply(this,arguments); }
+      if(path.indexOf('/api/game/')<0 && path.indexOf('/api/auth/')<0) return _fetch.apply(this,arguments);
+      var m = ((init&&init.method)||'GET').toUpperCase();
+      var body = (init&&init.body)?(typeof init.body==='string'?init.body:JSON.stringify(init.body)):'';
+      var res = route(path, m, body);
+      var text = typeof res.json==='string'?res.json:JSON.stringify(res.json);
+      return Promise.resolve(new Response(text, {status:res.status||200, headers:{'Content-Type':'application/json'}}));
+    };
+  }
+})();
+</script>
+<script>
+/* 预设本地登录，打开即玩（若尚无本地身份） */
+(function(){
+  try{
+    if(!localStorage.getItem('farm_game_token')) localStorage.setItem('farm_game_token','local-standalone');
+    if(!localStorage.getItem('farm_game_username')) localStorage.setItem('farm_game_username','本地玩家');
+  }catch(e){}
+})();
+</script>
+
+<script>
+/* 修正 basename：让 React Router 匹配当前托管路径（本地独立版 /game4/） */
+(function(){
+  try{
+    var p = (window.location.pathname||'/').replace(/\/+$/,'') || '/';
+    window.__BASENAME__ = p;
+    if(window.__platform__) window.__platform__.basename = p;
+  }catch(e){}
+})();
+</script>
+<script>
+/* ===== 本地独立版 API 拦截器：把所有 /api/auth/* 和 /api/game/* 请求改为本地处理 ===== */
+(function(){
+  var CROPS = {"crops":[{"id":"wheat","name":"小麦","seedPrice":10,"harvestGold":20,"growthTime":30,"unlockLevel":1,"expReward":5,"emoji":"🌾"},{"id":"carrot","name":"胡萝卜","seedPrice":25,"harvestGold":55,"growthTime":60,"unlockLevel":2,"expReward":12,"emoji":"🥕"},{"id":"corn","name":"玉米","seedPrice":60,"harvestGold":140,"growthTime":120,"unlockLevel":3,"expReward":30,"emoji":"🌽"},{"id":"tomato","name":"番茄","seedPrice":150,"harvestGold":360,"growthTime":240,"unlockLevel":5,"expReward":75,"emoji":"🍅"},{"id":"strawberry","name":"草莓","seedPrice":350,"harvestGold":850,"growthTime":480,"unlockLevel":8,"expReward":180,"emoji":"🍓"},{"id":"pumpkin","name":"南瓜","seedPrice":800,"harvestGold":2000,"growthTime":900,"unlockLevel":12,"expReward":450,"emoji":"🎃"},{"id":"lettuce","name":"生菜","seedPrice":35,"harvestGold":80,"growthTime":45,"unlockLevel":3,"expReward":8,"emoji":"🥬"},{"id":"pepper","name":"辣椒","seedPrice":80,"harvestGold":190,"growthTime":90,"unlockLevel":4,"expReward":20,"emoji":"🌶️"},{"id":"cucumber","name":"黄瓜","seedPrice":120,"harvestGold":300,"growthTime":150,"unlockLevel":6,"expReward":50,"emoji":"🥒"},{"id":"apple","name":"苹果","seedPrice":200,"harvestGold":500,"growthTime":180,"unlockLevel":5,"expReward":60,"emoji":"🍎"},{"id":"grape","name":"葡萄","seedPrice":400,"harvestGold":1000,"growthTime":300,"unlockLevel":6,"expReward":120,"emoji":"🍇"},{"id":"peach","name":"桃子","seedPrice":600,"harvestGold":1500,"growthTime":420,"unlockLevel":8,"expReward":200,"emoji":"🍑"},{"id":"cherry","name":"樱桃","seedPrice":900,"harvestGold":2200,"growthTime":600,"unlockLevel":10,"expReward":300,"emoji":"🍒"},{"id":"orange","name":"橙子","seedPrice":1200,"harvestGold":3000,"growthTime":720,"unlockLevel":12,"expReward":400,"emoji":"🍊"},{"id":"chicken","name":"小鸡","seedPrice":150,"harvestGold":400,"growthTime":120,"unlockLevel":7,"expReward":40,"emoji":"🐔"},{"id":"cow","name":"奶牛","seedPrice":500,"harvestGold":1200,"growthTime":300,"unlockLevel":8,"expReward":150,"emoji":"🐄"},{"id":"sheep","name":"绵羊","seedPrice":700,"harvestGold":1700,"growthTime":420,"unlockLevel":9,"expReward":220,"emoji":"🐑"},{"id":"bee","name":"蜂箱","seedPrice":1000,"harvestGold":2500,"growthTime":540,"unlockLevel":11,"expReward":350,"emoji":"🐝"},{"id":"goat","name":"山羊","seedPrice":1500,"harvestGold":3800,"growthTime":720,"unlockLevel":13,"expReward":500,"emoji":"🐐"},{"id":"moonflower","name":"月光花","seedPrice":300,"harvestGold":800,"growthTime":200,"unlockLevel":10,"expReward":100,"emoji":"🌸"},{"id":"starmushroom","name":"星辰蘑菇","seedPrice":600,"harvestGold":1600,"growthTime":350,"unlockLevel":11,"expReward":200,"emoji":"🍄"},{"id":"crystal_cabbage","name":"水晶白菜","seedPrice":1000,"harvestGold":2600,"growthTime":500,"unlockLevel":12,"expReward":320,"emoji":"💎"},{"id":"fire_chili","name":"火焰辣椒","seedPrice":1500,"harvestGold":3800,"growthTime":650,"unlockLevel":13,"expReward":450,"emoji":"🔥"},{"id":"rainbow_potato","name":"彩虹土豆","seedPrice":2000,"harvestGold":5000,"growthTime":800,"unlockLevel":15,"expReward":600,"emoji":"🥔"}]};
+  var SCENES = {"scenes":[{"id":"farm","name":"普通农田","description":"最基础的农田，适合新手种植常见作物","emoji":"🌾","unlockLevel":1,"unlockCost":0,"plotCount":9,"cropIds":["wheat","carrot","corn","tomato","strawberry","pumpkin"],"bgColor":"bg-green-50","plotColor":"bg-amber-800"},{"id":"greenhouse","name":"温室大棚","description":"温暖湿润的温室，生长速度 +20%，种植特色蔬果","emoji":"🏠","unlockLevel":3,"unlockCost":1000,"plotCount":6,"cropIds":["tomato","strawberry","lettuce","pepper","cucumber"],"bgColor":"bg-emerald-50","plotColor":"bg-emerald-700"},{"id":"orchard","name":"果园","description":"阳光充足的果园，种植果树收获丰厚奖励","emoji":"🍎","unlockLevel":5,"unlockCost":3000,"plotCount":6,"cropIds":["apple","grape","peach","cherry","orange"],"bgColor":"bg-rose-50","plotColor":"bg-amber-900"},{"id":"ranch","name":"牧场","description":"广阔的牧场，养殖动物获得特色产品","emoji":"🐄","unlockLevel":7,"unlockCost":5000,"plotCount":6,"cropIds":["chicken","cow","sheep","bee","goat"],"bgColor":"bg-yellow-50","plotColor":"bg-yellow-700"},{"id":"mystic","name":"神秘农田","description":"传送门另一端的神秘之地，生长着世间罕见的魔法作物","emoji":"🌌","unlockLevel":99,"unlockCost":999999,"plotCount":6,"cropIds":["moonflower","starmushroom","crystal_cabbage","fire_chili","rainbow_potato"],"bgColor":"bg-indigo-50","plotColor":"bg-indigo-800"}]};
+  var CONFIG = {"githubOwner":"local","githubRepo":"local","githubTokenMasked":"","configured":false,"adminPasswordSet":false,"source":"local"};
+
+  function safeGet(n,f){ try{ return localStorage.getItem(n)||f; }catch(e){ return f; } }
+  function currentUser(){ return safeGet('farm_game_username','本地玩家'); }
+
+  function buildDefaultSave(username){
+    var now = new Date().toISOString();
+    function makePlots(count, farmFlag){
+      var arr=[]; for(var i=0;i<count;i++){
+        var p = {id:i, unlocked:(i<3), crop:null, plantedAt:null, waterCount:0};
+        if(i>=3 && i<6) p.unlockCost=500;
+        if(farmFlag && i>=6){ p.unlockCost=2000; p.unlockLevel=5; }
+        arr.push(p);
+      }
+      return arr;
+    }
+    var defs = SCENES.scenes||[];
+    var scenes = {};
+    for(var k=0;k<defs.length;k++){
+      var s = defs[k], isFarm = (s.id==='farm');
+      scenes[s.id] = { unlocked:isFarm, plots:makePlots(s.plotCount,isFarm),
+        unlockedCrops:isFarm?['wheat']:[], inventory:{},
+        portal:{portalCount:0,pityCount:0}, harvestedCrops:{} };
+    }
+    var farm = scenes['farm'];
+    return { username:username, gold:100, level:1, exp:0, currentScene:'farm',
+      scenes:scenes, plots:farm.plots, inventory:farm.inventory,
+      unlockedCrops:farm.unlockedCrops, unlockedScenes:['farm'],
+      stats:{totalHarvests:0,totalPlanted:0,totalGoldEarned:0,inventoryTotal:0},
+      autoUnlocked:false, lastSaveTime:now };
+  }
+
+  function readLB(){ try{ var r=localStorage.getItem('farm_local_leaderboard'); return r?JSON.parse(r):[]; }catch(e){ return []; } }
+  function updLB(sd){
+    try{
+      var rows = readLB().filter(function(r){ return r.username!==sd.username; });
+      var totalInv=0, scenes=sd.scenes||{}, ks=Object.keys(scenes);
+      for(var i=0;i<ks.length;i++){ var inv=scenes[ks[i]].inventory||{}, ck=Object.keys(inv); for(var j=0;j<ck.length;j++) totalInv+=(inv[ck[j]]||0); }
+      rows.push({rank:0, username:sd.username, gold:sd.gold||0, level:sd.level||1,
+        totalHarvests:(sd.stats&&sd.stats.totalHarvests)||0, totalPlanted:(sd.stats&&sd.stats.totalPlanted)||0,
+        inventoryTotal:totalInv});
+      rows.sort(function(a,b){ return (b.gold||0)-(a.gold||0); });
+      for(var n=0;n<rows.length;n++) rows[n].rank=n+1;
+      localStorage.setItem('farm_local_leaderboard', JSON.stringify(rows));
+    }catch(e){}
+  }
+
+  function route(path, m, body){
+    var user = currentUser();
+    if(/\/api\/auth\/login$/.test(path)||/\/api\/auth\/register$/.test(path)){
+      var un=user; try{ var d=JSON.parse(body||'{}'); if(d.username) un=String(d.username); }catch(e){}
+      return {status:200, json:{success:true, token:'local-'+Date.now(), username:un, message:/login$/.test(path)?'登录成功':'注册成功'}};
+    }
+    if(/\/api\/game\/crops$/.test(path)) return {status:200, json:CROPS};
+    if(/\/api\/game\/scenes$/.test(path)) return {status:200, json:SCENES};
+    if(/\/api\/game\/config$/.test(path)){
+      if(m==='POST'){ try{ var dd=JSON.parse(body||'{}'); if(dd&&typeof dd==='object') CONFIG=Object.assign({},CONFIG,dd); }catch(e){} return {status:200, json:{success:true}}; }
+      return {status:200, json:CONFIG};
+    }
+    if(/\/api\/game\/load$/.test(path)){
+      var key='farm_save_'+user, sd=null;
+      try{ var raw=localStorage.getItem(key); if(raw) sd=JSON.parse(raw); }catch(e){}
+      if(!sd) sd=buildDefaultSave(user);
+      return {status:201, json:{success:true, message:'读取成功', saveData:sd, isNewGame:false, source:'local'}};
+    }
+    if(/\/api\/game\/save$/.test(path)){
+      try{ var dd=JSON.parse(body||'{}'); if(dd.saveData){ localStorage.setItem('farm_save_'+user, JSON.stringify(dd.saveData)); updLB(dd.saveData); } }catch(e){}
+      return {status:200, json:{success:true, message:'保存成功'}};
+    }
+    if(/\/api\/game\/leaderboard$/.test(path)) return {status:200, json:{entries:readLB(), metric:'gold'}};
+    if(/\/api\/game\/redeem$/.test(path)) return {status:200, json:{success:false, message:'本地版无兑换码功能'}};
+    return {status:404, json:{success:false, message:'not found'}};
+  }
+
+  function handleXHR(xhr, m, u, body){
+    var path; try{ path=new URL(u, location.href).pathname; }catch(e){ return false; }
+    if(path.indexOf('/api/game/')<0 && path.indexOf('/api/auth/')<0) return false;
+    var res; try{ res = route(path, String(m).toUpperCase(), body||''); }catch(e){ return false; }
+    var text = typeof res.json==='string'?res.json:JSON.stringify(res.json);
+    xhr.__intercepted = true;
+    try{ Object.defineProperty(xhr,'responseText',{configurable:true,get:function(){return text;}}); }catch(e){}
+    try{ Object.defineProperty(xhr,'response',{configurable:true,get:function(){return text;}}); }catch(e){}
+    try{ xhr.getAllResponseHeaders = function(){ return 'content-type: application/json\r\n'; }; }catch(e){}
+    xhr.status = res.status||200; xhr.statusText='OK'; xhr.readyState=4;
+    try{ if(typeof xhr.onreadystatechange==='function') xhr.onreadystatechange.call(xhr); }catch(e){}
+    try{ if(typeof xhr.onload==='function') xhr.onload.call(xhr); }catch(e){}
+    try{ if(typeof xhr.onloadend==='function') xhr.onloadend.call(xhr); }catch(e){}
+    try{ xhr.dispatchEvent(new Event('readystatechange')); xhr.dispatchEvent(new Event('load')); xhr.dispatchEvent(new Event('loadend')); }catch(e){}
+    return true;
+  }
+
+  var OR = window.XMLHttpRequest;
+  if(OR){
+    var _open=OR.prototype.open, _send=OR.prototype.send;
+    OR.prototype.open = function(m,u){ this.__m=m; this.__u=u; return _open.apply(this,arguments); };
+    OR.prototype.send = function(body){
+      if(handleXHR(this, this.__m, this.__u, body)) return;
+      return _send.apply(this,arguments);
+    };
+  }
+  var _fetch = window.fetch;
+  if(_fetch){
+    window.fetch = function(input, init){
+      var u = typeof input==='string'?input:(input&&input.url)||'';
+      var path; try{ path=new URL(u, location.href).pathname; }catch(e){ return _fetch.apply(this,arguments); }
+      if(path.indexOf('/api/game/')<0 && path.indexOf('/api/auth/')<0) return _fetch.apply(this,arguments);
+      var m = ((init&&init.method)||'GET').toUpperCase();
+      var body = (init&&init.body)?(typeof init.body==='string'?init.body:JSON.stringify(init.body)):'';
+      var res = route(path, m, body);
+      var text = typeof res.json==='string'?res.json:JSON.stringify(res.json);
+      return Promise.resolve(new Response(text, {status:res.status||200, headers:{'Content-Type':'application/json'}}));
+    };
+  }
+})();
+</script>
+<script>
+/* 预设本地登录，打开即玩（若尚无本地身份） */
+(function(){
+  try{
+    if(!localStorage.getItem('farm_game_token')) localStorage.setItem('farm_game_token','local-standalone');
+    if(!localStorage.getItem('farm_game_username')) localStorage.setItem('farm_game_username','本地玩家');
+  }catch(e){}
+})();
+</script>
+
+<script>
+/* 修正 basename：让 React Router 匹配当前托管路径（本地独立版 /game4/） */
+(function(){
+  try{
+    var p = (window.location.pathname||'/').replace(/\/+$/,'') || '/';
+    window.__BASENAME__ = p;
+    if(window.__platform__) window.__platform__.basename = p;
+  }catch(e){}
+})();
+</script>
+<script>
+/* ===== 本地独立版 API 拦截器：把所有 /api/auth/* 和 /api/game/* 请求改为本地处理 ===== */
+(function(){
+  var CROPS = {"crops":[{"id":"wheat","name":"小麦","seedPrice":10,"harvestGold":20,"growthTime":30,"unlockLevel":1,"expReward":5,"emoji":"🌾"},{"id":"carrot","name":"胡萝卜","seedPrice":25,"harvestGold":55,"growthTime":60,"unlockLevel":2,"expReward":12,"emoji":"🥕"},{"id":"corn","name":"玉米","seedPrice":60,"harvestGold":140,"growthTime":120,"unlockLevel":3,"expReward":30,"emoji":"🌽"},{"id":"tomato","name":"番茄","seedPrice":150,"harvestGold":360,"growthTime":240,"unlockLevel":5,"expReward":75,"emoji":"🍅"},{"id":"strawberry","name":"草莓","seedPrice":350,"harvestGold":850,"growthTime":480,"unlockLevel":8,"expReward":180,"emoji":"🍓"},{"id":"pumpkin","name":"南瓜","seedPrice":800,"harvestGold":2000,"growthTime":900,"unlockLevel":12,"expReward":450,"emoji":"🎃"},{"id":"lettuce","name":"生菜","seedPrice":35,"harvestGold":80,"growthTime":45,"unlockLevel":3,"expReward":8,"emoji":"🥬"},{"id":"pepper","name":"辣椒","seedPrice":80,"harvestGold":190,"growthTime":90,"unlockLevel":4,"expReward":20,"emoji":"🌶️"},{"id":"cucumber","name":"黄瓜","seedPrice":120,"harvestGold":300,"growthTime":150,"unlockLevel":6,"expReward":50,"emoji":"🥒"},{"id":"apple","name":"苹果","seedPrice":200,"harvestGold":500,"growthTime":180,"unlockLevel":5,"expReward":60,"emoji":"🍎"},{"id":"grape","name":"葡萄","seedPrice":400,"harvestGold":1000,"growthTime":300,"unlockLevel":6,"expReward":120,"emoji":"🍇"},{"id":"peach","name":"桃子","seedPrice":600,"harvestGold":1500,"growthTime":420,"unlockLevel":8,"expReward":200,"emoji":"🍑"},{"id":"cherry","name":"樱桃","seedPrice":900,"harvestGold":2200,"growthTime":600,"unlockLevel":10,"expReward":300,"emoji":"🍒"},{"id":"orange","name":"橙子","seedPrice":1200,"harvestGold":3000,"growthTime":720,"unlockLevel":12,"expReward":400,"emoji":"🍊"},{"id":"chicken","name":"小鸡","seedPrice":150,"harvestGold":400,"growthTime":120,"unlockLevel":7,"expReward":40,"emoji":"🐔"},{"id":"cow","name":"奶牛","seedPrice":500,"harvestGold":1200,"growthTime":300,"unlockLevel":8,"expReward":150,"emoji":"🐄"},{"id":"sheep","name":"绵羊","seedPrice":700,"harvestGold":1700,"growthTime":420,"unlockLevel":9,"expReward":220,"emoji":"🐑"},{"id":"bee","name":"蜂箱","seedPrice":1000,"harvestGold":2500,"growthTime":540,"unlockLevel":11,"expReward":350,"emoji":"🐝"},{"id":"goat","name":"山羊","seedPrice":1500,"harvestGold":3800,"growthTime":720,"unlockLevel":13,"expReward":500,"emoji":"🐐"},{"id":"moonflower","name":"月光花","seedPrice":300,"harvestGold":800,"growthTime":200,"unlockLevel":10,"expReward":100,"emoji":"🌸"},{"id":"starmushroom","name":"星辰蘑菇","seedPrice":600,"harvestGold":1600,"growthTime":350,"unlockLevel":11,"expReward":200,"emoji":"🍄"},{"id":"crystal_cabbage","name":"水晶白菜","seedPrice":1000,"harvestGold":2600,"growthTime":500,"unlockLevel":12,"expReward":320,"emoji":"💎"},{"id":"fire_chili","name":"火焰辣椒","seedPrice":1500,"harvestGold":3800,"growthTime":650,"unlockLevel":13,"expReward":450,"emoji":"🔥"},{"id":"rainbow_potato","name":"彩虹土豆","seedPrice":2000,"harvestGold":5000,"growthTime":800,"unlockLevel":15,"expReward":600,"emoji":"🥔"}]};
+  var SCENES = {"scenes":[{"id":"farm","name":"普通农田","description":"最基础的农田，适合新手种植常见作物","emoji":"🌾","unlockLevel":1,"unlockCost":0,"plotCount":9,"cropIds":["wheat","carrot","corn","tomato","strawberry","pumpkin"],"bgColor":"bg-green-50","plotColor":"bg-amber-800"},{"id":"greenhouse","name":"温室大棚","description":"温暖湿润的温室，生长速度 +20%，种植特色蔬果","emoji":"🏠","unlockLevel":3,"unlockCost":1000,"plotCount":6,"cropIds":["tomato","strawberry","lettuce","pepper","cucumber"],"bgColor":"bg-emerald-50","plotColor":"bg-emerald-700"},{"id":"orchard","name":"果园","description":"阳光充足的果园，种植果树收获丰厚奖励","emoji":"🍎","unlockLevel":5,"unlockCost":3000,"plotCount":6,"cropIds":["apple","grape","peach","cherry","orange"],"bgColor":"bg-rose-50","plotColor":"bg-amber-900"},{"id":"ranch","name":"牧场","description":"广阔的牧场，养殖动物获得特色产品","emoji":"🐄","unlockLevel":7,"unlockCost":5000,"plotCount":6,"cropIds":["chicken","cow","sheep","bee","goat"],"bgColor":"bg-yellow-50","plotColor":"bg-yellow-700"},{"id":"mystic","name":"神秘农田","description":"传送门另一端的神秘之地，生长着世间罕见的魔法作物","emoji":"🌌","unlockLevel":99,"unlockCost":999999,"plotCount":6,"cropIds":["moonflower","starmushroom","crystal_cabbage","fire_chili","rainbow_potato"],"bgColor":"bg-indigo-50","plotColor":"bg-indigo-800"}]};
+  var CONFIG = {"githubOwner":"local","githubRepo":"local","githubTokenMasked":"","configured":false,"adminPasswordSet":false,"source":"local"};
+
+  function safeGet(n,f){ try{ return localStorage.getItem(n)||f; }catch(e){ return f; } }
+  function currentUser(){ return safeGet('farm_game_username','本地玩家'); }
+
+  function buildDefaultSave(username){
+    var now = new Date().toISOString();
+    function makePlots(count, farmFlag){
+      var arr=[]; for(var i=0;i<count;i++){
+        var p = {id:i, unlocked:(i<3), crop:null, plantedAt:null, waterCount:0};
+        if(i>=3 && i<6) p.unlockCost=500;
+        if(farmFlag && i>=6){ p.unlockCost=2000; p.unlockLevel=5; }
+        arr.push(p);
+      }
+      return arr;
+    }
+    var defs = SCENES.scenes||[];
+    var scenes = {};
+    for(var k=0;k<defs.length;k++){
+      var s = defs[k], isFarm = (s.id==='farm');
+      scenes[s.id] = { unlocked:isFarm, plots:makePlots(s.plotCount,isFarm),
+        unlockedCrops:isFarm?['wheat']:[], inventory:{},
+        portal:{portalCount:0,pityCount:0}, harvestedCrops:{} };
+    }
+    var farm = scenes['farm'];
+    return { username:username, gold:100, level:1, exp:0, currentScene:'farm',
+      scenes:scenes, plots:farm.plots, inventory:farm.inventory,
+      unlockedCrops:farm.unlockedCrops, unlockedScenes:['farm'],
+      stats:{totalHarvests:0,totalPlanted:0,totalGoldEarned:0,inventoryTotal:0},
+      autoUnlocked:false, lastSaveTime:now };
+  }
+
+  function readLB(){ try{ var r=localStorage.getItem('farm_local_leaderboard'); return r?JSON.parse(r):[]; }catch(e){ return []; } }
+  function updLB(sd){
+    try{
+      var rows = readLB().filter(function(r){ return r.username!==sd.username; });
+      var totalInv=0, scenes=sd.scenes||{}, ks=Object.keys(scenes);
+      for(var i=0;i<ks.length;i++){ var inv=scenes[ks[i]].inventory||{}, ck=Object.keys(inv); for(var j=0;j<ck.length;j++) totalInv+=(inv[ck[j]]||0); }
+      rows.push({rank:0, username:sd.username, gold:sd.gold||0, level:sd.level||1,
+        totalHarvests:(sd.stats&&sd.stats.totalHarvests)||0, totalPlanted:(sd.stats&&sd.stats.totalPlanted)||0,
+        inventoryTotal:totalInv});
+      rows.sort(function(a,b){ return (b.gold||0)-(a.gold||0); });
+      for(var n=0;n<rows.length;n++) rows[n].rank=n+1;
+      localStorage.setItem('farm_local_leaderboard', JSON.stringify(rows));
+    }catch(e){}
+  }
+
+  function route(path, m, body){
+    var user = currentUser();
+    if(/\/api\/auth\/login$/.test(path)||/\/api\/auth\/register$/.test(path)){
+      var un=user; try{ var d=JSON.parse(body||'{}'); if(d.username) un=String(d.username); }catch(e){}
+      return {status:200, json:{success:true, token:'local-'+Date.now(), username:un, message:/login$/.test(path)?'登录成功':'注册成功'}};
+    }
+    if(/\/api\/game\/crops$/.test(path)) return {status:200, json:CROPS};
+    if(/\/api\/game\/scenes$/.test(path)) return {status:200, json:SCENES};
+    if(/\/api\/game\/config$/.test(path)){
+      if(m==='POST'){ try{ var dd=JSON.parse(body||'{}'); if(dd&&typeof dd==='object') CONFIG=Object.assign({},CONFIG,dd); }catch(e){} return {status:200, json:{success:true}}; }
+      return {status:200, json:CONFIG};
+    }
+    if(/\/api\/game\/load$/.test(path)){
+      var key='farm_save_'+user, sd=null;
+      try{ var raw=localStorage.getItem(key); if(raw) sd=JSON.parse(raw); }catch(e){}
+      if(!sd) sd=buildDefaultSave(user);
+      return {status:201, json:{success:true, message:'读取成功', saveData:sd, isNewGame:false, source:'local'}};
+    }
+    if(/\/api\/game\/save$/.test(path)){
+      try{ var dd=JSON.parse(body||'{}'); if(dd.saveData){ localStorage.setItem('farm_save_'+user, JSON.stringify(dd.saveData)); updLB(dd.saveData); } }catch(e){}
+      return {status:200, json:{success:true, message:'保存成功'}};
+    }
+    if(/\/api\/game\/leaderboard$/.test(path)) return {status:200, json:{entries:readLB(), metric:'gold'}};
+    if(/\/api\/game\/redeem$/.test(path)) return {status:200, json:{success:false, message:'本地版无兑换码功能'}};
+    return {status:404, json:{success:false, message:'not found'}};
+  }
+
+  function handleXHR(xhr, m, u, body){
+    var path; try{ path=new URL(u, location.href).pathname; }catch(e){ return false; }
+    if(path.indexOf('/api/game/')<0 && path.indexOf('/api/auth/')<0) return false;
+    var res; try{ res = route(path, String(m).toUpperCase(), body||''); }catch(e){ return false; }
+    var text = typeof res.json==='string'?res.json:JSON.stringify(res.json);
+    xhr.__intercepted = true;
+    /* XHR 的 status/statusText/readyState/responseText/response 都是原型只读 getter，必须用 defineProperty 在实例上遮蔽 */
+    var props = {
+      'status': res.status||200,
+      'statusText': 'OK',
+      'readyState': 4,
+      'responseText': text,
+      'response': text,
+      'responseURL': location.href
+    };
+    try{ Object.keys(props).forEach(function(k){ Object.defineProperty(xhr, k, {configurable:true, enumerable:true, get:function(){ return props[k]; }}); }); }catch(e){}
+    try{ xhr.getAllResponseHeaders = function(){ return 'content-type: application/json\r\n'; }; }catch(e){}
+    try{ if(typeof xhr.onreadystatechange==='function') xhr.onreadystatechange.call(xhr); }catch(e){}
+    try{ if(typeof xhr.onload==='function') xhr.onload.call(xhr); }catch(e){}
+    try{ if(typeof xhr.onloadend==='function') xhr.onloadend.call(xhr); }catch(e){}
+    return true;
+  }
+
+  var OR = window.XMLHttpRequest;
+  if(OR){
+    var _open=OR.prototype.open, _send=OR.prototype.send;
+    OR.prototype.open = function(m,u){ this.__m=m; this.__u=u; return _open.apply(this,arguments); };
+    OR.prototype.send = function(body){
+      if(handleXHR(this, this.__m, this.__u, body)) return;
+      return _send.apply(this,arguments);
+    };
+  }
+  var _fetch = window.fetch;
+  if(_fetch){
+    window.fetch = function(input, init){
+      var u = typeof input==='string'?input:(input&&input.url)||'';
+      var path; try{ path=new URL(u, location.href).pathname; }catch(e){ return _fetch.apply(this,arguments); }
+      if(path.indexOf('/api/game/')<0 && path.indexOf('/api/auth/')<0) return _fetch.apply(this,arguments);
+      var m = ((init&&init.method)||'GET').toUpperCase();
+      var body = (init&&init.body)?(typeof init.body==='string'?init.body:JSON.stringify(init.body)):'';
+      var res = route(path, m, body);
+      var text = typeof res.json==='string'?res.json:JSON.stringify(res.json);
+      return Promise.resolve(new Response(text, {status:res.status||200, headers:{'Content-Type':'application/json'}}));
+    };
+  }
+})();
+</script>
+<script>
+/* 预设本地登录，打开即玩（若尚无本地身份） */
+(function(){
+  try{
+    if(!localStorage.getItem('farm_game_token')) localStorage.setItem('farm_game_token','local-standalone');
+    if(!localStorage.getItem('farm_game_username')) localStorage.setItem('farm_game_username','本地玩家');
+  }catch(e){}
+})();
+</script>
+<script type="module" crossorigin src="./assets/index-DPB_SEnj.js"></script><link rel="modulepreload" crossorigin href="./assets/rolldown-runtime-hePW80VL.js"><link rel="modulepreload" crossorigin href="./assets/radix-CwIF97SI.js"><link rel="stylesheet" crossorigin href="./assets/index-9_j48Vgc.css"><meta property="og:title" content="线上农场种植游戏（本地独立版）"><meta property="og:description" content="注册账号即可开垦地块种植作物，浇水施肥等待成熟收获赚金币升级，退出时自动保存进度，随时回到农场延续种植乐趣。"><meta property="og:image" content="https://miaoda.feishu.cn/aily/api/v1/files/static/2974332ce9d464f3c6faa12b87a531acc382ca0bd48e3b68b4d348e2cd9162cf_ve_miaoda?x-tos-process&#x3D;image%2Fresize%2Cw_120%2Ch_120%2Cm_fixed%7Crounded-corners%2Cr_14%2Fformat%2Cpng"><meta name="description" content="注册账号即可开垦地块种植作物，浇水施肥等待成熟收获赚金币升级，退出时自动保存进度，随时回到农场延续种植乐趣。"><link rel="icon" href="https://miaoda.feishu.cn/aily/api/v1/files/static/2974332ce9d464f3c6faa12b87a531acc382ca0bd48e3b68b4d348e2cd9162cf_ve_miaoda?x-tos-process&#x3D;image%2Fresize%2Cw_120%2Ch_120%2Cm_fixed%7Crounded-corners%2Cr_14%2Fformat%2Cpng"></head><body><div id="root"></div></body></html>
