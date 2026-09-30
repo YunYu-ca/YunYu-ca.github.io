@@ -1,14 +1,14 @@
 {
   "archiveData": {
-    "score": 7,
+    "score": 12,
     "scoreLevel": 1,
     "level": 1,
-    "exp": 11,
+    "exp": 12,
     "clear": {
-      "total": 2,
+      "total": 3,
       "rewards": [],
       "byMode": {
-        "normal": 2
+        "normal": 3
       }
     },
     "endless": {
@@ -16,12 +16,12 @@
       "milestones": []
     },
     "kills": {
-      "boss": 3,
-      "fast": 108,
-      "tank": 50,
-      "elite": 19,
-      "normal": 183,
-      "zombie": 10
+      "boss": 6,
+      "fast": 184,
+      "tank": 90,
+      "elite": 44,
+      "normal": 344,
+      "zombie": 23
     },
     "killMilestones": {},
     "fishing": {
@@ -45,8 +45,8 @@
     "hasAutoFishingRod": true
   },
   "preview": {
-    "score": 7,
+    "score": 12,
     "level": 1,
-    "clearTotal": 2
+    "clearTotal": 3
   }
 }
