@@ -56,14 +56,93 @@
     border-bottom: 1px solid var(--border);
   }
   /* ===== 主题切换按钮 ===== */
-  .theme-btn {
+  .theme-btn, .ext-btn {
     display: inline-flex; align-items: center; justify-content: center;
     width: 38px; height: 38px; border-radius: 50%;
     border: 1px solid var(--border); background: var(--surface);
     color: var(--text-muted); cursor: pointer;
     transition: background .2s, color .2s, transform .15s;
   }
-  .theme-btn:hover { color: var(--accent); border-color: var(--accent); transform: translateY(-1px); }
+  .theme-btn:hover, .ext-btn:hover { color: var(--accent); border-color: var(--accent); transform: translateY(-1px); }
+
+  /* ===== 灵动岛 ===== */
+  #dynamic-island {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    z-index: 1500; display: flex; align-items: center; gap: 10px;
+    padding: 8px 18px; border-radius: 999px;
+    background: rgba(18,26,48,.82); backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,.14);
+    color: #eef2ff; font-size: .82rem; letter-spacing: .3px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.25);
+    transition: opacity .3s, transform .3s;
+    font-variant-numeric: tabular-nums;
+  }
+  #dynamic-island.island-hidden { opacity: 0; transform: translateX(-50%) translateY(-8px); pointer-events: none; }
+  #dynamic-island .island-dot { width: 7px; height: 7px; border-radius: 50%; background: #34d399; box-shadow: 0 0 8px #34d399; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  #dynamic-island .island-sep { width:1px; height:14px; background:rgba(255,255,255,.18); }
+
+  /* ===== 拓展抽屉 ===== */
+  .ext-scrim {
+    position: fixed; inset: 0; z-index: 2000;
+    background: rgba(0,0,0,.45); backdrop-filter: blur(1px);
+    opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s;
+  }
+  .ext-scrim.open { opacity: 1; visibility: visible; }
+  #ext-drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 2001;
+    width: 33.33vw; max-width: 470px; min-width: 300px;
+    background: var(--surface); border-left: 1px solid var(--border);
+    transform: translateX(100%); transition: transform .32s cubic-bezier(.2,.8,.2,1);
+    display: flex; flex-direction: column;
+    box-shadow: -12px 0 40px rgba(0,0,0,.22);
+  }
+  #ext-drawer.open { transform: translateX(0); }
+  .drawer-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 20px; border-bottom: 1px solid var(--border);
+  }
+  .drawer-head h3 { font-size: 1.05rem; margin: 0; }
+  .drawer-close {
+    background: none; border: none; color: var(--text-muted);
+    font-size: 22px; cursor: pointer; line-height: 1; padding: 4px 8px;
+  }
+  .drawer-close:hover { color: var(--accent); }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 18px; }
+  .ext-section {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px; background: var(--bg);
+  }
+  .ext-section h4 { font-size: .98rem; margin: 0 0 4px; display:flex; align-items:center; gap:8px; }
+  .ext-section p { font-size: .8rem; color: var(--text-muted); margin: 0 0 12px; }
+  .upload-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text); font-size: .85rem; cursor: pointer;
+  }
+  .upload-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .wall-actions { display: none; margin-top: 10px; gap: 10px; }
+  .wall-actions button {
+    padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text); font-size: .85rem; cursor: pointer;
+  }
+  .wall-actions button:first-child { background: var(--accent); color:#fff; border-color: var(--accent); }
+  .qq-box { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background:#000; height: 340px; }
+  .qq-box iframe { width: 100%; height: 100%; border: 0; display:block; }
+  .qq-open { display: inline-block; margin-top: 10px; font-size: .85rem; }
+  .switch { position: relative; display: inline-block; width: 46px; height: 26px; vertical-align: middle; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch .slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background: var(--border); border-radius: 26px; transition: .25s;
+  }
+  .switch .slider::before {
+    content:""; position: absolute; height: 20px; width: 20px; left: 3px; top: 3px;
+    background: #fff; border-radius: 50%; transition: .25s; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+  .switch input:checked + .slider { background: var(--accent); }
+  .switch input:checked + .slider::before { transform: translateX(20px); }
+  .ext-toggle-row { display:flex; align-items:center; justify-content:space-between; }
   .nav-inner {
     max-width: var(--max-w); margin: 0 auto;
     padding: 14px 24px;
@@ -235,6 +314,50 @@
 </head>
 <body>
 
+<!-- ===== 灵动岛 ===== -->
+<div id="dynamic-island">
+  <span class="island-dot"></span>
+  <span id="island-time">--:--:--</span>
+  <span class="island-sep"></span>
+  <span id="island-date">—</span>
+</div>
+
+<!-- ===== 拓展抽屉 ===== -->
+<div class="ext-scrim" id="ext-scrim" onclick="closeExt()"></div>
+<aside id="ext-drawer" aria-label="拓展功能面板">
+  <div class="drawer-head">
+    <h3>拓展功能</h3>
+    <button class="drawer-close" onclick="closeExt()" aria-label="关闭">&times;</button>
+  </div>
+  <div class="drawer-body">
+    <section class="ext-section">
+      <h4>🖼️ 壁纸背景</h4>
+      <p>上传一张图片作为页面背景（可保存，刷新仍生效）</p>
+      <label class="upload-btn">选择图片<input type="file" id="wall-file" accept="image/*" hidden></label>
+      <div class="wall-actions" id="wall-actions">
+        <button id="wall-apply">✔ 使用此壁纸</button>
+        <button id="wall-reset">恢复默认</button>
+      </div>
+      <p id="wall-msg" style="font-size:.78rem;min-height:0;margin:8px 0 0;"></p>
+    </section>
+    <section class="ext-section">
+      <h4>🎵 QQ音乐播放器</h4>
+      <p>嵌入版播放器，首次使用需扫码登录</p>
+      <div class="qq-box"><iframe id="qq-frame" src="about:blank" title="QQ音乐"></iframe></div>
+      <a class="qq-open" id="qq-open" href="https://y.qq.com/" target="_blank" rel="noopener">若播放器未加载，点此在新窗口打开 QQ音乐 ↗</a>
+    </section>
+    <section class="ext-section">
+      <div class="ext-toggle-row">
+        <div>
+          <h4 style="margin:0 0 2px;">📱 灵动岛</h4>
+          <p style="margin:0;">顶部状态浮岛：实时显示时间 / 日期</p>
+        </div>
+        <label class="switch"><input type="checkbox" id="island-toggle"><span class="slider"></span></label>
+      </div>
+    </section>
+  </div>
+</aside>
+
 <!-- ===== 导航 ===== -->
 <nav>
   <div class="nav-inner">
@@ -248,6 +371,9 @@
     <div style="display:flex;align-items:center;gap:12px;">
       <button class="menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <button class="ext-btn" onclick="openExt()" id="ext-btn" aria-label="拓展功能">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       </button>
       <button class="theme-btn" onclick="toggleTheme()" id="theme-btn" aria-label="切换深浅色模式"></button>
     </div>
@@ -415,6 +541,121 @@
       saved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
     }
     applyTheme(saved==='dark' ? 'dark' : 'light');
+  })();
+
+  // ===== 灵动岛：实时时钟 =====
+  function pad(n){ return n<10 ? '0'+n : ''+n; }
+  function tickIsland(){
+    var d = new Date();
+    var elt = document.getElementById('island-time');
+    var eld = document.getElementById('island-date');
+    if(elt) elt.textContent = pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+    if(eld) eld.textContent = (d.getMonth()+1)+'月'+d.getDate()+'日 · 周'+'日一二三四五六'[d.getDay()];
+  }
+  function applyIsland(on){
+    var island = document.getElementById('dynamic-island');
+    if(island) island.classList.toggle('island-hidden', !on);
+    var tog = document.getElementById('island-toggle');
+    if(tog) tog.checked = on;
+    try{ localStorage.setItem('island', on ? 'on' : 'off'); }catch(e){}
+  }
+  (function initIsland(){
+    var saved = 'on'; try{ saved = localStorage.getItem('island')||'on'; }catch(e){}
+    applyIsland(saved !== 'off');
+    tickIsland(); setInterval(tickIsland, 1000);
+  })();
+
+  // ===== 拓展抽屉 =====
+  function openExt(){
+    document.getElementById('ext-drawer').classList.add('open');
+    document.getElementById('ext-scrim').classList.add('open');
+  }
+  function closeExt(){
+    document.getElementById('ext-drawer').classList.remove('open');
+    document.getElementById('ext-scrim').classList.remove('open');
+  }
+  // 灵动岛开关绑定
+  var islandToggle = document.getElementById('island-toggle');
+  if(islandToggle) islandToggle.addEventListener('change', function(){ applyIsland(islandToggle.checked); });
+
+  // ===== 壁纸上传 =====
+  var wallFile = document.getElementById('wall-file');
+  var wallActions = document.getElementById('wall-actions');
+  var wallMsg = document.getElementById('wall-msg');
+  var pendingWall = null;
+  function downscale(dataUrl, maxW, cb){
+    var img = new Image();
+    img.onload = function(){
+      var w = img.width, h = img.height;
+      if(w > maxW){ h = Math.round(h * maxW / w); w = maxW; }
+      var c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      try{ cb(c.toDataURL('image/jpeg', 0.82)); }catch(e){ cb(dataUrl); }
+    };
+    img.onerror = function(){ cb(dataUrl); };
+    img.src = dataUrl;
+  }
+  function setWall(url, persist){
+    document.body.style.backgroundImage = 'linear-gradient(var(--bg-overlay),var(--bg-overlay)), url("'+url+'")';
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundAttachment = 'fixed';
+    if(persist){ try{ localStorage.setItem('wallpaper', url); }catch(e){ if(wallMsg) wallMsg.textContent='图片过大无法保存，本次生效'; } }
+  }
+  if(wallFile) wallFile.addEventListener('change', function(){
+    var f = wallFile.files && wallFile.files[0];
+    if(!f) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      pendingWall = reader.result;
+      wallActions.style.display = 'flex';
+      if(wallMsg) wallMsg.textContent = '已选择图片（'+(f.size/1024).toFixed(0)+' KB），点「使用此壁纸」生效';
+    };
+    reader.readAsDataURL(f);
+  });
+  var wallApply = document.getElementById('wall-apply');
+  if(wallApply) wallApply.addEventListener('click', function(){
+    if(!pendingWall) return;
+    downscale(pendingWall, 1920, function(smallUrl){
+      setWall(smallUrl, true);
+      if(wallMsg) wallMsg.textContent = '已应用并保存为壁纸 ✔';
+    });
+  });
+  var wallReset = document.getElementById('wall-reset');
+  if(wallReset) wallReset.addEventListener('click', function(){
+    document.body.style.backgroundImage = '';
+    document.body.style.backgroundSize = '';
+    try{ localStorage.removeItem('wallpaper'); }catch(e){}
+    if(wallMsg) wallMsg.textContent = '已恢复默认背景';
+    if(wallActions) wallActions.style.display = 'none';
+    pendingWall = null;
+  });
+  // 恢复已保存壁纸
+  (function initWall(){
+    var saved = null; try{ saved = localStorage.getItem('wallpaper'); }catch(e){}
+    if(saved) setWall(saved, false);
+  })();
+
+  // ===== QQ音乐播放器 =====
+  (function initQQ(){
+    var frame = document.getElementById('qq-frame');
+    if(frame){
+      // 尝试内嵌 QQ音乐网页版（可能被 X-Frame-Options 拒绝，属正常）
+      frame.setAttribute('src', 'https://y.qq.com/');
+      var timer = setTimeout(function(){
+        // 若 iframe 无法加载（大多数跨站策略会拒绝），给出新窗口入口提示
+        try{
+          var doc = frame.contentDocument || frame.contentWindow.document;
+          if(!doc || !doc.body || doc.body.childNodes.length===0){
+            var t = document.getElementById('qq-open');
+            if(t){ t.style.color='var(--accent)'; t.style.fontWeight='600'; }
+          }
+        }catch(e){
+          var t2 = document.getElementById('qq-open');
+          if(t2){ t2.style.color='var(--accent)'; t2.style.fontWeight='600'; }
+        }
+      }, 1800);
+    }
   })();
 </script>
 
