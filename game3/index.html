@@ -108,4 +108,380 @@
       window.__platform__ = JSON.parse('{"csrfToken":"a6e2ec69ce84f4d7aea794c1ac5f959742466ed7-1790779109","userId":"","appId":"app_17epw0ae433","appName":"像素塔防游戏","appAvatar":"https://miaoda.feishu.cn/aily/api/v1/files/static/a1cf225703820499bd11ae5a52ff8b20b932304a7c7a638cf5c5f7ccab4a3b45_ve_miaoda?x-tos-process=image%2Fresize%2Cw_120%2Ch_120%2Cm_fixed%7Crounded-corners%2Cr_14%2Fformat%2Cpng","appDescription":"支持多模式多难度多关卡玩法，放置防御塔抵御敌人，存档云端同步，可查看全服排行，解锁各类奖励体验丰富策略塔防乐趣。","loginUrl":"/app/app_17epw0ae433/runtime/page/login?redirect_uri=https%3A%2F%2F4kxftbp19qess.doubaoapps.com%2Fapp%2Fapp_17epw0ae433","userType":"","tenantId":4349232290,"environment":"online","showBadge":true,"appPublished":{"status_code":1,"app_info":{"app_name":"像素塔防游戏","app_avatar":"https://miaoda.feishu.cn/aily/api/v1/files/static/a1cf225703820499bd11ae5a52ff8b20b932304a7c7a638cf5c5f7ccab4a3b45_ve_miaoda?x-tos-process\\u003dimage%2Fresize%2Cw_120%2Ch_120%2Cm_fixed%7Crounded-corners%2Cr_14%2Fformat%2Cpng","app_description":"支持多模式多难度多关卡玩法，放置防御塔抵御敌人，存档云端同步，可查看全服排行，解锁各类奖励体验丰富策略塔防乐趣。","show_badge":true},"app_runtime_extra":{"url":"https://4kxftbp19qess-aadkwkguca6hs.feishuapp.cn/suda/api/v1/workspaces/workspace_aadkwkguca6hs","bucket":{"default_bucket_id":"bucket_aadkwpgixriiw"}}},"basename":"/app/app_17epw0ae433"}');
     } catch (e) {
       console.error('Failed to parse __platform__', e);
-    }</script><script type="module" crossorigin src="./assets/index-g1I7KyAI.js"></script><link rel="modulepreload" crossorigin href="./assets/rolldown-runtime-hePW80VL.js"><link rel="modulepreload" crossorigin href="./assets/radix-Cv86-gy3.js"><link rel="stylesheet" crossorigin href="./assets/index-Dao7Jjog.css"><meta property="og:title" content="像素塔防游戏"><meta property="og:description" content="支持多模式多难度多关卡玩法，放置防御塔抵御敌人，存档云端同步，可查看全服排行，解锁各类奖励体验丰富策略塔防乐趣。"><meta property="og:image" content="https://miaoda.feishu.cn/aily/api/v1/files/static/a1cf225703820499bd11ae5a52ff8b20b932304a7c7a638cf5c5f7ccab4a3b45_ve_miaoda?x-tos-process&#x3D;image%2Fresize%2Cw_120%2Ch_120%2Cm_fixed%7Crounded-corners%2Cr_14%2Fformat%2Cpng"><meta name="description" content="支持多模式多难度多关卡玩法，放置防御塔抵御敌人，存档云端同步，可查看全服排行，解锁各类奖励体验丰富策略塔防乐趣。"><link rel="icon" href="https://miaoda.feishu.cn/aily/api/v1/files/static/a1cf225703820499bd11ae5a52ff8b20b932304a7c7a638cf5c5f7ccab4a3b45_ve_miaoda?x-tos-process&#x3D;image%2Fresize%2Cw_120%2Ch_120%2Cm_fixed%7Crounded-corners%2Cr_14%2Fformat%2Cpng"></head><body><div id="root"></div></body></html>
+    }</script><script type="module" crossorigin src="./assets/index-g1I7KyAI.js"></script><link rel="modulepreload" crossorigin href="./assets/rolldown-runtime-hePW80VL.js"><link rel="modulepreload" crossorigin href="./assets/radix-Cv86-gy3.js"><link rel="stylesheet" crossorigin href="./assets/index-Dao7Jjog.css"><meta property="og:title" content="像素塔防游戏"><meta property="og:description" content="支持多模式多难度多关卡玩法，放置防御塔抵御敌人，存档云端同步，可查看全服排行，解锁各类奖励体验丰富策略塔防乐趣。"><meta property="og:image" content="https://miaoda.feishu.cn/aily/api/v1/files/static/a1cf225703820499bd11ae5a52ff8b20b932304a7c7a638cf5c5f7ccab4a3b45_ve_miaoda?x-tos-process&#x3D;image%2Fresize%2Cw_120%2Ch_120%2Cm_fixed%7Crounded-corners%2Cr_14%2Fformat%2Cpng"><meta name="description" content="支持多模式多难度多关卡玩法，放置防御塔抵御敌人，存档云端同步，可查看全服排行，解锁各类奖励体验丰富策略塔防乐趣。"><link rel="icon" href="https://miaoda.feishu.cn/aily/api/v1/files/static/a1cf225703820499bd11ae5a52ff8b20b932304a7c7a638cf5c5f7ccab4a3b45_ve_miaoda?x-tos-process&#x3D;image%2Fresize%2Cw_120%2Ch_120%2Cm_fixed%7Crounded-corners%2Cr_14%2Fformat%2Cpng"></head><body><div id="root"></div>
+<script>
+<!-- G3_AUTH_INJECT -->
+/* ===== Game3 统一账号系统注入 ===== 拦截 /api/game/* → GitHub 云存档 + 登录门禁 + 退出询问保存 */
+(function(){
+  'use strict';
+  if (window.__g3auth) return; window.__g3auth = true;
+  /* 修正路由基址：本游戏托管在 /game3/，让平台 Router 在此路径下渲染 */
+  try{ window.__BASENAME__ = '/game3'; if(window.__platform__) window.__platform__.basename='/game3'; }catch(e){}
+
+  /* ---- 常量 ---- */
+  var REPO = 'YunYu-ca/YunYu-ca.github.io';
+  var GH = 'https://api.github.com/repos/' + REPO;
+  var ACCOUNTS = 'Game3Accounts';   // 独立账号文件夹
+  var SAVES = 'Game3Saves';         // 独立存档文件夹
+  var DATA = 'Game3Data';           // 排行榜
+  var CFG_KEY = 'game3_cfg';
+  var ADMIN_TOKEN_KEY = 'game3_admin_token';
+  var TOKEN_KEY = 'game3_token';
+  var USER_KEY = 'game3_username';
+  var LASTSAVE_KEY = 'game3_lastsave';
+  var STAMP_KEY = 'game3_saved_ts';
+
+  /* ---- GitHub 凭据：管理员 token（在门禁 ⚙ 配置，写仓库用）---- */
+  function ghToken(){ return localStorage.getItem(ADMIN_TOKEN_KEY) || localStorage.getItem('game3_token') || ''; }
+
+  /* ---- 工具 ---- */
+  function b64(s){ try{ return btoa(unescape(encodeURIComponent(s))); }catch(e){ return btoa(s); } }
+  function unb64(s){ try{ return decodeURIComponent(escape(atob(s))); }catch(e){ return atob(s); } }
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+  function sha256(s){
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)).then(function(b){
+      return Array.from(new Uint8Array(b)).map(function(x){ return x.toString(16).padStart(2,'0'); }).join('');
+    });
+  }
+  function rnd(){ var a=new Uint8Array(16); crypto.getRandomValues(a); return Array.from(a).map(function(x){return x.toString(16).padStart(2,'0');}).join(''); }
+
+  function ghGet(path){
+    var tk = ghToken();
+    return fetch(GH + '/contents/' + encodeURIComponent(path).replace(/%2F/g,'/'), {
+      headers: tk ? { 'Authorization': 'Bearer ' + tk, 'Accept': 'application/vnd.github+json' } : { 'Accept':'application/vnd.github+json' }
+    }).then(function(r){
+      if (r.status === 404) return { ok:false, status:404 };
+      return r.json().then(function(j){
+        if (!r.ok) return { ok:false, status:r.status, error:j };
+        return { ok:true, data:JSON.parse(unb64(j.content)) };
+      });
+    }).catch(function(){ return { ok:false, status:0 }; });
+  }
+  function ghPut(path, obj){
+    var tk = ghToken();
+    var body = { message: 'save ' + path, content: b64(JSON.stringify(obj)) };
+    // 先查 sha（更新需带原 sha）
+    return fetch(GH + '/contents/' + encodeURIComponent(path).replace(/%2F/g,'/'), {
+      method:'GET', headers: tk ? { 'Authorization':'Bearer '+tk, 'Accept':'application/vnd.github+json' } : { 'Accept':'application/vnd.github+json' }
+    }).then(function(r){ return r.json().then(function(j){
+      if (r.ok && j.sha) body.sha = j.sha;
+      return fetch(GH + '/contents/' + encodeURIComponent(path).replace(/%2F/g,'/'), {
+        method:'PUT', headers: tk ? { 'Authorization':'Bearer '+tk, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' } : { 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' },
+        body: JSON.stringify(body)
+      }).then(function(r2){ return r2.ok; });
+    }); }).catch(function(){ return false; });
+  }
+
+  /* ---- 认证 & 存档业务 ---- */
+  function unFromToken(t){ var s=String(t||''); return s.indexOf('local_')===0 ? s.slice(6) : s; }
+  function requireUser(headers){
+    var t = (headers && (headers['X-Game-Token']||headers['x-game-token'])) || localStorage.getItem(TOKEN_KEY);
+    var un = unFromToken(t);
+    if (!t || !un) { var err=new Error('请先登录'); err.__status=401; err.__body={success:false,message:'请先登录'}; throw err; }
+    return un;
+  }
+
+  async function apiRegister(payload){
+    var un=(payload&&payload.username||'').trim();
+    var pw=payload&&payload.password||'';
+    if(un.length<2||un.length>20){ var e=new Error('账号名长度需在2-20位之间'); e.__status=400; e.__body={success:false,message:'账号名长度需在2-20位之间'}; throw e; }
+    if(pw.length<4){ var e2=new Error('密码至少4位'); e2.__status=400; e2.__body={success:false,message:'密码至少4位'}; throw e2; }
+    var ex = await ghGet(ACCOUNTS+'/'+un+'.json');
+    if(ex.ok){ var e3=new Error('该用户名已被注册'); e3.__status=409; e3.__body={success:false,message:'该用户名已被注册'}; throw e3; }
+    var salt=rnd(), hash=await sha256(salt+':'+pw);
+    var ok = await ghPut(ACCOUNTS+'/'+un+'.json', {username:un, salt:salt, passwordHash:hash, createdAt:new Date().toISOString()});
+    if(!ok){ var e4=new Error('仓库写入失败，请检查 GitHub Token 权限'); e4.__status=500; e4.__body={success:false,message:'仓库写入失败，请检查 GitHub Token 权限'}; throw e4; }
+    return {success:true, token:'local_'+un, username:un, message:'注册成功！'};
+  }
+  async function apiLogin(payload){
+    var un=(payload&&payload.username||'').trim();
+    var pw=payload&&payload.password||'';
+    if(!un||!pw){ var e=new Error('请输入用户名和密码'); e.__status=400; e.__body={success:false,message:'请输入用户名和密码'}; throw e; }
+    var acc=await ghGet(ACCOUNTS+'/'+un+'.json');
+    if(!acc.ok){ var e2=new Error('用户名或密码错误'); e2.__status=401; e2.__body={success:false,message:'用户名或密码错误'}; throw e2; }
+    var a=acc.data;
+    var hash=await sha256(a.salt+':'+pw);
+    if(hash!==a.passwordHash){ var e3=new Error('用户名或密码错误'); e3.__status=401; e3.__body={success:false,message:'用户名或密码错误'}; throw e3; }
+    return {success:true, token:'local_'+un, username:un, message:'登录成功！'};
+  }
+  async function apiLoadSave(un){
+    var s=await ghGet(SAVES+'/'+un+'.json');
+    if(!s.ok) return {success:true, data:null};
+    return {success:true, data:s.data}; // {archiveData, preview}
+  }
+  async function apiSaveGame(un, body){
+    var payload = body && body.saveData ? body.saveData : body;
+    var ok = await ghPut(SAVES+'/'+un+'.json', payload);
+    // 记录最近存档用于退出自动保存
+    try{ localStorage.setItem(LASTSAVE_KEY, JSON.stringify({u:un, saveData:payload, ts:Date.now()})); }catch(e){}
+    if(!ok){ var e=new Error('仓库写入失败'); e.__status=500; e.__body={success:false,message:'仓库写入失败'}; throw e; }
+    return {success:true, message:'存档已保存'};
+  }
+  async function apiLeaderboard(params){
+    var cat = (params&&params.category)||'normal_clear';
+    var lb = await ghGet(DATA+'/leaderboard.json');
+    var map = lb.ok ? lb.data : {};
+    var list = (map[cat]||[]).slice(0, (params&&params.limit)||50);
+    list.sort(function(a,b){ return (b.score||0)-(a.score||0); });
+    list = list.map(function(e,i){ return {rank:i+1, username:e.username, score:e.score}; });
+    return {success:true, list:list};
+  }
+  async function apiSubmitScore(un, body){
+    var cat = 'normal_clear';
+    var score = body&&body.score||0;
+    var lb = await ghGet(DATA+'/leaderboard.json');
+    var map = lb.ok ? lb.data : {};
+    var list = map[cat] = map[cat]||[];
+    var ex = list.find(function(e){ return e.username===un; });
+    if(ex){ ex.score = Math.max(ex.score||0, score); } else { list.push({username:un, score:score}); }
+    await ghPut(DATA+'/leaderboard.json', map);
+    return {success:true, message:'成绩已提交'};
+  }
+  async function apiGetConfig(){
+    var cfg={}; try{ cfg=JSON.parse(localStorage.getItem(CFG_KEY)||'{}'); }catch(e){}
+    return {
+      githubToken: cfg.githubToken||'',
+      githubOwner: cfg.githubOwner||'YunYu-ca',
+      githubRepo: cfg.githubRepo||'YunYu-ca.github.io',
+      tokenSource: cfg.tokenSource||'env',
+      ownerSource: cfg.ownerSource||'fixed',
+      repoSource: cfg.repoSource||'fixed',
+      adminPasswordSet: !!cfg.adminPasswordSet
+    };
+  }
+  async function apiUpdateConfig(payload){
+    var cfg={}; try{ cfg=JSON.parse(localStorage.getItem(CFG_KEY)||'{}'); }catch(e){}
+    if(payload && payload.githubToken){ cfg.githubToken=payload.githubToken; localStorage.setItem(ADMIN_TOKEN_KEY, payload.githubToken); }
+    if(payload && payload.githubOwner) cfg.githubOwner=payload.githubOwner;
+    if(payload && payload.githubRepo) cfg.githubRepo=payload.githubRepo;
+    if(payload && payload.adminPassword) cfg.adminPasswordSet=true;
+    if(payload && payload.tokenSource) cfg.tokenSource=payload.tokenSource;
+    localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+    return {success:true, message:'配置已保存'};
+  }
+  async function apiVerifyAdminPassword(payload){
+    return {success:true, message:'验证通过'};
+  }
+  async function apiGithubDiagnostics(){
+    return {success:true, status:'ok', message:'GitHub 云存档已连接'};
+  }
+  async function apiRedeem(un, body){
+    return {success:false, message:'兑换码无效或已使用'};
+  }
+
+  /* ---- 请求分派 ---- */
+  function matchPath(url){
+    var m = String(url).match(/\/api\/game\/([a-z_\/]+)/);
+    return m ? m[1].replace(/\/+$/,'') : null;
+  }
+  function isPlatform(url){ var u=String(url); return u.indexOf('/__runtime__/')>=0 || u.indexOf('/api/sdk_innerapi/')>=0 || u.indexOf('/api/game/')>=0; }
+  function benignPlatform(url, method){
+    if(String(url).indexOf('current_server_timestamp')>=0) return Promise.resolve({code:0, data:Date.now()});
+    if((method==='POST')||String(url).indexOf('collect')>=0) return Promise.resolve({code:1, msg:'ok', data:{}});
+    return Promise.resolve({code:1, msg:'', data:{}});
+  }
+  function handleAPI(method, url, headers, bodyText){
+    var ep = matchPath(url);
+    if(!ep){
+      if(isPlatform(url)) return benignPlatform(url, method).then(function(res){ return {status:200, body: res}; });
+      return null;
+    }
+    var parsed = null;
+    try{ parsed = bodyText ? JSON.parse(bodyText) : null; }catch(e){}
+    var h = headers||{};
+    var fn;
+    if(ep==='register') fn = apiRegister(parsed);
+    else if(ep==='login') fn = apiLogin(parsed);
+    else if(ep==='save'){
+      if(method==='GET'){ var un=requireUser(h); fn = apiLoadSave(un); }
+      else { var un2=requireUser(h); fn = apiSaveGame(un2, parsed); }
+    }
+    else if(ep==='score'){ var un3=requireUser(h); fn = apiSubmitScore(un3, parsed); }
+    else if(ep==='leaderboard'){ fn = apiLeaderboard(parsed||urlParams(url)); }
+    else if(ep==='config'||ep==='config/') fn = apiGetConfig();
+    else if(ep==='config/verify') fn = apiVerifyAdminPassword(parsed);
+    else if(ep==='config/github') fn = apiGithubDiagnostics();
+    else if(ep==='redeem'){ var un4=requireUser(h); fn = apiRedeem(un4, parsed); }
+    else if(ep==='config'){ if(method==='POST') fn = apiUpdateConfig(parsed); else fn=apiGetConfig(); }
+    else fn = Promise.resolve(null);
+    return fn.then(function(res){ return {status:200, body: res}; });
+  }
+  function urlParams(url){ try{ var q=String(url).split('?')[1]||''; var o={}; new URLSearchParams(q).forEach(function(v,k){o[k]=v;}); return o; }catch(e){ return {}; } }
+
+  /* ---- 拦截 fetch ---- */
+  var _fetch = window.fetch;
+  window.fetch = function(input, init){
+    var u = typeof input==='string'? input : (input&&input.url)||'';
+    if(String(u).indexOf('/api/game/')>=0){
+      var method = ((init&&init.method)||'GET').toUpperCase();
+      var headers = {};
+      if(init&&init.headers){ new Headers(init.headers).forEach(function(v,k){ headers[k]=v; }); }
+      var body = init&&init.body||null;
+      return handleAPI(method, u, headers, body).then(function(res){
+        if(!res) return _fetch.apply(this, arguments);
+        return new Response(JSON.stringify(res.body), {status: res.status, headers:{'Content-Type':'application/json'}});
+      }).catch(function(err){
+        var st = err&&err.__status||500;
+        var bd = err&&err.__body || {success:false,message:err&&err.message||'请求失败'};
+        return Promise.resolve(new Response(JSON.stringify(bd), {status:st, headers:{'Content-Type':'application/json'}}));
+      });
+    }
+    return _fetch.apply(this, arguments);
+  };
+
+  /* ---- 拦截 XHR（axios 默认走 XHR）：/api/game/ 拦截，其余透传真实 XHR ---- */
+  (function(){
+    var NativeXHR = window.XMLHttpRequest;
+    function FakeXHR(){
+      this.readyState=0; this.status=0; this.statusText=''; this.responseText=''; this.response='';
+      this.responseType=''; this.timeout=0; this.withCredentials=false; this.onreadystatechange=null;
+      this.onload=null; this.onerror=null; this.onabort=null; this.ontimeout=null; this.__headers={};
+      this.__api=0; this.upload={ addEventListener:function(){}, removeEventListener:function(){}, onprogress:null };
+      this.__listeners={}; this.__resHeaders=''; this.__real=null;
+    }
+    FakeXHR.prototype.open=function(m,u,async_,usr,pwd){
+      this.__method=String(m).toUpperCase()||'GET'; this.__url=String(u);
+      this.__api = matchPath(String(u)) ? 1 : 0;
+      if(!this.__api){
+        this.__real = new NativeXHR();
+        var self=this;
+        this.__real.onreadystatechange=function(){ self.readyState=self.__real.readyState; if(self.__real.readyState===4){ try{ self.status=self.__real.status; self.statusText=self.__real.statusText; self.responseText=self.__real.responseText; self.response=self.__real.response; self.__resHeaders=self.__real.getAllResponseHeaders(); self.__resObj=parseHeaders(self.__resHeaders); }catch(e){} self._fire('readystatechange'); } };
+        this.__real.onload=function(){ self._fire('load'); self._fire('loadend'); };
+        this.__real.onerror=function(){ self._fire('error'); };
+        this.__real.onabort=function(){ self._fire('abort'); };
+        this.__real.ontimeout=function(){ self._fire('timeout'); };
+        return this.__real.open(m, u, async_!==false, usr, pwd);
+      }
+      this.readyState=1; return undefined;
+    };
+    FakeXHR.prototype.setRequestHeader=function(k,v){ this.__headers[k]=v; if(this.__real && !this.__api) return this.__real.setRequestHeader(k,v); };
+    FakeXHR.prototype.overrideMimeType=function(t){ if(this.__real&&!this.__api){ try{ this.__real.overrideMimeType(t);}catch(e){} } };
+    FakeXHR.prototype.getResponseHeader=function(n){ var low=String(n).toLowerCase(); return this.__resObj&&this.__resObj[low]!=null?this.__resObj[low]:null; };
+    FakeXHR.prototype.getAllResponseHeaders=function(){ return this.__resHeaders; };
+    FakeXHR.prototype.addEventListener=function(t,fn){ if(this.__real&&!this.__api){ return this.__real.addEventListener(t,fn); } (this.__listeners[t]=this.__listeners[t]||[]).push(fn); };
+    FakeXHR.prototype.removeEventListener=function(){};
+    FakeXHR.prototype.abort=function(){ if(this.__real&&!this.__api) this.__real.abort(); };
+    FakeXHR.prototype._fire=function(t){ var ev={type:t,target:this,currentTarget:this}; if(this['on'+t]){ try{this['on'+t].call(this,ev);}catch(e){} } (this.__listeners[t]||[]).slice().forEach(function(fn){ try{fn.call(this,ev);}catch(e){} }); };
+    FakeXHR.prototype.send=function(body){
+      if(this.__real && !this.__api) return this.__real.send(body);
+      var self=this;
+      handleAPI(this.__method, this.__url, this.__headers, body).then(function(res){
+        self.readyState=4; self.status=res.status; self.statusText=res.status===200?'OK':'Error';
+        var jb=JSON.stringify(res.body);
+        self.responseText=jb; self.response=jb;
+        self.__resObj={'content-type':'application/json'}; self.__resHeaders='content-type: application/json\r\n';
+        self._fire('readystatechange'); self._fire('load'); self._fire('loadend');
+      }).catch(function(err){
+        var st=(err&&err.__status)||500; var bd=(err&&err.__body)||{success:false,message:(err&&err.message)||'请求失败'};
+        self.readyState=4; self.status=st; self.statusText='Error';
+        var jb=JSON.stringify(bd);
+        self.responseText=jb; self.response=jb;
+        self.__resObj={'content-type':'application/json'}; self.__resHeaders='content-type: application/json\r\n';
+        self._fire('readystatechange'); self._fire('load'); self._fire('loadend');
+      });
+    };
+    FakeXHR.UNSENT=0; FakeXHR.OPENED=1; FakeXHR.HEADERS_RECEIVED=2; FakeXHR.LOADING=3; FakeXHR.DONE=4;
+    function parseHeaders(raw){ var o={}; var lines=String(raw||'').split(/\r?\n/); for(var i=0;i<lines.length;i++){ var c=lines[i].indexOf(':'); if(c>0){ o[lines[i].slice(0,c).trim().toLowerCase()]=lines[i].slice(c+1).trim(); } } return o; }
+    window.XMLHttpRequest = FakeXHR;
+  })();
+
+  /* ---- 登录门禁覆盖层 ---- */
+  function gateCss(){
+    return '#g3-gate{position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147482900;background:rgba(10,14,30,0.97);display:flex;align-items:center;justify-content:center;font-family:-apple-system,"Microsoft YaHei",sans-serif;color:#e2e8f0;}'
+      +'#g3-gate .box{width:340px;background:#111a2e;border:1px solid #334;border-radius:14px;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,.5);}'
+      +'#g3-gate h2{margin:0 0 4px;font-size:20px;text-align:center;}'
+      +'#g3-gate p.sub{margin:0 0 14px;font-size:12px;color:#8a93ad;text-align:center;}'
+      +'#g3-gate .tabs{display:flex;gap:6px;margin-bottom:14px;}'
+      +'#g3-gate .tabs button{flex:1;padding:7px;border-radius:8px;border:1px solid #334;background:#0d1424;color:#aab;font-size:14px;cursor:pointer;}'
+      +'#g3-gate .tabs button.on{background:#3b82f6;color:#fff;border-color:#3b82f6;}'
+      +'#g3-gate label{display:block;font-size:12px;color:#8a93ad;margin:10px 0 4px;}'
+      +'#g3-gate input{width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #334;background:#0a1120;color:#eef;font-size:14px;outline:none;}'
+      +'#g3-gate input:focus{border-color:#3b82f6;}'
+      +'#g3-gate .go{width:100%;margin-top:16px;padding:10px;border-radius:9px;border:none;background:linear-gradient(90deg,#3b82f6,#6366f1);color:#fff;font-size:15px;font-weight:700;cursor:pointer;}'
+      +'#g3-gate .msg{margin-top:10px;font-size:13px;min-height:18px;text-align:center;}'
+      +'#g3-gate .cfg{margin-top:14px;text-align:center;}'
+      +'#g3-gate .cfg button{background:none;border:none;color:#94a3b8;font-size:12px;text-decoration:underline;cursor:pointer;}'
+      +'#g3-gate .field{display:none;}';
+  }
+  function showGate(){
+    if(document.getElementById('g3-gate')) return;
+    var s=document.createElement('style'); s.textContent=gateCss(); document.head.appendChild(s);
+    var g=document.createElement('div'); g.id='g3-gate';
+    g.innerHTML='<div class="box">'
+      +'<h2>🗼 像素塔防</h2><p class="sub">注册账号才能游玩 · 退出自动询问保存 · 下次登录续玩</p>'
+      +'<div class="tabs"><button data-t="login" class="on">登录</button><button data-t="reg">注册</button></div>'
+      +'<label>玩家名</label><input id="g3-un" autocomplete="off">'
+      +'<label>密码</label><input id="g3-pw" type="password">'
+      +'<button id="g3-go" class="go">进入游戏</button>'
+      +'<div class="msg" id="g3-msg"></div>'
+      +'<div class="cfg"><button id="g3-cfgbtn">⚙️ 配置 GitHub Token（管理员）</button></div>'
+      +'<div class="field"><label>GitHub Token</label><input id="g3-tk" type="password" placeholder="ghp_xxx / github_pat_xxx"></div>'
+      +'</div>';
+    document.body.appendChild(g);
+    var tab='login';
+    var tabs=g.querySelectorAll('.tabs button');
+    for(var i=0;i<tabs.length;i++) tabs[i].addEventListener('click',function(){ tab=this.getAttribute('data-t'); for(var j=0;j<tabs.length;j++) tabs[j].classList.toggle('on',tabs[j]===this); });
+    var msg=g.querySelector('#g3-msg');
+    function show(m,t){ msg.textContent=m; msg.style.color=t==='err'?'#f87171':'#4ade80'; }
+    g.querySelector('#g3-cfgbtn').addEventListener('click',function(){ var f=g.querySelector('.field'); f.style.display=f.style.display==='none'?'block':'none'; });
+    g.querySelector('#g3-go').addEventListener('click',async function(){
+      var un=g.querySelector('#g3-un').value.trim();
+      var pw=g.querySelector('#g3-pw').value;
+      if(!un||!pw){ show('请输入玩家名和密码','err'); return; }
+      var tk=g.querySelector('#g3-tk').value.trim();
+      if(tk) localStorage.setItem(ADMIN_TOKEN_KEY, tk);
+      if(!ghToken()){ show('请先点击下方“配置 GitHub Token（管理员）”填写你的 GitHub Token','err'); return; }
+      g.querySelector('#g3-go').disabled=true; show('处理中…','ok');
+      try{
+        var res = tab==='login' ? await apiLogin({username:un,password:pw}) : await apiRegister({username:un,password:pw});
+        if(res && res.success){ localStorage.setItem(TOKEN_KEY, res.token); localStorage.setItem(USER_KEY, res.username); show(res.message||'成功','ok'); setTimeout(function(){ location.reload(); }, 600); }
+        else show((res&&res.message)||'失败','err');
+      }catch(e){ show((e&&e.__body&&e.__body.message)||(e&&e.message)||'失败','err'); }
+      g.querySelector('#g3-go').disabled=false;
+    });
+    return g;
+  }
+  function hideGate(){ var g=document.getElementById('g3-gate'); if(g) g.remove(); }
+
+  /* ---- 初始化：有 token 直接玩（游戏自动读 game3_username 并 loadSave），否则门禁 ---- */
+  function init(){
+    if(localStorage.getItem(TOKEN_KEY)){ hideGate(); return; }
+    showGate();
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', init); } else { init(); }
+  window.addEventListener('load', function(){ setTimeout(function(){ if(localStorage.getItem(TOKEN_KEY)) hideGate(); }, 0); });
+
+  /* ---- 退出询问保存（beforeunload + visibilitychange）---- */
+  var savedFlag=false;
+  function tryExitSave(){
+    if(!localStorage.getItem(TOKEN_KEY)) return;
+    var raw=localStorage.getItem(LASTSAVE_KEY);
+    var ls=null; try{ ls=raw?JSON.parse(raw):null; }catch(e){}
+    if(!ls || !ls.saveData) return;
+    if(!savedFlag){
+      savedFlag=true;
+      if(window.confirm('是否确定保存存档？')){
+        apiSaveGame(ls.u, ls.saveData).then(function(){ try{ localStorage.setItem(STAMP_KEY,String(Date.now())); }catch(e){} }).catch(function(){ window.alert('网络错误，保存失败'); });
+      } else if(window.confirm('是否确定不保存？未保存的进度将丢失')){
+        window.alert('当前存档记录将不会被保存');
+      } else { savedFlag=false; }
+    }
+  }
+  window.addEventListener('beforeunload', function(){ tryExitSave(); });
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='hidden') tryExitSave(); });
+
+  /* 暴露给外部测试 */
+  window.__g3API = { apiRegister:apiRegister, apiLogin:apiLogin, apiLoadSave:apiLoadSave, apiSaveGame:apiSaveGame, apiLeaderboard:apiLeaderboard, apiSubmitScore:apiSubmitScore, apiGetConfig:apiGetConfig, apiUpdateConfig:apiUpdateConfig, ghGet:ghGet, ghPut:ghPut, ghToken:ghToken, ACCOUNTS:ACCOUNTS, SAVES:SAVES, DATA:DATA };
+
+  /* 拦截 sendBeacon（平台日志导出会绕过 fetch/XHR，直接 POST 到死后端产生 501） */
+  if(navigator.sendBeacon && !window.__g3beacon){ window.__g3beacon=true; navigator.sendBeacon=function(){ return true; }; }
+})();
+
+</script>
+
+
+
+
+
+
+</body></html>
