@@ -210,7 +210,7 @@
   var WORKER='lucky-chip-sync.3837782838.workers.dev';
   var API='https://api.github.com/repos/YunYu-ca/YunYu-ca.github.io/contents/';
   var _fetch = window.fetch;
-  function ghToken(){ try{ return localStorage.getItem('gamehub_token')||''; }catch(e){ return ''; } }
+  function ghToken(){ try{ return localStorage.getItem('gamehub_tok_5')||localStorage.getItem('gamehub_tok_5')||localStorage.getItem('gamehub_token')||''; }catch(e){ return ''; } }
   function b64(s){ var b=unescape(encodeURIComponent(s)); var out=''; for(var i=0;i<b.length;i++) out+=String.fromCharCode(b.charCodeAt(i)); return btoa(out); }
   function resp(obj){ return Promise.resolve(new Response(JSON.stringify(obj), {status:200, headers:{'Content-Type':'application/json'}})); }
   function hdr(tok){ return {Authorization:'Bearer '+tok,'User-Agent':'g5','Accept':'application/vnd.github+json'}; }
@@ -268,6 +268,195 @@
 
 <body>
   <div id="root"></div>
-</body>
+
+<script id="cloud-hub">
+/* ===== 跨设备云配置 v2（__HubAdmin）：5 个游戏各自独立 token，加密存仓库 GameHub/config.json =====
+ * config.json: { v:2, adminSalt, adminHash, salt, iv, data }
+ *   data(解密后) = { t1,t2,t3,t4,t5 }  ← 各游戏自己的 GitHub token
+ * 本机缓存: gamehub_tok_<slot>（各游戏各自的 token；slot 由 window.__HUB_SLOT 指定）
+ * 任一设备配置一次（管理员密码 + 5 个 token）→ 全同步；修改需管理员密码，写回仓库。
+ */
+(function(){
+  if(window.__HubAdmin) return;
+  var CFG_PATH = 'GameHub/config.json';
+  var API = 'https://api.github.com/repos/YunYu-ca/YunYu-ca.github.io/contents/';
+
+  function mySlot(){ return parseInt(window.__HUB_SLOT||'1',10)||1; }
+  function tokKey(slot){ return 'gamehub_tok_'+slot; }
+  function ls(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  function sha256hex(s){ return crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)).then(function(b){ return bytesToHex(new Uint8Array(b)); }); }
+  function rndHex(n){ var a=new Uint8Array(n); crypto.getRandomValues(a); return bytesToHex(a); }
+  function bytesToHex(a){ return Array.prototype.map.call(a,function(x){ return x.toString(16).padStart(2,'0'); }).join(''); }
+  function hexToBytes(h){ var a=new Uint8Array(h.length/2); for(var i=0;i<a.length;i++) a[i]=parseInt(h.substr(i*2,2),16); return a; }
+  function b64ToBytes(s){ var bin=atob(s), a=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) a[i]=bin.charCodeAt(i); return a; }
+  function bytesToB64(a){ var s=''; for(var i=0;i<a.length;i++) s+=String.fromCharCode(a[i]); return btoa(s); }
+
+  function deriveKey(password, saltHex){
+    return crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']).then(function(km){
+      return crypto.subtle.deriveKey({name:'PBKDF2', salt:hexToBytes(saltHex), iterations:150000, hash:'SHA-256'}, km, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+    });
+  }
+  async function enc(password, saltHex, dataStr){
+    var key=await deriveKey(password,saltHex), iv=crypto.getRandomValues(new Uint8Array(12));
+    var ct=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv}, key, new TextEncoder().encode(dataStr));
+    return {iv:bytesToHex(iv), data:bytesToB64(new Uint8Array(ct))};
+  }
+  async function dec(password, saltHex, ivHex, dataB64){
+    var key=await deriveKey(password,saltHex);
+    var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:hexToBytes(ivHex)}, key, b64ToBytes(dataB64));
+    return new TextDecoder().decode(pt);
+  }
+
+  function getToken(){ return ls(tokKey(mySlot())); }
+  function isSet(){ return !!ls(tokKey(mySlot())); }
+
+  function fetchCfg(){
+    return fetch(API + encodeURIComponent(CFG_PATH).replace(/%2F/g,'/'), {headers:{'User-Agent':'gamehub','Accept':'application/vnd.github+json'}}).then(function(r){
+      if(r.status===404) return null;
+      if(!r.ok) throw new Error('拉取配置失败 HTTP '+r.status);
+      return r.json().then(function(j){
+        var txt = (j && j.encoding==='base64' && j.content) ? atob(j.content) : JSON.stringify(j);
+        return JSON.parse(txt);
+      });
+    });
+  }
+  function writeCfg(cfg, token, msg){
+    return fetch(API + encodeURIComponent(CFG_PATH).replace(/%2F/g,'/')).then(function(r){
+      return r.ok ? r.json() : null;
+    }).then(function(ex){
+      var body={message:msg||'update cloud config', content:b64(JSON.stringify(cfg))};
+      if(ex && ex.sha) body.sha=ex.sha;
+      return fetch(API + encodeURIComponent(CFG_PATH).replace(/%2F/g,'/'),{method:'PUT',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json','User-Agent':'gamehub','Accept':'application/vnd.github+json'},body:JSON.stringify(body)});
+    }).then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('写入配置失败 HTTP '+r.status+': '+t.slice(0,120)); }); return true; });
+  }
+  function b64(s){ var b=unescape(encodeURIComponent(s)); var out=''; for(var i=0;i<b.length;i++) out+=String.fromCharCode(b.charCodeAt(i)); return btoa(out); }
+  function cacheTokens(obj){ for(var i=1;i<=5;i++){ if(obj['t'+i]) lsSet(tokKey(i), obj['t'+i]); } }
+
+  /* 首次配置：管理员密码 + 5 个游戏各自的 token，加密写仓库 */
+  async function setup(pw, toks){
+    if(!pw||String(pw).length<4) throw new Error('管理员密码至少4位');
+    var any=false; for(var i=0;i<5;i++){ if(toks[i]&&String(toks[i]).trim()) any=true; }
+    if(!any) throw new Error('请至少填一个游戏的 GitHub Token');
+    var salt=rndHex(16), adminHash=await sha256hex(salt+':'+pw);
+    var t={}; for(var j=0;j<5;j++){ if(toks[j]&&String(toks[j]).trim()) t['t'+(j+1)]=String(toks[j]).trim(); }
+    var encr=await enc(pw, salt, JSON.stringify(t));
+    var cfg={v:2, adminSalt:salt, adminHash:adminHash, salt:salt, iv:encr.iv, data:encr.data};
+    var writeTok=''; for(var k=1;k<=5;k++){ if(t['t'+k]){ writeTok=t['t'+k]; break; } }
+    await writeCfg(cfg, writeTok, 'init cloud config');
+    cacheTokens(t);
+    return {ok:true, message:'已加密写入仓库，所有设备自动同步'};
+  }
+
+  /* 解锁：验证密码并解密，缓存全部 5 个 token */
+  async function unlock(pw){
+    var cfg=await fetchCfg();
+    if(!cfg) throw new Error('仓库无配置，请先完成首次配置');
+    if(await sha256hex(cfg.adminSalt+':'+pw)!==cfg.adminHash) throw new Error('管理员密码错误');
+    var plain=await dec(pw, cfg.salt, cfg.iv, cfg.data);
+    var obj=JSON.parse(plain);
+    if(!obj['t'+mySlot()]) throw new Error('本游戏未配置 Token，请在⚙️里补充');
+    cacheTokens(obj);
+    return {ok:true, message:'解锁成功，云存档已启用'};
+  }
+
+  /* 修改：旧密码验证，可改任意游戏的 token，写回仓库 */
+  async function modify(pw, toks, newPw){
+    var cfg=await fetchCfg();
+    if(!cfg) throw new Error('仓库无配置，请先完成首次配置');
+    if(await sha256hex(cfg.adminSalt+':'+pw)!==cfg.adminHash) throw new Error('管理员密码错误');
+    var plain=await dec(pw, cfg.salt, cfg.iv, cfg.data);
+    var obj=JSON.parse(plain);
+    var writeTok='';
+    for(var i=0;i<5;i++){ if(toks[i]&&String(toks[i]).trim()){ obj['t'+(i+1)]=String(toks[i]).trim(); } }
+    for(var k=1;k<=5;k++){ if(obj['t'+k]){ writeTok=obj['t'+k]; break; } }
+    if(!writeTok) throw new Error('配置中没有可用 token 作为写入凭据');
+    var newSalt=cfg.salt, newHash=cfg.adminHash, encrSalt=cfg.salt, encrIv=cfg.iv, encrData=cfg.data;
+    if(newPw && String(newPw).length>=4){
+      newSalt=rndHex(16); newHash=await sha256hex(newSalt+':'+newPw); encrSalt=newSalt;
+      var e=await enc(newPw, newSalt, JSON.stringify(obj)); encrIv=e.iv; encrData=e.data;
+    } else {
+      var e2=await enc(pw, cfg.salt, JSON.stringify(obj)); encrIv=e2.iv; encrData=e2.data;
+    }
+    var newCfg={v:2, adminSalt:newSalt, adminHash:newHash, salt:encrSalt, iv:encrIv, data:encrData};
+    await writeCfg(newCfg, writeTok, 'update cloud config');
+    cacheTokens(obj);
+    return {ok:true, message:'已更新并同步到所有设备'};
+  }
+
+  /* ---- UI ---- */
+  var LABELS=['Game1 钓鱼','Game2','Game3 塔防','Game4 农场','Game5 筹码'];
+  function tokenFields(prefix){
+    var s='';
+    for(var i=0;i<5;i++){
+      s+='<label style="font-size:12px;color:#8a93ad;margin-top:8px;">'+LABELS[i]+' Token'+(mySlot()===i+1?'（本游戏）':'')+'</label>'
+        +'<input id="'+prefix+i+'" type="password" style="width:100%;box-sizing:border-box;padding:7px;border-radius:8px;border:1px solid #334;background:#0a1120;color:#eef;font-size:13px;margin-bottom:6px;" placeholder="ghp_xxx / github_pat_xxx">';
+    }
+    return s;
+  }
+  function open(opts){
+    opts=opts||{}; if(document.getElementById('hub-admin')) return;
+    var mode='auto';
+    var d=document.createElement('div'); d.id='hub-admin';
+    d.style.cssText='position:fixed;inset:0;z-index:2147482999;background:rgba(8,12,26,.94);display:flex;align-items:center;justify-content:center;font-family:-apple-system,"Microsoft YaHei",sans-serif;color:#e2e8f0;';
+    d.innerHTML='<div style="width:400px;background:#111a2e;border:1px solid #334;border-radius:14px;padding:22px;box-sizing:border-box;max-height:92vh;overflow:auto;">'
+      +'<h3 id="hub-title" style="margin:0 0 4px;font-size:17px;text-align:center;">⚙️ 云存档配置（跨设备 · 每游戏独立 Token）</h3>'
+      +'<p id="hub-sub" style="margin:0 0 12px;font-size:12px;color:#8a93ad;text-align:center;line-height:1.5;">正在连接仓库…</p>'
+      +'<div id="hub-form">'
+      +'<label style="font-size:12px;color:#8a93ad;">管理员密码</label>'
+      +'<input id="hub-pw" type="password" style="width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #334;background:#0a1120;color:#eef;font-size:14px;margin-bottom:8px;">'
+      +'<div id="hub-newpw-wrap" style="display:none;"><label style="font-size:12px;color:#8a93ad;">新管理员密码（可选）</label><input id="hub-newpw" type="password" style="width:100%;box-sizing:border-box;padding:8px;border-radius:8px;border:1px solid #334;background:#0a1120;color:#eef;font-size:13px;margin-bottom:8px;"></div>'
+      +'<div id="hub-tok-wrap" style="display:none;">'+tokenFields('hub-t')+'</div>'
+      +'</div>'
+      +'<button id="hub-save" style="width:100%;padding:10px;border-radius:9px;border:none;background:linear-gradient(90deg,#3b82f6,#6366f1);color:#fff;font-size:15px;font-weight:700;cursor:pointer;">确定</button>'
+      +'<div id="hub-msg" style="margin-top:10px;font-size:13px;min-height:18px;text-align:center;"></div>'
+      +'<div style="margin-top:10px;text-align:center;"><button id="hub-close" style="background:none;border:none;color:#94a3b8;font-size:12px;cursor:pointer;">关闭</button></div>'
+      +'</div>';
+    document.body.appendChild(d);
+    var title=d.querySelector('#hub-title'), sub=d.querySelector('#hub-sub'), msg=d.querySelector('#hub-msg');
+    function show(m,c){ msg.textContent=m; msg.style.color=c||'#f87171'; }
+    d.querySelector('#hub-close').onclick=function(){ d.remove(); };
+    function readToks(){ var a=[]; for(var i=0;i<5;i++){ var el=document.getElementById('hub-t'+i); a.push(el?el.value:''); } return a; }
+    function save(){
+      return (function(){ try{
+        var pw=document.getElementById('hub-pw').value;
+        var npw=document.getElementById('hub-newpw').value;
+        var toks=readToks();
+        if(mode==='setup'){ show('正在写入仓库…','#e2e8f0'); return setup(pw,toks).then(function(r){ show(r.message,'#4ade80'); if(r.ok) setTimeout(function(){d.remove();},1300); }); }
+        else if(mode==='unlock'){ show('正在解密…','#e2e8f0'); return unlock(pw).then(function(r){ show(r.message,'#4ade80'); if(r.ok) setTimeout(function(){d.remove();},1300); }); }
+        else if(mode==='modify'){ show('正在更新并同步…','#e2e8f0'); return modify(pw,toks,npw).then(function(r){ show(r.message,'#4ade80'); if(r.ok) setTimeout(function(){d.remove();},1300); }); }
+      }catch(e){ return Promise.reject(e); }})()
+        .catch(function(e){ show(e.message||'失败','#f87171'); });
+    }
+    var sv=d.querySelector('#hub-save');
+    // 确定模式
+    fetchCfg().then(function(cfg){
+      var tokWrap=d.querySelector('#hub-tok-wrap'), newpwWrap=d.querySelector('#hub-newpw-wrap');
+      if(cfg){
+        if(getToken()){ mode='modify'; title.textContent='⚙️ 修改云配置（需管理员密码）'; sub.textContent='输入管理员密码，可修改各游戏 Token / 管理员密码，改完同步所有设备'; tokWrap.style.display='block'; newpwWrap.style.display='block'; }
+        else { mode='unlock'; title.textContent='🔓 云存档解锁'; sub.textContent='配置已存在。输入管理员密码解锁（本机只需一次）'; }
+      } else {
+        mode='setup'; title.textContent='⚙️ 首次配置（每游戏独立 Token）'; sub.textContent='设置管理员密码 + 各游戏 GitHub Token，加密写入仓库，所有设备自动同步'; tokWrap.style.display='block'; document.getElementById('hub-pw').placeholder='设置管理员密码（至少4位）';
+      }
+      sv.onclick=save;
+    }).catch(function(e){ show(e.message||'连接仓库失败','#f87171'); });
+  }
+
+  /* 启动：本机无该游戏 token 则拉仓库配置决定解锁/首次配置 */
+  function ensure(){
+    if(getToken()) return;
+    fetchCfg().then(function(cfg){
+      if(cfg && !getToken()) open({});
+      else if(!cfg) open({});
+    }).catch(function(){});
+  }
+
+  window.__HubAdmin={ getToken:getToken, isSet:isSet, open:open, ensure:ensure, unlock:unlock, setup:setup, modify:modify, fetchCfg:fetchCfg, mySlot:mySlot, tokKey:tokKey };
+})();
+
+</script>
+<script id="cloud-hub-run">
+(function(){ window.__HUB_SLOT=5; function run(){ if(window.__HubAdmin) window.__HubAdmin.ensure(); } if(document.readyState==="complete"){ setTimeout(run,300); } else { window.addEventListener("load",function(){ setTimeout(run,300); }); } })();
+</script></body>
 
 </html>
