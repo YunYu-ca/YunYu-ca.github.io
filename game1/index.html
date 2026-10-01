@@ -117,7 +117,7 @@
     <div id="settingsBox">
       <h2>⚙️ 游戏设置</h2>
       <div class="sub">配置玩家名与 GitHub Token，实现云端自动存档与排行榜</div>
-      <label>玩家名（用于存档文件夹 Game5Saves/&lt;玩家名&gt;）</label>
+      <label>玩家名（登录后自动使用，存档在 Game1Saves/）</label>
       <input id="inpUser" type="text" placeholder="例如 lh3778" autocomplete="off">
       <label>GitHub Token（需对该仓库有 Contents 读写权限）</label>
       <input id="inpToken" type="password" placeholder="ghp_xxxxxxxx" autocomplete="off">
@@ -130,7 +130,7 @@
         <button class="btn" onclick="refreshLB()">刷新排行榜</button>
       </div>
       <div id="setNote"></div>
-      <div class="tip">Token 仅保存在你浏览器本地（localStorage）。存档写入仓库 Game5Saves/玩家名/save.json，排行榜写入 Game1Data/leaderboard.json。</div>
+      <div class="tip">Token 仅保存在你浏览器本地（localStorage）。存档写入仓库 Game1Saves/玩家名.json，排行榜写入 Game1Data/leaderboard.json。</div>
       <div class="row"><button class="btn" onclick="closeSettings()">关闭</button></div>
     </div>
   </div>
@@ -138,6 +138,72 @@
   <div id="toast"></div>
 </div>
 
+<div id="g1-gate" style="position:fixed;inset:0;z-index:2147482900;display:flex;align-items:center;justify-content:center;background:radial-gradient(1100px 480px at 18% -8%,rgba(120,200,255,.14),transparent 60%),radial-gradient(900px 420px at 92% 0,rgba(255,215,0,.12),transparent 55%),#04101c;font-family:system-ui;">
+  <div style="width:min(360px,92vw);background:#0e3a52;border:1px solid rgba(120,200,255,.35);border-radius:16px;padding:26px;box-shadow:0 24px 60px rgba(0,0,0,.6);">
+    <div style="text-align:center;margin-bottom:18px;"><div style="font-size:40px;">🎣</div><div style="font-size:20px;font-weight:700;color:#e6f6ff;">钓鱼乐园</div><div style="color:#9cc9e6;font-size:12px;margin-top:4px;">注册账号才能游玩 · 退出自动询问保存 · 下次登录续玩</div></div>
+    <div style="display:flex;margin-bottom:14px;background:rgba(0,0,0,.3);border-radius:8px;padding:4px;">
+      <button id="g1-tab-login" style="flex:1;padding:8px;border:none;border-radius:6px;background:#2f7ea8;color:#fff;font-weight:600;cursor:pointer;">登录</button>
+      <button id="g1-tab-reg" style="flex:1;padding:8px;border:none;border-radius:6px;background:transparent;color:#9cc9e6;cursor:pointer;">注册</button>
+    </div>
+    <input id="g1-un" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid rgba(120,200,255,.4);background:rgba(0,0,0,.3);color:#e6f6ff;margin-bottom:10px;" placeholder="玩家名（2-20 位，字母/数字/中文）">
+    <input id="g1-pw" type="password" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid rgba(120,200,255,.4);background:rgba(0,0,0,.3);color:#e6f6ff;margin-bottom:8px;" placeholder="密码（至少 4 位）">
+    <button id="g1-go" style="width:100%;padding:11px;border:none;border-radius:8px;background:#ffd866;color:#04101c;font-weight:700;cursor:pointer;font-size:15px;">进入游戏</button>
+    <div id="g1-msg" style="margin-top:10px;color:#ff9d9d;font-size:12px;min-height:16px;text-align:center;"></div>
+    <div style="text-align:center;margin-top:10px;"><button id="g1-admin" style="background:none;border:none;color:#5fb6e0;font-size:12px;cursor:pointer;text-decoration:underline;">⚙ 配置 GitHub Token（管理员）</button></div>
+  </div>
+</div>
+<script>
+/* 登录门禁（Game1）自包含：不依赖游戏内部函数 */
+(function(){
+  var LS_USER='game1_user', LS_TOKEN='game1_token';
+  var API='https://api.github.com/repos/YunYu-ca/YunYu-ca.github.io';
+  var ACCT='Game1Accounts';
+  function ls(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  function b64(s){ return btoa(unescape(encodeURIComponent(s))); }
+  function unb64(s){ return decodeURIComponent(escape(atob(s))); }
+  function sha(s){ return crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)).then(function(b){ var a=new Uint8Array(b),h=''; for(var i=0;i<a.length;i++) h+=('0'+a[i].toString(16)).slice(-2); return h; }); }
+  function ghGet(path){ return fetch(API+'/contents/'+encodeURIComponent(path).replace(/%2F/g,'/'),{headers:{Authorization:'Bearer '+ls(LS_TOKEN),Accept:'application/vnd.github+json','User-Agent':'fishing'}}).then(function(r){ if(r.status===404) return null; if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }); }
+  function ghPut(path,obj,msg){ return ghGet(path).then(function(ex){ return fetch(API+'/contents/'+encodeURIComponent(path).replace(/%2F/g,'/'),{method:'PUT',headers:{Authorization:'Bearer '+ls(LS_TOKEN),'Content-Type':'application/json',Accept:'application/vnd.github+json','User-Agent':'fishing'},body:JSON.stringify({message:msg||'save',content:b64(JSON.stringify(obj)),...(ex&&ex.sha?{sha:ex.sha}:{})})}).then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t.slice(0,120)); }); }); }); }
+  function register(un,pw){ return sha(pw).then(function(ph){ var salt=Math.random().toString(36).slice(2)+Date.now().toString(36); return sha(ph+salt).then(function(h){ return ghGet(ACCT+'/'+un+'.json').then(function(ex){ if(ex) throw new Error('该玩家名已被注册'); return ghPut(ACCT+'/'+un+'.json',{username:un,salt:salt,hash:h,createdAt:new Date().toISOString()},'Game1 register '+un); }); }); }); }
+  function login(un,pw){ return ghGet(ACCT+'/'+un+'.json').then(function(ac){ if(!ac) throw new Error('账号不存在'); return sha(pw).then(function(ph){ return sha(ph+ac.salt).then(function(h){ if(h!==ac.hash) throw new Error('密码错误'); return true; }); }); }); }
+
+  if(ls(LS_USER)){ var g=document.getElementById('g1-gate'); if(g) g.remove(); return; }
+
+  var mode='login';
+  function setMode(m){
+    mode=m;
+    var lt=document.getElementById('g1-tab-login'), lr=document.getElementById('g1-tab-reg');
+    if(m==='login'){ lt.style.background='#2f7ea8';lt.style.color='#fff';lr.style.background='transparent';lr.style.color='#9cc9e6';document.getElementById('g1-pw').placeholder='密码'; }
+    else { lr.style.background='#2f7ea8';lr.style.color='#fff';lt.style.background='transparent';lt.style.color='#9cc9e6';document.getElementById('g1-pw').placeholder='设置密码（至少 4 位）'; }
+  }
+  document.getElementById('g1-tab-login').onclick=function(){ setMode('login'); };
+  document.getElementById('g1-tab-reg').onclick=function(){ setMode('register'); };
+  document.getElementById('g1-admin').onclick=function(){
+    if(document.getElementById('g1-tok-modal')) return;
+    var m=document.createElement('div');
+    m.id='g1-tok-modal';
+    m.style.cssText='position:fixed;top:14px;right:14px;z-index:2147483001;background:#0e3a52;color:#e6f6ff;border:1px solid rgba(120,200,255,.4);border-radius:12px;padding:14px;width:320px;font-family:system-ui;font-size:13px;box-shadow:0 10px 40px rgba(0,0,0,.6);';
+    m.innerHTML='<div style="margin-bottom:8px;font-weight:600;">GitHub 云存档 · 管理员设置</div><div style="color:#9cc9e6;margin-bottom:8px;">填入 GitHub Token（仅授权本仓库的 Fine-grained PAT，Contents 读+写）。Token 只在浏览器本地。</div><input id="g1-tok-inp" type="password" style="width:100%;box-sizing:border-box;padding:6px;border-radius:6px;border:1px solid rgba(120,200,255,.4);background:rgba(0,0,0,.3);color:#e6f6ff;margin-bottom:8px;"><div style="display:flex;gap:8px;"><button id="g1-tok-save" style="flex:1;padding:6px;border-radius:6px;border:none;background:#ffd866;color:#04101c;cursor:pointer;font-weight:600;">保存</button><button id="g1-tok-close" style="padding:6px 10px;border-radius:6px;border:1px solid rgba(120,200,255,.4);background:transparent;color:#9cc9e6;cursor:pointer;">关闭</button></div><div id="g1-tok-msg" style="margin-top:8px;color:#7fe0a0;min-height:14px;"></div>';
+    document.body.appendChild(m);
+    document.getElementById('g1-tok-inp').value=ls(LS_TOKEN);
+    document.getElementById('g1-tok-save').onclick=function(){ var t=document.getElementById('g1-tok-inp').value.trim(); lsSet(LS_TOKEN,t); document.getElementById('g1-tok-msg').textContent=t?'已保存（仅本浏览器）':'已清空 Token'; };
+    document.getElementById('g1-tok-close').onclick=function(){ m.remove(); };
+  };
+  function go(){
+    var un=document.getElementById('g1-un').value.trim(), pw=document.getElementById('g1-pw').value;
+    var msg=document.getElementById('g1-msg'); msg.style.color='#ff9d9d'; msg.textContent='';
+    if(!un||!pw){ msg.textContent='请填写玩家名和密码'; return; }
+    if(!ls(LS_TOKEN)){ msg.textContent='管理员尚未配置 GitHub Token（点⚙）'; return; }
+    msg.style.color='#7fe0a0'; msg.textContent='正在连接云端…';
+    var p = (mode==='register') ? register(un,pw) : login(un,pw);
+    p.then(function(){ lsSet(LS_USER,un); msg.textContent='成功，即将进入…'; setTimeout(function(){ location.reload(); },500); })
+     .catch(function(e){ msg.style.color='#ff9d9d'; msg.textContent=e&&e.message?e.message:'操作失败'; });
+  }
+  document.getElementById('g1-go').onclick=go;
+  document.getElementById('g1-pw').addEventListener('keydown',function(e){ if(e.key==='Enter') go(); });
+})();
+</script>
 <script>
 (function(){
 "use strict";
@@ -153,7 +219,7 @@ var W=0,H=0,DPR=1;
 /* ================= 配置与存档 ================= */
 var LS_USER='game1_user', LS_TOKEN='game1_token';
 var API_BASE='https://api.github.com/repos/YunYu-ca/YunYu-ca.github.io';
-var SAVE_PATH='Game5Saves';          // 与 Game5 共用存档文件夹
+var SAVE_PATH='Game1Saves';           // Game1 独立存档文件夹
 var LB_PATH='Game1Data/leaderboard.json';
 
 var cfg={user:'',token:''};
@@ -197,7 +263,7 @@ function unb64(s){ try{ return decodeURIComponent(escape(atob(s))); }catch(e){ r
 
 function packSave(){ return { username:cfg.user, savedAt:new Date().toISOString(), bestScore:P.best, totalScore:P.score, coins:P.coins, totalCatches:P.catches, rareFish:P.rareFish }; }
 
-/* 保存当前玩家存档到 Game5Saves/玩家名/save.json */
+/* 保存当前玩家存档到 Game1Saves/玩家名.json */
 function pushSave(){
   if(!cfg.user||!cfg.token){ return Promise.reject(new Error('未配置玩家名或 Token')); }
   var path=SAVE_PATH+'/'+encodeURIComponent(cfg.user)+'/save.json';
@@ -210,7 +276,7 @@ function pushSave(){
 function saveNow(){
   if(!cfg.user||!cfg.token){ note('请先配置玩家名与 Token'); return; }
   note('正在保存…');
-  pushSave().then(function(){ note('✅ 已保存到 Game5Saves/'+cfg.user+'/save.json'); toast('存档已保存'); })
+  pushSave().then(function(){ note('✅ 已保存到 Game1Saves/'+cfg.user+'.json'); toast('存档已保存'); })
     .catch(function(e){ note('保存失败：'+e.message); toast('保存失败：'+e.message); });
 }
 function loadCloud(){
