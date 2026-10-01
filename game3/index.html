@@ -131,8 +131,8 @@
   var LASTSAVE_KEY = 'game3_lastsave';
   var STAMP_KEY = 'game3_saved_ts';
 
-  /* ---- GitHub 凭据：管理员 token（在门禁 ⚙ 配置，写仓库用）---- */
-  function ghToken(){ return localStorage.getItem(ADMIN_TOKEN_KEY) || localStorage.getItem('game3_token') || ''; }
+  /* ---- GitHub 凭据：优先全局 gamehub_token（同域各游戏共享，配一次即可）；兼容旧版本游戏 token ---- */
+  function ghToken(){ return localStorage.getItem('gamehub_token') || localStorage.getItem(ADMIN_TOKEN_KEY) || localStorage.getItem('game3_token') || ''; }
 
   /* ---- 工具 ---- */
   function b64(s){ try{ return btoa(unescape(encodeURIComponent(s))); }catch(e){ return btoa(s); } }
@@ -423,7 +423,7 @@
     for(var i=0;i<tabs.length;i++) tabs[i].addEventListener('click',function(){ tab=this.getAttribute('data-t'); for(var j=0;j<tabs.length;j++) tabs[j].classList.toggle('on',tabs[j]===this); });
     var msg=g.querySelector('#g3-msg');
     function show(m,t){ msg.textContent=m; msg.style.color=t==='err'?'#f87171':'#4ade80'; }
-    g.querySelector('#g3-cfgbtn').addEventListener('click',function(){ var f=g.querySelector('.field'); f.style.display=f.style.display==='none'?'block':'none'; });
+    g.querySelector('#g3-cfgbtn').addEventListener('click',function(){ if(window.__HubAdmin) window.__HubAdmin.open(); });
     g.querySelector('#g3-go').addEventListener('click',async function(){
       var un=g.querySelector('#g3-un').value.trim();
       var pw=g.querySelector('#g3-pw').value;
@@ -447,6 +447,10 @@
   function init(){
     if(localStorage.getItem(TOKEN_KEY)){ hideGate(); return; }
     showGate();
+    // 首次（全局和本游戏都未配置 token）自动弹出全局管理员配置
+    if(!ghToken() && !(window.__HubAdmin && window.__HubAdmin.isSet())){
+      setTimeout(function(){ if(window.__HubAdmin) window.__HubAdmin.open(); }, 300);
+    }
   }
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', init); } else { init(); }
   window.addEventListener('load', function(){ setTimeout(function(){ if(localStorage.getItem(TOKEN_KEY)) hideGate(); }, 0); });
@@ -477,7 +481,66 @@
   if(navigator.sendBeacon && !window.__g3beacon){ window.__g3beacon=true; navigator.sendBeacon=function(){ return true; }; }
 })();
 
+/* ===== 全局管理员配置（同域各游戏共享：配一次 token，修改需管理员密码）===== */
+(function(){
+  if(window.__HubAdmin) return;
+  var TK='gamehub_token', SALT='gamehub_admin_salt', HASH='gamehub_admin_hash';
+  function sha256(s){ return crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)).then(function(b){ return Array.from(new Uint8Array(b)).map(function(x){ return x.toString(16).padStart(2,'0'); }).join(''); }); }
+  function rnd(){ var a=new Uint8Array(16); crypto.getRandomValues(a); return Array.from(a).map(function(x){ return x.toString(16).padStart(2,'0'); }).join(''); }
+  function ls(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  function getToken(){ return ls(TK); }
+  function isSet(){ return !!ls(HASH); }
+  async function setup(pw, tok){
+    if(!pw||String(pw).length<4) throw new Error('管理员密码至少4位');
+    if(!tok||!String(tok).trim()) throw new Error('请输入 GitHub Token');
+    var salt=rnd(); lsSet(SALT,salt); lsSet(HASH,await sha256(salt+':'+pw)); lsSet(TK,String(tok).trim());
+    return {ok:true,message:'全局配置已保存，各游戏通用'};
+  }
+  async function modify(pw, newTok, newPw){
+    if(!isSet()) throw new Error('尚未配置，请先完成首次配置');
+    if(await sha256(ls(SALT)+':'+pw)!==ls(HASH)) throw new Error('管理员密码错误');
+    if(newTok&&String(newTok).trim()) lsSet(TK,String(newTok).trim());
+    if(newPw){ if(String(newPw).length<4) throw new Error('新密码至少4位'); var ns=rnd(); lsSet(SALT,ns); lsSet(HASH,await sha256(ns+':'+newPw)); }
+    return {ok:true,message:'配置已更新'};
+  }
+  function open(opts){
+    opts=opts||{}; if(document.getElementById('hub-admin')) return;
+    var first=!isSet();
+    var d=document.createElement('div'); d.id='hub-admin';
+    d.style.cssText='position:fixed;inset:0;z-index:2147482999;background:rgba(8,12,26,.92);display:flex;align-items:center;justify-content:center;font-family:-apple-system,"Microsoft YaHei",sans-serif;color:#e2e8f0;';
+    d.innerHTML='<div style="width:360px;background:#111a2e;border:1px solid #334;border-radius:14px;padding:22px;box-sizing:border-box;">'
+      +'<h3 style="margin:0 0 4px;font-size:17px;text-align:center;">⚙️ 全局管理员配置</h3>'
+      +'<p style="margin:0 0 14px;font-size:12px;color:#8a93ad;text-align:center;">'+(first?'首次：设置管理员密码 + GitHub Token，四个游戏通用':'修改需输入管理员密码验证')+'</p>'
+      +'<label style="font-size:12px;color:#8a93ad;">'+(first?'设置管理员密码':'管理员密码（验证身份）')+'</label>'
+      +'<input id="hub-pw" type="password" style="width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #334;background:#0a1120;color:#eef;font-size:14px;margin-bottom:10px;">'
+      +'<div id="hub-newpw-wrap" style="display:none;"><label style="font-size:12px;color:#8a93ad;">新密码（可选，留空不修改）</label>'
+      +'<input id="hub-newpw" type="password" style="width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #334;background:#0a1120;color:#eef;font-size:14px;margin-bottom:10px;"></div>'
+      +'<label style="font-size:12px;color:#8a93ad;">GitHub Token</label>'
+      +'<input id="hub-tk" type="password" style="width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #334;background:#0a1120;color:#eef;font-size:14px;margin-bottom:14px;" placeholder="ghp_xxx / github_pat_xxx">'
+      +'<button id="hub-save" style="width:100%;padding:10px;border-radius:9px;border:none;background:linear-gradient(90deg,#3b82f6,#6366f1);color:#fff;font-size:15px;font-weight:700;cursor:pointer;">保存</button>'
+      +'<div id="hub-msg" style="margin-top:10px;font-size:13px;min-height:18px;text-align:center;"></div>'
+      +'<div style="margin-top:10px;text-align:center;"><button id="hub-close" style="background:none;border:none;color:#94a3b8;font-size:12px;cursor:pointer;">关闭</button></div>'
+      +'</div>';
+    document.body.appendChild(d);
+    if(!first) document.getElementById('hub-newpw-wrap').style.display='block';
+    var msg=d.querySelector('#hub-msg');
+    function show(m,c){ msg.textContent=m; msg.style.color=c||'#f87171'; }
+    d.querySelector('#hub-close').onclick=function(){ d.remove(); };
+    d.querySelector('#hub-save').onclick=async function(){
+      var pw=d.querySelector('#hub-pw').value;
+      var tk=d.querySelector('#hub-tk').value;
+      var npw=d.querySelector('#hub-newpw').value;
+      try{ var r=first?await setup(pw,tk):await modify(pw,tk,npw); show(r.message,'#4ade80'); if(r.ok) setTimeout(function(){ d.remove(); },1200); }
+      catch(e){ show(e.message||'失败','#f87171'); }
+    };
+  }
+  window.__HubAdmin={ getToken:getToken, isSet:isSet, setup:setup, modify:modify, open:open };
+})();
+
 </script>
+
+
 
 
 

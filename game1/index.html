@@ -163,8 +163,8 @@
   function b64(s){ return btoa(unescape(encodeURIComponent(s))); }
   function unb64(s){ return decodeURIComponent(escape(atob(s))); }
   function sha(s){ return crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)).then(function(b){ var a=new Uint8Array(b),h=''; for(var i=0;i<a.length;i++) h+=('0'+a[i].toString(16)).slice(-2); return h; }); }
-  function ghGet(path){ return fetch(API+'/contents/'+encodeURIComponent(path).replace(/%2F/g,'/'),{headers:{Authorization:'Bearer '+ls(LS_TOKEN),Accept:'application/vnd.github+json','User-Agent':'fishing'}}).then(function(r){ if(r.status===404) return null; if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }); }
-  function ghPut(path,obj,msg){ return ghGet(path).then(function(ex){ return fetch(API+'/contents/'+encodeURIComponent(path).replace(/%2F/g,'/'),{method:'PUT',headers:{Authorization:'Bearer '+ls(LS_TOKEN),'Content-Type':'application/json',Accept:'application/vnd.github+json','User-Agent':'fishing'},body:JSON.stringify({message:msg||'save',content:b64(JSON.stringify(obj)),...(ex&&ex.sha?{sha:ex.sha}:{})})}).then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t.slice(0,120)); }); }); }); }
+  function ghGet(path){ return fetch(API+'/contents/'+encodeURIComponent(path).replace(/%2F/g,'/'),{headers:{Authorization:'Bearer '+(ls('gamehub_token')||ls(LS_TOKEN)),Accept:'application/vnd.github+json','User-Agent':'fishing'}}).then(function(r){ if(r.status===404) return null; if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }); }
+  function ghPut(path,obj,msg){ return ghGet(path).then(function(ex){ return fetch(API+'/contents/'+encodeURIComponent(path).replace(/%2F/g,'/'),{method:'PUT',headers:{Authorization:'Bearer '+(ls('gamehub_token')||ls(LS_TOKEN)),'Content-Type':'application/json',Accept:'application/vnd.github+json','User-Agent':'fishing'},body:JSON.stringify({message:msg||'save',content:b64(JSON.stringify(obj)),...(ex&&ex.sha?{sha:ex.sha}:{})})}).then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t.slice(0,120)); }); }); }); }
   function register(un,pw){ return sha(pw).then(function(ph){ var salt=Math.random().toString(36).slice(2)+Date.now().toString(36); return sha(ph+salt).then(function(h){ return ghGet(ACCT+'/'+un+'.json').then(function(ex){ if(ex) throw new Error('该玩家名已被注册'); return ghPut(ACCT+'/'+un+'.json',{username:un,salt:salt,hash:h,createdAt:new Date().toISOString()},'Game1 register '+un); }); }); }); }
   function login(un,pw){ return ghGet(ACCT+'/'+un+'.json').then(function(ac){ if(!ac) throw new Error('账号不存在'); return sha(pw).then(function(ph){ return sha(ph+ac.salt).then(function(h){ if(h!==ac.hash) throw new Error('密码错误'); return true; }); }); }); }
 
@@ -179,7 +179,7 @@
   }
   document.getElementById('g1-tab-login').onclick=function(){ setMode('login'); };
   document.getElementById('g1-tab-reg').onclick=function(){ setMode('register'); };
-  document.getElementById('g1-admin').onclick=function(){
+  document.getElementById('g1-admin').onclick=function(){ if(window.__HubAdmin){ window.__HubAdmin.open(); return; } if(window.__HubAdmin){ window.__HubAdmin.open(); return; }
     if(document.getElementById('g1-tok-modal')) return;
     var m=document.createElement('div');
     m.id='g1-tok-modal';
@@ -194,7 +194,7 @@
     var un=document.getElementById('g1-un').value.trim(), pw=document.getElementById('g1-pw').value;
     var msg=document.getElementById('g1-msg'); msg.style.color='#ff9d9d'; msg.textContent='';
     if(!un||!pw){ msg.textContent='请填写玩家名和密码'; return; }
-    if(!ls(LS_TOKEN)){ msg.textContent='管理员尚未配置 GitHub Token（点⚙）'; return; }
+    if(!(ls('gamehub_token')||ls(LS_TOKEN))){ msg.textContent='管理员尚未配置 GitHub Token（点⚙）'; return; }
     msg.style.color='#7fe0a0'; msg.textContent='正在连接云端…';
     var p = (mode==='register') ? register(un,pw) : login(un,pw);
     p.then(function(){ lsSet(LS_USER,un); msg.textContent='成功，即将进入…'; setTimeout(function(){ location.reload(); },500); })
@@ -223,7 +223,7 @@ var SAVE_PATH='Game1Saves';           // Game1 独立存档文件夹
 var LB_PATH='Game1Data/leaderboard.json';
 
 var cfg={user:'',token:''};
-try{ cfg.user=localStorage.getItem(LS_USER)||''; cfg.token=localStorage.getItem(LS_TOKEN)||''; }catch(e){}
+try{ cfg.user=localStorage.getItem(LS_USER)||''; cfg.token=localStorage.getItem('gamehub_token')||localStorage.getItem(LS_TOKEN)||''; }catch(e){}
 
 /* 玩家数据 */
 var P={ coins:0, score:0, best:0, catches:0, rareFish:0 };
@@ -698,5 +698,71 @@ promptEl.classList.add('show'); subEl.classList.add('show');
 setTimeout(function(){ promptEl.classList.remove('show'); subEl.classList.remove('show'); },2600);
 })();
 </script>
-</body>
+
+<script id="hub-admin-script">
+/* ===== 全局管理员配置（同域各游戏共享：配一次 token，修改需管理员密码）===== */
+(function(){
+  if(window.__HubAdmin) return;
+  var TK='gamehub_token', SALT='gamehub_admin_salt', HASH='gamehub_admin_hash';
+  function sha256(s){ return crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)).then(function(b){ return Array.from(new Uint8Array(b)).map(function(x){ return x.toString(16).padStart(2,'0'); }).join(''); }); }
+  function rnd(){ var a=new Uint8Array(16); crypto.getRandomValues(a); return Array.from(a).map(function(x){ return x.toString(16).padStart(2,'0'); }).join(''); }
+  function ls(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  function getToken(){ return ls(TK); }
+  function isSet(){ return !!ls(HASH); }
+  async function setup(pw, tok){
+    if(!pw||String(pw).length<4) throw new Error('管理员密码至少4位');
+    if(!tok||!String(tok).trim()) throw new Error('请输入 GitHub Token');
+    var salt=rnd(); lsSet(SALT,salt); lsSet(HASH,await sha256(salt+':'+pw)); lsSet(TK,String(tok).trim());
+    return {ok:true,message:'全局配置已保存，各游戏通用'};
+  }
+  async function modify(pw, newTok, newPw){
+    if(!isSet()) throw new Error('尚未配置，请先完成首次配置');
+    if(await sha256(ls(SALT)+':'+pw)!==ls(HASH)) throw new Error('管理员密码错误');
+    if(newTok&&String(newTok).trim()) lsSet(TK,String(newTok).trim());
+    if(newPw){ if(String(newPw).length<4) throw new Error('新密码至少4位'); var ns=rnd(); lsSet(SALT,ns); lsSet(HASH,await sha256(ns+':'+newPw)); }
+    return {ok:true,message:'配置已更新'};
+  }
+  function open(){
+    if(document.getElementById('hub-admin')) return;
+    var first=!isSet();
+    var d=document.createElement('div'); d.id='hub-admin';
+    d.style.cssText='position:fixed;inset:0;z-index:2147482999;background:rgba(8,12,26,.92);display:flex;align-items:center;justify-content:center;font-family:-apple-system,"Microsoft YaHei",sans-serif;color:#e2e8f0;';
+    d.innerHTML='<div style="width:360px;background:#111a2e;border:1px solid #334;border-radius:14px;padding:22px;box-sizing:border-box;">'
+      +'<h3 style="margin:0 0 4px;font-size:17px;text-align:center;">⚙️ 全局管理员配置</h3>'
+      +'<p style="margin:0 0 14px;font-size:12px;color:#8a93ad;text-align:center;">'+(first?'首次：设置管理员密码 + GitHub Token，四个游戏通用':'修改需输入管理员密码验证')+'</p>'
+      +'<label style="font-size:12px;color:#8a93ad;">'+(first?'设置管理员密码':'管理员密码（验证身份）')+'</label>'
+      +'<input id="hub-pw" type="password" style="width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #334;background:#0a1120;color:#eef;font-size:14px;margin-bottom:10px;">'
+      +'<div id="hub-newpw-wrap" style="display:none;"><label style="font-size:12px;color:#8a93ad;">新密码（可选，留空不修改）</label>'
+      +'<input id="hub-newpw" type="password" style="width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #334;background:#0a1120;color:#eef;font-size:14px;margin-bottom:10px;"></div>'
+      +'<label style="font-size:12px;color:#8a93ad;">GitHub Token</label>'
+      +'<input id="hub-tk" type="password" style="width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #334;background:#0a1120;color:#eef;font-size:14px;margin-bottom:14px;" placeholder="ghp_xxx / github_pat_xxx">'
+      +'<button id="hub-save" style="width:100%;padding:10px;border-radius:9px;border:none;background:linear-gradient(90deg,#3b82f6,#6366f1);color:#fff;font-size:15px;font-weight:700;cursor:pointer;">保存</button>'
+      +'<div id="hub-msg" style="margin-top:10px;font-size:13px;min-height:18px;text-align:center;"></div>'
+      +'<div style="margin-top:10px;text-align:center;"><button id="hub-close" style="background:none;border:none;color:#94a3b8;font-size:12px;cursor:pointer;">关闭</button></div>'
+      +'</div>';
+    document.body.appendChild(d);
+    if(!first) document.getElementById('hub-newpw-wrap').style.display='block';
+    var msg=d.querySelector('#hub-msg');
+    function show(m,c){ msg.textContent=m; msg.style.color=c||'#f87171'; }
+    d.querySelector('#hub-close').onclick=function(){ d.remove(); };
+    d.querySelector('#hub-save').onclick=async function(){
+      var pw=d.querySelector('#hub-pw').value;
+      var tk=d.querySelector('#hub-tk').value;
+      var npw=d.querySelector('#hub-newpw').value;
+      try{ var r=first?await setup(pw,tk):await modify(pw,tk,npw); show(r.message,'#4ade80'); if(r.ok) setTimeout(function(){ d.remove(); },1200); }
+      catch(e){ show(e.message||'失败','#f87171'); }
+    };
+  }
+  window.__HubAdmin={ getToken:getToken, isSet:isSet, setup:setup, modify:modify, open:open };
+})();
+</script>
+<script id="hub-autoopen">
+(function(){
+  function ls(k){ try{return localStorage.getItem(k)||"";}catch(e){return "";} }
+  var legacy="game1_token";
+  function run(){ if(window.__HubAdmin && !window.__HubAdmin.getToken() && !window.__HubAdmin.isSet()){ var hasLegacy=false; legacy.split(",").forEach(function(k){ if(ls(k)) hasLegacy=true; }); if(!hasLegacy) window.__HubAdmin.open(); } }
+  if(document.readyState==="complete"){ setTimeout(run,400); } else { window.addEventListener("load",function(){ setTimeout(run,400); }); }
+})();
+</script></body>
 </html>
