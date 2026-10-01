@@ -15,16 +15,32 @@
     --accent: #4f46e5;
     --accent-light: #eef2ff;
     --border: #e5e7eb;
+    --nav-bg: rgba(255,255,255,.85);
+    --bg-overlay: rgba(250,250,250,.82);
+    --shadow: rgba(0,0,0,.06);
     --radius: 12px;
     --max-w: 960px;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b1226;
+    --surface: #151f38;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --accent: #818cf8;
+    --accent-light: #1f2c4f;
+    --border: #2a3a5f;
+    --nav-bg: rgba(11,18,38,.88);
+    --bg-overlay: rgba(11,18,38,.82);
+    --shadow: rgba(0,0,0,.35);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
     background:
-      linear-gradient(rgba(250,250,250,.82), rgba(250,250,250,.82)),
+      linear-gradient(var(--bg-overlay), var(--bg-overlay)),
       url("bg.jpg") center / cover no-repeat fixed;
+    background-color: var(--bg);
     color: var(--text);
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
@@ -35,10 +51,19 @@
   /* ===== 导航 ===== */
   nav {
     position: sticky; top: 0; z-index: 100;
-    background: rgba(255,255,255,.85);
+    background: var(--nav-bg);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border);
   }
+  /* ===== 主题切换按钮 ===== */
+  .theme-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-muted); cursor: pointer;
+    transition: background .2s, color .2s, transform .15s;
+  }
+  .theme-btn:hover { color: var(--accent); border-color: var(--accent); transform: translateY(-1px); }
   .nav-inner {
     max-width: var(--max-w); margin: 0 auto;
     padding: 14px 24px;
@@ -142,7 +167,7 @@
     display: flex; flex-direction: column;
     transition: transform .2s, box-shadow .2s;
   }
-  .project-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,.06); }
+  .project-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px var(--shadow); }
   .project-card .p-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
   .project-card .p-folder {
     width: 36px; height: 36px; border-radius: 8px;
@@ -214,15 +239,18 @@
 <nav>
   <div class="nav-inner">
     <div class="logo">Dev<span>.folio</span></div>
-    <button class="menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
     <ul class="nav-links">
       <li><a href="#about">关于</a></li>
       <li><a href="#skills">技能</a></li>
       <li><a href="#projects">项目</a></li>
       <li><a href="#contact">联系</a></li>
     </ul>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <button class="theme-btn" onclick="toggleTheme()" id="theme-btn" aria-label="切换深浅色模式"></button>
+    </div>
   </div>
 </nav>
 
@@ -367,6 +395,27 @@
       document.querySelector('.nav-links').classList.remove('open');
     });
   });
+
+  // ===== 浅色 / 深色模式切换 =====
+  var SUN = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
+  var MOON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  function applyTheme(t){
+    document.documentElement.setAttribute('data-theme', t);
+    var btn = document.getElementById('theme-btn');
+    if(btn){ btn.innerHTML = (t==='dark') ? SUN : MOON; btn.title = (t==='dark') ? '切换到浅色' : '切换到深色'; }
+    try{ localStorage.setItem('theme', t); }catch(e){}
+  }
+  function toggleTheme(){
+    var cur = document.documentElement.getAttribute('data-theme')==='dark' ? 'dark' : 'light';
+    applyTheme(cur==='dark' ? 'light' : 'dark');
+  }
+  (function initTheme(){
+    var saved = null; try{ saved = localStorage.getItem('theme'); }catch(e){}
+    if(!saved){
+      saved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    applyTheme(saved==='dark' ? 'dark' : 'light');
+  })();
 </script>
 
 </body>
