@@ -127,17 +127,36 @@
     background: var(--surface); color: var(--text); font-size: .85rem; cursor: pointer;
   }
   .wall-actions button:first-child { background: var(--accent); color:#fff; border-color: var(--accent); }
-  .qq-box { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background:#000; box-shadow: 0 8px 22px rgba(0,0,0,.2); }
-  .qq-head {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 11px 14px;
-    background: linear-gradient(90deg, #1e2b4d, #34235a);
-    color: #eef2ff; border-bottom: 1px solid rgba(255,255,255,.09);
+  .qq-launch {
+    display: block; width: 100%; padding: 12px; border-radius: 10px; border: none;
+    background: linear-gradient(90deg,#3b82f6,#6366f1); color: #fff;
+    font-size: .95rem; font-weight: 700; cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
   }
-  .qq-logo { font-weight: 700; font-size: .9rem; display: flex; align-items: center; gap: 7px; }
-  .qq-hint { font-size: .72rem; color: #9fb0d4; }
-  .qq-box iframe { width: 100%; height: 460px; border: 0; display: block; background: #000; }
+  .qq-launch:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(79,70,229,.3); }
   .qq-open { display: inline-block; margin-top: 10px; font-size: .85rem; }
+
+  /* ===== QQ音乐播放器弹窗 ===== */
+  .qq-modal {
+    position: fixed; inset: 0; z-index: 2500;
+    background: rgba(6,10,22,.82); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .qq-modal.open { display: flex; }
+  .qq-modal-box {
+    width: 1000px; max-width: 96vw; height: 640px; max-height: 92vh;
+    background: #000; border-radius: 14px; overflow: hidden;
+    border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    display: flex; flex-direction: column;
+  }
+  .qq-modal-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; background: linear-gradient(90deg,#1e2b4d,#34235a); color: #eef2ff;
+    border-bottom: 1px solid rgba(255,255,255,.09);
+  }
+  .qq-modal-title { font-weight: 700; font-size: .95rem; }
+  .qq-modal-hint { font-size: .75rem; color: #9fb0d4; flex: 1; text-align: right; margin-right: 8px; }
+  .qq-modal-box iframe { flex: 1; width: 100%; border: 0; display: block; background: #000; }
   .switch { position: relative; display: inline-block; width: 46px; height: 26px; vertical-align: middle; }
   .switch input { opacity: 0; width: 0; height: 0; }
   .switch .slider {
@@ -350,14 +369,8 @@
     </section>
     <section class="ext-section">
       <h4>🎵 QQ音乐播放器</h4>
-      <p>网页版播放器，首次使用点右上「登录」扫码即可</p>
-      <div class="qq-box">
-        <div class="qq-head">
-          <span class="qq-logo">🎵 QQ音乐</span>
-          <span class="qq-hint">扫码登录 · 边玩边听</span>
-        </div>
-        <iframe id="qq-frame" src="https://y.qq.com/n/ryqq/player" title="QQ音乐"></iframe>
-      </div>
+      <p>点击打开完整播放器，右上「登录」扫码即可，登录后播放会显示进度条</p>
+      <button class="qq-launch" onclick="openQQ()">▶ 打开播放器</button>
       <a class="qq-open" id="qq-open" href="https://y.qq.com/" target="_blank" rel="noopener">在新窗口打开 QQ音乐 ↗</a>
     </section>
     <section class="ext-section">
@@ -371,6 +384,18 @@
     </section>
   </div>
 </aside>
+
+<!-- ===== QQ音乐完整播放器弹窗 ===== -->
+<div class="qq-modal" id="qq-modal" onclick="if(event.target===this)closeQQ()">
+  <div class="qq-modal-box">
+    <div class="qq-modal-head">
+      <span class="qq-modal-title">🎵 QQ音乐播放器</span>
+      <span class="qq-modal-hint">右上角「登录」扫码 · 播放即见进度条</span>
+      <button class="drawer-close" onclick="closeQQ()" aria-label="关闭">&times;</button>
+    </div>
+    <iframe id="qq-frame" src="https://y.qq.com/n/ryqq/player" title="QQ音乐"></iframe>
+  </div>
+</div>
 
 <!-- ===== 导航 ===== -->
 <nav>
@@ -670,6 +695,15 @@
       }, 2000);
     }
   })();
+  // 打开 / 关闭 QQ音乐完整播放器弹窗
+  function openQQ(){
+    document.getElementById('qq-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeQQ(){
+    document.getElementById('qq-modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
 </script>
 
 </body>
