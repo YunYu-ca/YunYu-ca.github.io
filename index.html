@@ -343,6 +343,28 @@
     section { padding: 56px 20px; }
     .hero { min-height: auto; padding-top: 60px; padding-bottom: 40px; }
   }
+  /* ===== 移动端自适应增强 ===== */
+  @media (max-width: 720px){
+    body { background-attachment: scroll; }
+    #dynamic-island { top: 10px; gap: 8px; padding: 7px 14px; font-size: .78rem; }
+    #ext-drawer { width: 85vw; min-width: 0; max-width: 100vw; }
+    h2 { font-size: 1.5rem; }
+    .contact-box { padding: 28px 18px; }
+    .about-card { padding: 20px; }
+    .qq-modal-hint { display: none; }
+    .qq-modal-box { height: 78vh; }
+    .drawer-body { padding: 16px; }
+  }
+  @media (max-width: 480px){
+    #dynamic-island { gap: 6px; padding: 6px 12px; }
+    #dynamic-island .island-sep:nth-of-type(2) { display: none; }
+    #dynamic-island #island-date { font-size: .72rem; }
+    .btn { flex: 1; justify-content: center; }
+    .hero-buttons { gap: 12px; }
+    .project-card .game-btn { width: 100%; }
+    .qq-modal { padding: 10px; }
+    .btn { padding: 13px 16px; }
+  }
 </style>
 </head>
 <body>
