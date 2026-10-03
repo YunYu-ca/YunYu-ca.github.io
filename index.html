@@ -81,6 +81,12 @@
   #dynamic-island .island-dot { width: 7px; height: 7px; border-radius: 50%; background: #34d399; box-shadow: 0 0 8px #34d399; animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
   #dynamic-island .island-sep { width:1px; height:14px; background:rgba(255,255,255,.18); }
+  #dynamic-island .island-qq {
+    background:none; border:none; color:inherit; cursor:pointer;
+    font-size:.9rem; line-height:1; padding:2px 5px; border-radius:6px;
+    transition: transform .15s, color .15s, background .15s;
+  }
+  #dynamic-island .island-qq:hover { transform: scale(1.3); color:#fbbf24; background:rgba(255,255,255,.12); }
 
   /* ===== 拓展抽屉 ===== */
   .ext-scrim {
@@ -347,6 +353,8 @@
   <span id="island-time">--:--:--</span>
   <span class="island-sep"></span>
   <span id="island-date">—</span>
+  <span class="island-sep"></span>
+  <button class="island-qq" onclick="openQQ()" title="打开 QQ音乐播放器" aria-label="打开QQ音乐播放器">♪</button>
 </div>
 
 <!-- ===== 拓展抽屉 ===== -->
