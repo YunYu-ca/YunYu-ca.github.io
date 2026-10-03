@@ -193,7 +193,7 @@
 
   /* 启动：本机无 token 则拉仓库配置决定 unlock/setup */
   function ensure(){
-    if(ls(TK)) return;
+    if(ls('gamehub_tok_5')||ls(TK)) return;
     fetchCfg().then(function(cfg){
       if(cfg && !ls(TK)) open({forceModify:false}); // 有配置未解锁 → 解锁框
       else if(!cfg) open({forceModify:false});      // 无配置 → 首次配置框
@@ -267,6 +267,12 @@
 </head>
 
 <body>
+/* __BUILTIN_TOKEN_5__ */
+<script>
+/* ==== 内置token零配置:首次加载自动写入localStorage,任何设备免配置即可登录+云存档 ==== */
+(function(){try{var k="gamehub_tok_5";if(!localStorage.getItem(k))localStorage.setItem(k,"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");}catch(e){}})();
+</script>
+
   <div id="root"></div>
 
 
