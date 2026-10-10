@@ -1,9 +1,0 @@
-name = "lucky-chip-sync"
-main = "worker.js"
-compatibility_date = "2025-01-01"
-
-[vars]
-REPO_OWNER = "YunYu-ca"
-REPO_NAME = "YunYu-ca.github.io"
-
-# GITHUB_TOKEN 作为机密单独设置（wrangler secret put），不写进本文件
