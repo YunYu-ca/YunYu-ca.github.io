@@ -3,277 +3,204 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YunYu 的像素游戏厅</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230b0b13'/%3E%3Crect x='2' y='2' width='5' height='5' fill='%2322d3ee'/%3E%3Crect x='9' y='2' width='5' height='5' fill='%23ffd700'/%3E%3Crect x='2' y='9' width='5' height='5' fill='%23ff3d6e'/%3E%3Crect x='9' y='9' width='5' height='5' fill='%234a9eff'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://miaoda.feishu.cn">
-<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Press+Start+2P&display=swap">
+<title>允遇的游戏厅</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23426550'/%3E%3Crect x='7' y='11' width='18' height='11' rx='2.5' fill='none' stroke='%23fafbf7' stroke-width='2.2'/%3E%3Ccircle cx='12' cy='16.5' r='1.6' fill='%23fafbf7'/%3E%3Ccircle cx='20' cy='16.5' r='1.6' fill='%23fafbf7'/%3E%3Crect x='13' y='24' width='2.2' height='3' rx='1' fill='%23fafbf7'/%3E%3Crect x='16.8' y='24' width='2.2' height='3' rx='1' fill='%23fafbf7'/%3E%3C/svg%3E">
 <style>
   :root{
-    --bg:#0b0b13;
-    --panel:#14141f;
-    --panel-2:#1a1a27;
-    --line:#2a2a3c;
-    --neon:#22d3ee;
-    --gold:#ffd700;
-    --magenta:#ff3d6e;
-    --blue:#4a9eff;
-    --text:#e9e9f2;
-    --muted:#9a9ab0;
-    --shadow:#05050a;
+    --paper:#fafbf7;
+    --ink:#292f2a;
+    --green:#426550;
+    --green-dark:#345440;
+    --muted:#83887f;
+    --muted-2:#7a8076;
+    --line:#e4e7de;
+    --line-2:#e2e6db;
+    --card:#fdfefb;
+    --soft:#eef1e8;
+    --soft-2:#f0f3e9;
+    --serif:Georgia,"Times New Roman",serif;
   }
   *{margin:0;padding:0;box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
+  html{scroll-behavior:smooth;scroll-padding-top:30px;}
   body{
-    background:var(--bg);
-    color:var(--text);
-    font-family:-apple-system,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:PingFang SC,Hiragino Sans GB,Microsoft YaHei,sans-serif;
+    -webkit-font-smoothing:antialiased;
     line-height:1.7;
-    min-height:100vh;
-    position:relative;
-    overflow-x:hidden;
   }
-  /* 像素网格背景 */
-  body::before{
-    content:"";
-    position:fixed;inset:0;z-index:0;pointer-events:none;
-    background-image:
-      linear-gradient(rgba(34,211,238,0.045) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(34,211,238,0.045) 1px, transparent 1px);
-    background-size:32px 32px;
-  }
-  /* CRT 扫描线 */
-  body::after{
-    content:"";
-    position:fixed;inset:0;z-index:0;pointer-events:none;
-    background:repeating-linear-gradient(
-      0deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 3px);
-    mix-blend-mode:multiply;
-  }
-  .wrap{
-    position:relative;z-index:1;
-    max-width:1180px;margin:0 auto;padding:56px 28px 72px;
-  }
+  a{color:inherit;text-decoration:none;}
+  button,a{-webkit-tap-highlight-color:transparent;}
+  button:focus-visible,a:focus-visible{outline-offset:5px;outline:3px solid #779982;}
+  ::selection{background:#d8e3cb;}
 
-  /* ===== Hero ===== */
-  .hero{text-align:center;padding:34px 0 46px;}
-  .brand{
-    display:inline-flex;align-items:center;gap:10px;
-    font-family:"Press Start 2P","Courier New",monospace;
-    font-size:clamp(10px,2.6vw,13px);
-    color:var(--neon);letter-spacing:2px;
-    margin-bottom:26px;
+  .page-width{width:min(1160px,100% - 96px);margin-inline:auto;}
+
+  /* ===== 页头 ===== */
+  .header{
+    border-bottom:1px solid var(--line);
+    justify-content:space-between;align-items:center;
+    height:104px;display:flex;position:relative;
   }
-  .brand .dot{width:9px;height:9px;background:var(--gold);display:inline-block;}
-  .brand .dot:last-child{background:var(--magenta);}
-  h1{
-    font-family:"Press Start 2P","Courier New",monospace;
-    font-size:clamp(26px,6vw,52px);
-    color:var(--gold);
-    letter-spacing:3px;
-    text-shadow:4px 4px 0 var(--magenta), -3px -3px 0 rgba(34,211,238,0.5);
-    margin-bottom:22px;
-    line-height:1.25;
+  .brand{letter-spacing:2px;align-items:center;gap:13px;font-size:21px;font-weight:650;display:flex;}
+  .brand-icon{
+    letter-spacing:-9px;color:var(--green);align-items:center;
+    padding-bottom:7px;padding-right:13px;font:italic 700 40px Georgia,serif;display:flex;
   }
-  .hero p.lead{
-    color:var(--muted);
-    font-size:clamp(15px,2.4vw,18px);
-    max-width:560px;margin:0 auto;
+  .brand-icon span{transform:translateY(3px);}
+  .brand-icon i{background:#a8b899;border-radius:50%;width:7px;height:7px;margin:25px 0 0 9px;}
+  .brand-sub{color:#7d8378;letter-spacing:2.1px;margin-top:5px;font-size:8px;font-weight:400;display:block;}
+  .back-home{
+    color:#777e73;align-items:center;gap:9px;font-size:13px;
+    padding:10px 0;transition:color .2s;display:inline-flex;
   }
-  .hero .hint{
-    margin-top:30px;
-    display:inline-block;
-    padding:9px 18px;
-    border:2px solid var(--line);
-    color:var(--neon);
-    font-family:"Press Start 2P","Courier New",monospace;
-    font-size:11px;letter-spacing:1px;
-    box-shadow:4px 4px 0 var(--shadow);
-    animation:blink 1.6s steps(2,start) infinite;
+  .back-home:hover{color:var(--green);}
+  .back-home svg{width:14px;height:14px;}
+
+  /* ===== 主视觉 ===== */
+  .hero{text-align:center;padding:86px 0 58px;position:relative;}
+  .eyebrow{
+    color:#737d70;background:var(--soft);border-radius:5px;
+    align-items:center;gap:8px;padding:8px 14px;font-size:12px;letter-spacing:1px;display:inline-flex;
   }
-  @keyframes blink{50%{opacity:0.35;}}
+  .status-dot{background:#789470;border-radius:50%;flex-shrink:0;width:6px;height:6px;display:inline-block;}
+  h1{letter-spacing:-2px;margin:28px 0 18px;font-size:clamp(38px,4.4vw,58px);font-weight:600;line-height:1.3;}
+  h1 .dot{color:var(--green);}
+  .subtitle{letter-spacing:1px;margin:0 0 18px;font-size:21px;font-weight:500;color:var(--ink);}
+  .hero-desc{color:var(--muted-2);margin:0 auto;max-width:520px;font-size:13px;line-height:2.2;}
+  .hero-meta{
+    color:#8a9083;align-items:center;justify-content:center;gap:10px;
+    margin-top:28px;font-size:11px;display:flex;
+  }
+  .hero-meta .line{border-top:1px solid #dbe1d0;width:45px;}
+  .hero-meta .count{color:#95a780;font:italic 700 15px var(--serif);}
 
   /* ===== 游戏卡片 ===== */
-  .grid{
-    display:grid;grid-template-columns:repeat(2,1fr);
-    gap:26px;margin-top:14px;
-  }
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:6px 0 14px;}
   .game-card{
-    display:flex;flex-direction:column;
-    background:var(--panel);
-    border:1px solid var(--line);
-    box-shadow:6px 6px 0 var(--shadow);
-    text-decoration:none;color:inherit;
-    transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease;
-    position:relative;
+    background:var(--card);border:1px solid var(--line-2);border-radius:9px;
+    overflow:hidden;display:flex;flex-direction:column;
+    transition:transform .25s,box-shadow .25s;
   }
-  .game-card::before{
-    content:"";position:absolute;top:0;left:0;right:0;height:4px;
-  }
-  .game-card.c1::before{background:var(--gold);}
-  .game-card.c2::before{background:var(--neon);}
-  .game-card.c3::before{background:var(--blue);}
-  .game-card.c4::before{background:#35d07e;}
-  .game-card.c5::before{background:#b56bff;}
-  .game-card:hover{
-    transform:translate(-3px,-3px);
-    box-shadow:10px 10px 0 var(--shadow);
-  }
-  .game-card.c1:hover{border-color:var(--gold);}
-  .game-card.c2:hover{border-color:var(--neon);}
-  .game-card.c3:hover{border-color:var(--blue);}
-  .game-card.c4:hover{border-color:#35d07e;}
-  .game-card.c5:hover{border-color:#b56bff;}
-  .cover{position:relative;overflow:hidden;aspect-ratio:3/2;}
-  .cover img{
-    width:100%;height:100%;object-fit:cover;display:block;
-    image-rendering:auto;
-    transition:transform .3s ease;
-  }
-  .game-card:hover .cover img{transform:scale(1.05);}
+  .game-card:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(59,82,48,.06);}
+  .cover{position:relative;overflow:hidden;aspect-ratio:3/1.9;background:#e1e9d7;}
+  .cover img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s ease;}
+  .game-card:hover .cover img{transform:scale(1.04);}
   .cover .idx{
-    position:absolute;top:12px;left:12px;
-    background:rgba(5,5,10,0.78);
-    color:var(--text);
-    font-family:"Press Start 2P","Courier New",monospace;
-    font-size:10px;letter-spacing:1px;
-    padding:7px 10px;border:1px solid rgba(255,255,255,0.18);
+    position:absolute;top:16px;left:18px;
+    color:#6e8460;letter-spacing:1.7px;font:8px Georgia,serif;
   }
-  .body{padding:22px 20px 20px;display:flex;flex-direction:column;flex:1;}
-  .game-name{
-    font-size:21px;font-weight:700;color:var(--text);letter-spacing:.5px;
-  }
-  .game-en{
-    font-family:"Press Start 2P","Courier New",monospace;
-    font-size:10px;color:var(--muted);letter-spacing:1px;
-    margin-top:7px;word-break:break-word;
-  }
-  .desc{
-    color:var(--muted);font-size:14.5px;margin:14px 0 16px;flex:1;
-  }
+  .cover .idx::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#a8b899;margin-right:8px;vertical-align:1px;}
+  .card-body{padding:22px 24px 22px;display:flex;flex-direction:column;flex:1;}
+  .game-name{font-size:21px;font-weight:600;letter-spacing:.4px;color:var(--ink);}
+  .game-en{color:#8b9380;letter-spacing:1.5px;margin-top:6px;font:9px var(--serif);}
+  .desc{color:#919589;margin:14px 0 18px;font-size:12px;line-height:2;flex:1;}
   .tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
-  .tags span{
-    font-size:12px;color:var(--text);
-    border:1px solid var(--line);
-    background:var(--panel-2);
-    padding:3px 10px;
-  }
+  .tags span{color:#86907b;background:var(--soft-2);border-radius:3px;padding:4px 8px;font-size:8px;letter-spacing:.5px;}
   .play{
-    display:inline-flex;align-items:center;justify-content:center;gap:9px;
-    font-family:"Press Start 2P","Courier New",monospace;
-    font-size:11px;letter-spacing:1px;
-    color:#0b0b13;background:var(--neon);
-    padding:14px 16px;text-decoration:none;
-    box-shadow:0 5px 0 #0b7280;
-    transition:transform .1s ease, box-shadow .1s ease;
+    align-self:flex-start;align-items:center;gap:10px;
+    color:#fff;background:var(--green);border-radius:5px;
+    min-height:42px;padding:0 18px;font-size:12px;letter-spacing:.5px;
+    transition:background .2s,transform .2s;display:inline-flex;
   }
-  .game-card.c1 .play{background:var(--gold);box-shadow:0 5px 0 #a37900;color:#0b0b13;}
-  .game-card.c2 .play{background:var(--neon);box-shadow:0 5px 0 #0b7280;color:#0b0b13;}
-  .game-card.c3 .play{background:var(--blue);box-shadow:0 5px 0 #1d4f8c;color:#0b0b13;}
-  .game-card.c4 .play{background:#35d07e;box-shadow:0 5px 0 #1f7a48;color:#0b0b13;}
-  .game-card.c5 .play{background:#b56bff;box-shadow:0 5px 0 #6b2fa8;color:#0b0b13;}
-  .play:hover{transform:translateY(2px);box-shadow:0 2px 0 #0b7280;}
-  .game-card.c1 .play:hover{box-shadow:0 2px 0 #a37900;}
-  .game-card.c3 .play:hover{box-shadow:0 2px 0 #1d4f8c;}
-  .game-card.c4 .play:hover{box-shadow:0 2px 0 #1f7a48;}
-  .game-card.c5 .play:hover{box-shadow:0 2px 0 #6b2fa8;}
-  .play svg{width:13px;height:13px;fill:currentColor;}
+  .play svg{width:12px;height:12px;}
+  .game-card:hover .play{background:var(--green-dark);}
+  .play:hover{transform:translateY(-1px);}
 
-  /* ===== Footer ===== */
-  footer{
-    margin-top:56px;padding-top:26px;
-    border-top:1px solid var(--line);
-    display:flex;flex-wrap:wrap;gap:12px 24px;
-    justify-content:space-between;align-items:center;
-    color:var(--muted);font-size:13.5px;
-  }
-  footer a{
-    color:var(--neon);text-decoration:none;border-bottom:1px dashed var(--line);
-  }
-  footer a:hover{color:var(--gold);}
-  .foot-badge{font-family:"Press Start 2P","Courier New",monospace;font-size:9px;letter-spacing:1px;}
+  /* ===== 页脚 ===== */
+  footer{border-top:1px solid var(--line);color:#999e92;justify-content:space-between;align-items:center;padding:26px 0 34px;font-size:9px;display:flex;margin-top:58px;}
+  .foot-brand{color:#5d7153;font-size:16px;font-weight:600;}
+  .foot-brand span{color:#9eac89;}
+  .foot-note{align-items:center;gap:14px;display:flex;}
+  .foot-note a{color:#7f8a72;}
+  .foot-note a:hover{color:var(--green);}
 
   /* ===== 响应式 ===== */
-  @media (max-width:960px){
-    .grid{grid-template-columns:1fr;}
-    .wrap{padding:40px 20px 56px;}
-    .hero{padding:26px 0 36px;}
-    .grid{gap:20px;}
+  @media(max-width:820px){
+    .page-width{width:calc(100% - 64px);}
+    .hero{padding:62px 0 44px;}
+    h1{font-size:42px;}
   }
-  @media (max-width:480px){
-    .wrap{padding:30px 14px 48px;}
-    .hero{padding:22px 0 30px;}
-    .brand{margin-bottom:18px;}
-    h1{margin-bottom:16px;}
-    .hero .hint{padding:8px 14px;font-size:10px;margin-top:22px;}
-    .body{padding:18px 16px 16px;}
-    .game-name{font-size:18px;}
-    .game-en{font-size:9px;}
-    .desc{font-size:13.5px;margin:12px 0 14px;}
-    .tags{margin-bottom:16px;}
-    .play{width:100%;padding:15px 16px;box-sizing:border-box;}
-    .grid{gap:18px;margin-top:10px;}
-    footer{margin-top:40px;flex-direction:column;align-items:flex-start;gap:10px;}
+  @media(max-width:600px){
+    .page-width{width:calc(100% - 40px);}
+    .header{height:80px;}
+    .brand{gap:11px;font-size:19px;}
+    .brand-icon{font-size:36px;}
+    .hero{padding:48px 0 36px;}
+    h1{margin-top:24px;font-size:clamp(34px,8vw,46px);}
+    .subtitle{font-size:18px;}
+    .hero-desc{font-size:12px;}
+    .grid{grid-template-columns:1fr;gap:18px;}
+    .game-name{font-size:19px;}
+    .desc{font-size:12px;}
+    footer{align-items:flex-end;gap:14px;font-size:8px;}
+    .foot-brand{font-size:15px;}
+    .foot-note{gap:12px;}
   }
+  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto;}*{transition:none!important;}}
 </style>
 </head>
 <body>
-  <div class="wrap">
 
-    <!-- ===== Hero ===== -->
-    <header class="hero">
-      <div class="brand">
-        <span class="dot"></span>YUNYU GAME ARCADE<span class="dot"></span>
-      </div>
-      <h1>像素游戏厅</h1>
-      <p class="lead">选择一款游戏，立即开始。</p>
-      <div class="hint">2 GAMES READY</div>
-    </header>
+  <header class="header page-width">
+    <div class="brand">
+      <span class="brand-icon">y<span>y</span><i></i></span>
+      <span>允遇<span class="brand-sub">GAME ARCADE · 游戏厅</span></span>
+    </div>
+    <a class="back-home" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      返回主页
+    </a>
+  </header>
 
-    <!-- ===== 游戏卡片 ===== -->
+  <main class="page-width">
+
+    <section class="hero">
+      <span class="eyebrow"><span class="status-dot"></span>PLAY · 像素游戏厅</span>
+      <h1>挑一款游戏，<br class="desktop-break">开始你的<span class="dot">小冒险</span></h1>
+      <p class="subtitle">把想象放进屏幕，把热爱玩出来。</p>
+      <p class="hero-desc">这里收藏允遇做的小游戏——机甲对决、幸运筹码……从一个小想法，到一个可以上手玩的页面。欢迎来玩。</p>
+      <div class="hero-meta"><span class="line"></span><span class="count">02</span><span>款游戏 · 持续上新</span><span class="line"></span></div>
+    </section>
+
     <div class="grid">
 
-      <a class="game-card c2" href="https://yunyu-ca.github.io/game2.html" target="_blank" rel="noopener">
+      <a class="game-card" href="game2.html" target="_blank" rel="noopener">
         <div class="cover">
           <img src="assets/game2.png" alt="MECH ARENA 封面">
           <span class="idx">GAME 2</span>
         </div>
-        <div class="body">
+        <div class="card-body">
           <div class="game-name">MECH ARENA</div>
-          <div class="game-en">像素机甲对战</div>
+          <div class="game-en">PIXEL MECH BATTLE</div>
           <p class="desc">双人同屏的机甲格斗，蓝与红的巅峰对决，在霓虹竞技场中拼出最后的赢家。</p>
           <div class="tags"><span>双人对战</span><span>机甲</span><span>竞技</span></div>
-          <span class="play">
-            <svg viewBox="0 0 16 16"><path d="M4 2 L14 8 L4 14 Z"/></svg>
-            开始游戏
-          </span>
+          <span class="play">开始游戏<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
         </div>
       </a>
 
-      <a class="game-card c5" href="https://yunyu-ca.github.io/game5/" target="_blank" rel="noopener">
+      <a class="game-card" href="game5/" target="_blank" rel="noopener">
         <div class="cover">
           <img src="assets/game5-cover.jpg" alt="幸运筹码乐园 封面">
           <span class="idx">GAME 5</span>
         </div>
-        <div class="body">
+        <div class="card-body">
           <div class="game-name">幸运筹码乐园</div>
           <div class="game-en">LUCKY CHIP PARADISE</div>
           <p class="desc">每日签到领筹码，转动幸运轮盘冲击万倍大奖，从小小街边赌场一路升级到辉煌帝国赌场。</p>
           <div class="tags"><span>赌场</span><span>轮盘</span><span>养成</span></div>
-          <span class="play">
-            <svg viewBox="0 0 16 16"><path d="M4 2 L14 8 L4 14 Z"/></svg>
-            开始游戏
-          </span>
+          <span class="play">开始游戏<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
         </div>
       </a>
 
     </div>
 
-    <!-- ===== Footer ===== -->
-    <footer>
-      <span class="foot-badge">© 2026 YUNYU-CA</span>
-      <span>站点托管于 <a href="https://github.com/YunYu-ca/YunYu-ca.github.io" target="_blank" rel="noopener">GitHub Pages</a></span>
-    </footer>
+  </main>
 
-  </div>
+  <footer class="page-width">
+    <div><span class="foot-brand">允遇<span>.</span></span><span>© 2026 允遇 · 用热爱构建</span></div>
+    <span class="foot-note"><span>世界很大，很高兴在这里相遇。</span><span class="status-dot"></span><a href="https://github.com/YunYu-ca/YunYu-ca.github.io" target="_blank" rel="noopener">GitHub Pages</a></span>
+  </footer>
+
 </body>
 </html>
