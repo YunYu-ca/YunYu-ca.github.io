@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>植物大战僵尸2 · 时空环游之旅</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%233f5a7a'/%3E%3Ccircle cx='12' cy='12' r='5' fill='%23d8b54a'/%3E%3Ccircle cx='21' cy='18' r='6' fill='%2367a8e8'/%3E%3Cpath d='M16 28l-4-6h8z' fill='%23946bc2'/%3E%3C/svg%3E">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    background:radial-gradient(1200px 700px at 80% 0%,#1c2a3f,#0b1220);
+    color:#e8eef7;font-family:PingFang SC,Hiragino Sans GB,Microsoft YaHei,sans-serif;
+    display:flex;flex-direction:column;align-items:center;min-height:100%;overflow:auto;
+  }
+  .wrap{width:min(920px,100%);padding:14px 12px 30px;}
+  header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;}
+  h1{font-size:22px;font-weight:700;letter-spacing:1px;display:flex;align-items:center;gap:10px;}
+  h1 .sub{font-size:11px;color:#9fb6cf;font-weight:400;letter-spacing:1px;}
+  .hud{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px;}
+  .hud b{color:#ffe66a;}
+  .hud .era{color:#9fd0e8;}
+  button{background:#3f5a7a;color:#fff;border:1px solid #5b7a9f;border-radius:6px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit;}
+  button:hover{background:#4b6b8f;}
+  button.ghost{background:transparent;color:#b6cde0;border-color:#4a5a6a;}
+  #canvas{width:100%;background:#0b1220;border-radius:12px;border:1px solid #2a3a52;display:block;box-shadow:0 18px 50px rgba(0,0,0,.5);cursor:pointer;touch-action:none;}
+  .tips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;font-size:11px;color:#8fa8bd;line-height:1.7;}
+  .tips span{background:#132338;border:1px solid #2a3a52;border-radius:5px;padding:4px 8px;}
+  .era-note{background:#14243a;border:1px solid #2a3a52;border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:#c3d4e4;line-height:1.9;}
+  .era-note b{color:#ffe66a;}
+  .muted{color:#6f8298;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>植物大战僵尸 <span class="sub">TIME TRAVEL · 时空环游之旅</span></h1>
+    <div class="hud">
+      <span>时代 <b id="eraBox" class="era">—</b></span>
+      <span>阳光 <b id="sunBox">150</b></span>
+      <span>波次 <b id="waveBox">0/0</b></span>
+      <span id="statusBox" class="muted">选择关卡</span>
+      <button id="startBtn">挑战</button>
+      <button id="soundBtn" class="ghost">🔇 音效</button>
+    </div>
+  </header>
+  <canvas id="canvas" width="900" height="520"></canvas>
+  <div class="era-note">
+    <b>时间之钟：</b>僵尸侵扰了各个时代，你需要穿越<b>古代遗迹 → 海盗时代 → 蒸汽纪元 → 赛博未来</b>，在每个时代种下植物、守住防线。通关一个时代即可解锁下一个。每个时代都有专属的植物和僵尸，风格完全不同！
+  </div>
+  <div class="tips">
+    <span>时代选择界面点击地图进入</span><span>点击阳光收集</span><span>选中植物后点击草坪种植</span><span>守住全部波次即通关</span>
+  </div>
+</div>
+
+<script>
+/* ===== 植物大战僵尸2 · 时空环游之旅 — 原创自包含实现 ===== */
+(function(){
+"use strict";
+var cv=document.getElementById('canvas'), ctx=cv.getContext('2d');
+var eraBox=document.getElementById('eraBox'), sunBox=document.getElementById('sunBox'),
+    waveBox=document.getElementById('waveBox'), statusBox=document.getElementById('statusBox'),
+    startBtn=document.getElementById('startBtn'), soundBtn=document.getElementById('soundBtn');
+
+/* ===== 常量 ===== */
+var ROWS=5, COLS=9;
+var fieldX=150, fieldY=70, cellW=(cv.width-fieldX)/COLS, cellH=(cv.height-fieldY)/ROWS;
+var state='map'; // map | playing | won | lost
+var sun=150, wave=0, totalWaves=5, time=0, selected=null;
+var eraIndex=0, cleared=0; // 0-3; cleared: 已通关个数
+var cells=[], plants=[], zombies=[], projectiles=[], suns=[], effects=[];
+var ctxAudio=null, muted=true;
+
+/* ===== 时代定义 ===== */
+function era(id,name,tag,bgTop,bgBot,deck,zombies){
+  return {id,name,tag,bgTop,bgBot,deck:deck.map(function(p){return plantById[p];}).filter(Boolean), zombies:zombies};
+}
+function mk(id,name,cost,opts){ return Object.assign({id,name,cost,type:'plant'},opts); }
+var plantById={};
+var BASE_PLANTS=[
+  mk('sunflower','向日葵',50,{kind:'sun',cooldown:8,hp:150,color:'#e6c93a',role:'产阳光'}),
+  mk('peashooter','豌豆射手',100,{kind:'shoot',rate:1.4,dmg:20,hp:150,color:'#64b345',role:'射豌豆'}),
+  mk('wallnut','坚果墙',50,{kind:'wall',hp:2800,color:'#c9a05a',role:'肉盾'}),
+  mk('snowpea','寒冰射手',175,{kind:'shoot',rate:1.6,dmg:20,slow:true,hp:160,color:'#7fd0e8',role:'减速冰豆'}),
+  mk('cherry','樱桃炸弹',150,{kind:'bomb',fuse:1.0,color:'#d8493e',role:'爆炸'}),
+  mk('threepeater','三线射手',300,{kind:'shoot3',rate:1.5,dmg:20,hp:160,color:'#7cc95a',role:'三行攻击'}),
+  mk('potato','土豆雷',25,{kind:'mine',armTime:12,color:'#b98a4e',role:'埋雷'}),
+  mk('gatling','机枪射手',250,{kind:'shoot',rate:0.6,dmg:20,hp:150,color:'#4d9b45',role:'连发'}),
+  mk('laser','激光豌豆',200,{kind:'shoot',rate:1.1,dmg:30,pierce:true,hp:160,color:'#67a8e8',role:'穿透激光'}),
+  mk('magnet','电磁坚果',100,{kind:'wall',hp:4000,color:'#946bc2',role:'超强护盾'})
+];
+BASE_PLANTS.forEach(function(p){plantById[p.id]=p;});
+
+var ERAS=[
+  era('ancient','古代遗迹','ANCIENT RUINS','#d8b26a','#8a6a3a',['sunflower','peashooter','wallnut','snowpea','cherry'],
+      [['mummy',260,0.38,'#d8c48a',1],['stone',560,0.32,'#9a968c',1],['pharaoh',1250,0.26,'#c7a050',1.2]]),
+  era('pirate','海盗时代','PIRATE ERA','#5fb3d8','#1e4a66',['sunflower','peashooter','threepeater','snowpea','potato'],
+      [['sailor',220,0.5,'#c95b4a',1],['parrot',150,0.8,'#e0564d',0.9],['cannon',950,0.3,'#6a6a6a',1.2]]),
+  era('steam','蒸汽纪元','STEAMPUNK','#c98a4a','#3a2a1a',['sunflower','peashooter','wallnut','gatling','cherry'],
+      [['gear',260,0.42,'#b06a2a',1],['robot',1100,0.28,'#8a5a3a',1.2],['smog',600,0.5,'#5c5a52',1]]),
+  era('cyber','赛博未来','CYBER FUTURE','#6a4ab0','#1a1030',['sunflower','laser','magnet','gatling','snowpea'],
+      [['cyber',280,0.5,'#39d0e0',1],['hacker',700,0.4,'#946bc2',1],['titan',1600,0.22,'#5a4a9a',1.4]])
+];
+var zkById={};
+function buildZombieKind(id,name,hp,speed,color,scale){ if(!zkById[id])zkById[id]={id,name,hp,speed,color,scale}; }
+['mummy','stone','pharaoh','sailor','parrot','cannon','gear','robot','smog','cyber','hacker','titan'].forEach(function(k){});
+// 用时代的僵尸表填充
+ERAS.forEach(function(er){ er.zombies.forEach(function(z){ buildZombieKind(z[0],z[0],z[1],z[2],z[3],z[4]); }); });
+
+/* ===== 波次 ===== */
+var waveEndTimes={};
+function spawnWave(){
+  wave++;
+  waveBox.textContent=wave+'/'+totalWaves;
+  statusBox.textContent='第 '+wave+' 波进攻！';
+  statusBox.style.color='#ff9d6a';
+  var er=ERAS[eraIndex];
+  var plan=[];
+  for(var i=0;i<3+wave*2;i++){
+    var zk=er.zombies[(Math.random()*er.zombies.length)|0];
+    plan.push({kind:zk[0],at:i*900});
+  }
+  var delay=1200;
+  plan.forEach(function(e){
+    setTimeout(function(){ if(state!=='playing')return; spawnZombie(e.kind,(Math.random()*ROWS)|0); }, delay+e.at);
+  });
+  waveEndTimes[wave]=delay+plan[plan.length-1].at+8000;
+}
+function spawnZombie(kind,row){
+  var z=zkById[kind];
+  zombies.push({kind:kind,row:row,x:cv.width+20,y:fieldY+row*cellH+cellH*0.66,hp:z.hp,maxhp:z.hp,speed:z.speed,dmg:40,color:z.color,scale:z.scale,slowUntil:0,eating:false,eatTarget:null,bob:Math.random()*6,arm:Math.random()*3});
+}
+
+/* ===== 主循环 ===== */
+var last=0;
+function loop(ts){ requestAnimationFrame(loop); var dt=Math.min(0.05,(ts-last)/1000); last=ts; if(state==='playing')update(dt); draw(); }
+requestAnimationFrame(function(ts){last=ts;requestAnimationFrame(loop);});
+
+function update(dt){
+  time+=dt;
+  if(Math.random()<dt*0.09) spawnSunFromSky();
+  for(var i=plants.length-1;i>=0;i--){
+    var p=plants[i]; p.cd-=dt; var def=plantById[p.id];
+    if(def.kind==='sun'){ if(p.cd<=0){p.cd=def.cooldown;spawnSunFromPlant(p,50);} }
+    if(def.kind==='shoot'||def.kind==='shoot3'){ if(p.cd<=0){p.cd=def.rate;shootPlant(p,def);} }
+    if(def.kind==='mine'){ p.armed=(p.armed||0)+dt; if(p.armed>=(def.armTime||12))p.ready=true; if(p.ready){var h=zombieOnCell(p);if(h){explode(p.x,p.y,0.9,1000);killPlant(p);}} }
+    if(def.kind==='bomb'){ p.fuseT=(p.fuseT||def.fuse||1)-dt; if(p.fuseT<=0){explode(p.x,p.y,1.4,1600);killPlant(p);} }
+    if(p.hp<=0)killPlant(p);
+  }
+  for(var j=zombies.length-1;j>=0;j--){
+    var z=zombies[j]; z.bob+=dt; z.effSpeed=(z.slowUntil>time?z.speed*0.5:z.speed);
+    var eat=false,target=null;
+    for(var k=0;k<plants.length;k++){var pp=plants[k];if(pp.row===z.row&&Math.abs(pp.y-z.y)<cellH*0.8&&Math.abs(pp.x-z.x)<cellW*0.85){eat=true;target=pp;break;}}
+    z.eating=eat;z.eatTarget=target;
+    if(eat&&target){target.hp-=z.dmg*dt;if(target.hp<=0)killPlant(target);}
+    else z.x-=z.effSpeed*60*dt;
+    if(z.x<fieldX-30){loseGame();return;}
+    if(z.hp<=0)zombies.splice(j,1);
+  }
+  for(var m=projectiles.length-1;m>=0;m--){
+    var b=projectiles[m]; b.x+=b.vx*dt; b.life-=dt; var hit=false;
+    if(b.pierce){ for(var n=0;n<zombies.length;n++){var zz=zombies[n];if(zz.row===b.row&&zz.x-16<=b.x&&zz.x+16>=b.x&&Math.abs(zz.y-b.y)<cellH*0.8){zz.hp-=b.dmg;if(b.slow)zz.slowUntil=time+(b.slowDur||4);hit=true;}} }
+    else{ for(var n2=0;n2<zombies.length;n2++){var z2=zombies[n2];if(z2.row===b.row&&z2.x-16<=b.x&&z2.x+16>=b.x&&Math.abs(z2.y-b.y)<cellH*0.8){z2.hp-=b.dmg;if(b.slow)z2.slowUntil=time+(b.slowDur||4);effects.push({type:'hit',x:b.x,y:z2.y-16,t:0});hit=true;projectiles.splice(m,1);break;}} }
+    if(!hit&&(b.x>cv.width+40||b.life<=0)&&!b.pierce)projectiles.splice(m,1);
+    if(b.pierce&&b.life<=0)projectiles.splice(m,1);
+  }
+  for(var s=suns.length-1;s>=0;s--){var su=suns[s];su.t+=dt;if(su.t>(su.fromSky?16:9))suns.splice(s,1);}
+  for(var f=effects.length-1;f>=0;f--){effects[f].t+=dt;if(effects[f].t>0.6)effects.splice(f,1);}
+  if(wave>=1&&zombies.length===0&&wave>=totalWaves&&time>waveEndTimes[wave])winGame();
+}
+
+function spawnSunFromSky(){suns.push({x:fieldX+Math.random()*(cv.width-fieldX-40),y:-10,t:0,amt:25,fromSky:true});}
+function spawnSunFromPlant(p,amt){suns.push({x:p.x,y:p.y-10,t:0,amt:amt||25,fromSky:false});}
+function zombieOnCell(p){for(var i=0;i<zombies.length;i++){var z=zombies[i];if(z.row===p.row&&Math.abs(z.y-p.y)<cellH*0.8&&z.x>p.x-30&&z.x<p.x+cellW*0.9)return z;}return null;}
+function shootPlant(p,def){
+  var rows=def.kind==='shoot3'?[Math.max(0,p.row-1),p.row,Math.min(ROWS-1,p.row+1)]:[p.row];
+  rows.forEach(function(r){ projectiles.push({row:r,x:p.x+20,y:fieldY+r*cellH+cellH*0.55,vx:400,dmg:def.dmg||20,slow:!!def.slow,slowDur:def.slow?4:0,life:6,color:def.pierce?'#67a8e8':def.slow?'#bfe9ff':'#e0f0d0',pierce:!!def.pierce}); });
+  sfx('shoot');
+}
+function explode(x,y,r,dmg){ effects.push({type:'boom',x:x,y:y,r:r,t:0}); sfx('boom'); for(var i=zombies.length-1;i>=0;i--){var z=zombies[i];if(Math.abs(z.x-x)<r*cellW&&Math.abs(z.y-y)<r*cellH*0.9)z.hp-=dmg;} }
+function killPlant(p){var i=plants.indexOf(p);if(i>=0)plants.splice(i,1);}
+function loseGame(){state='lost';statusBox.textContent='防线被攻破…';statusBox.style.color='#ff6a6a';startBtn.textContent='重新挑战';}
+function winGame(){state='won';if(cleared<=eraIndex)cleared=eraIndex+1;if(cleared>=ERAS.length){statusBox.textContent='时空已净化，全部通关！';statusBox.style.color='#ffe66a';}else{statusBox.textContent=ERAS[eraIndex].name+' 通关！下一个时代已解锁';statusBox.style.color='#7fe6a0';} startBtn.textContent='回地图';}
+
+/* ===== 交互 ===== */
+cv.addEventListener('click',function(e){
+  var rect=cv.getBoundingClientRect(); var mx=(e.clientX-rect.left)*(cv.width/rect.width),my=(e.clientY-rect.top)*(cv.height/rect.height);
+  if(state==='map'){ handleMapClick(mx,my); return; }
+  if(state==='won'||state==='lost')return;
+  for(var i=suns.length-1;i>=0;i--){var su=suns[i];if(Math.abs(su.x-mx)<20&&Math.abs(su.y-my)<20){sun+=su.amt;suns.splice(i,1);sfx('sun');updateSun();return;}}
+  if(mx<fieldX||my<fieldY)return;
+  var col=Math.floor((mx-fieldX)/cellW),row=Math.floor((my-fieldY)/cellH);
+  if(col<0||col>=COLS||row<0||row>=ROWS)return;
+  var cellX=fieldX+col*cellW+cellW/2,cellY=fieldY+row*cellH+cellH/2;
+  var existing=plants.find(function(p){return p.row===row&&Math.abs(p.x-cellX)<cellW*0.5;});
+  if(selected){ var def=plantById[selected]; if(sun<def.cost){flash('阳光不足');return;} if(existing){flash('该格已有植物');return;} sun-=def.cost;updateSun(); plants.push({id:selected,row:row,x:cellX,y:cellY,hp:def.hp,cd:0,armed:0}); sfx('plant'); selected=null; }
+  else if(existing){ var d=plantById[existing.id]; if(existing.hp>0){ sun+=Math.floor(d.cost*0.5);updateSun();killPlant(existing);sfx('dig');} }
+});
+cv.addEventListener('touchstart',function(e){var t=e.touches[0];var rect=cv.getBoundingClientRect();var mx=(t.clientX-rect.left)*(cv.width/rect.width),my=(t.clientY-rect.top)*(cv.height/rect.height);if(state==='map'){handleMapClick(mx,my);return;}for(var i=suns.length-1;i>=0;i--){var su=suns[i];if(Math.abs(su.x-mx)<20&&Math.abs(su.y-my)<20){sun+=su.amt;suns.splice(i,1);sfx('sun');updateSun();return;}}},{passive:true});
+
+function handleMapClick(mx,my){
+  // 时代地图按钮：4个水平按钮
+  for(var i=0;i<ERAS.length;i++){
+    var bx=150+i*160, by=300, bw=130, bh=90;
+    if(mx>=bx&&mx<=bx+bw&&my>=by&&my<=by+bh){
+      if(i<=cleared){ startEra(i); } else { flash('先通关上一时代'); }
+      return;
+    }
+  }
+}
+startBtn.addEventListener('click',function(){ if(state==='playing')return; if(state==='map'){flash('点击地图上的时代开始');return;} if(state==='won'&&cleared>=ERAS.length){ state='map'; startBtn.textContent='挑战'; drawMapState(); return;} startEra(eraIndex); });
+function startEra(idx){
+  eraIndex=idx; state='playing'; wave=0; sun=150; time=0;
+  plants=[];zombies=[];projectiles=[];suns=[];effects=[];waveEndTimes={};selected=null;
+  eraBox.textContent=ERAS[idx].name; eraBox.style.color='#9fd0e8';
+  updateSun(); spawnWave(); startBtn.textContent='对战中';
+}
+function updateSun(){sunBox.textContent=sun;}
+function drawMapState(){ eraBox.textContent='—'; }
+
+soundBtn.addEventListener('click',function(){muted=!muted;soundBtn.textContent=muted?'🔇 音效':'🔊 音效';if(!muted)initAudio();});
+function initAudio(){ if(ctxAudio)return; try{ctxAudio=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} }
+function sfx(kind){ if(!ctxAudio||muted)return; try{var o=ctxAudio.createOscillator(),g=ctxAudio.createGain();o.connect(g);g.connect(ctxAudio.destination);o.frequency.value=kind==='shoot'?520:kind==='sun'?880:kind==='plant'?340:kind==='boom'?90:260;g.gain.setValueAtTime(0.15,ctxAudio.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctxAudio.currentTime+0.15);o.start();o.stop(ctxAudio.currentTime+0.15);}catch(e){} }
+
+/* ===== 绘制 ===== */
+function draw(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  if(state==='map'){ drawMap(); return; }
+  var er=ERAS[eraIndex];
+  var g=ctx.createLinearGradient(0,0,0,cv.height); g.addColorStop(0,er.bgTop); g.addColorStop(1,er.bgBot);
+  ctx.fillStyle=g; ctx.fillRect(0,0,cv.width,cv.height);
+  drawHouse();
+  var c1=er.id==='ancient'?'#c8a86a':er.id==='pirate'?'#3f8fae':er.id==='steam'?'#8a6a3a':'#4a3a6a';
+  var c2=er.id==='ancient'?'#b8985a':er.id==='pirate'?'#3a82a0':er.id==='steam'?'#7a5c30':'#3f3060';
+  for(var r=0;r<ROWS;r++){for(var c=0;c<COLS;c++){var x=fieldX+c*cellW,y=fieldY+r*cellH;ctx.fillStyle=(r+c)%2===0?c1:c2;ctx.fillRect(x,y,cellW,cellH);ctx.strokeStyle='rgba(0,0,0,.05)';ctx.strokeRect(x,y,cellW,cellH);}}
+  ctx.fillStyle='rgba(0,0,0,.35)'; ctx.fillRect(fieldX,10,cellW*COLS,44);
+  ctx.fillStyle='#ffe66a'; ctx.font='16px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('🕰 '+er.name+' · 时空环游',cv.width/2,38);
+  plants.forEach(function(p){drawPlant(p);});
+  suns.forEach(function(su){drawSun(su);});
+  projectiles.forEach(function(b){ctx.beginPath();ctx.arc(b.x,b.y,b.pierce?5:4,0,7);ctx.fillStyle=b.color;ctx.fill();});
+  zombies.forEach(function(z){drawZombie(z);});
+  effects.forEach(function(f){drawEffect(f);});
+  if(state==='won')drawOverlay(cleared>=ERAS.length?'时空已净化！':'通关 '+ERAS[eraIndex].name,'点击「回地图」前往下一个时代');
+  if(state==='lost')drawOverlay('失败…','点击「重新挑战」再试一次');
+}
+function drawMap(){
+  var g=ctx.createLinearGradient(0,0,0,cv.height); g.addColorStop(0,'#16233a'); g.addColorStop(1,'#0b1220');
+  ctx.fillStyle=g; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#ffe66a'; ctx.font='bold 28px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('🕰 选择要穿越的时代',cv.width/2,90);
+  ctx.fillStyle='#9fb6cf'; ctx.font='14px sans-serif'; ctx.fillText('已通关 '+cleared+' / '+ERAS.length+' 个时代',cv.width/2,120);
+  for(var i=0;i<ERAS.length;i++){
+    var er=ERAS[i], unlocked=i<=cleared;
+    var bx=150+i*160, by=250, bw=130, bh=110;
+    // 路径线
+    if(i>0){ ctx.strokeStyle='#3a5a7a'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(150+i*160-40,by+bh/2); ctx.lineTo(150+i*160,by+bh/2); ctx.stroke(); }
+    ctx.fillStyle=unlocked?er.bgTop:'#3a4656'; ctx.strokeStyle=unlocked?'#8fb6d8':'#4a5a6a'; ctx.lineWidth=2;
+    roundRect(bx,by,bw,bh,8); ctx.fill(); ctx.stroke();
+    ctx.fillStyle=unlocked?'#0b1220':'#6f8298'; ctx.font='bold 15px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(er.name,bx+bw/2,by+40);
+    ctx.font='9px sans-serif'; ctx.fillStyle=unlocked?'#2a3a52':'#8fa8bd'; ctx.fillText(er.tag,bx+bw/2,by+58);
+    ctx.font='10px sans-serif'; ctx.fillStyle=unlocked?'#c3d4e4':'#6f8298'; ctx.fillText(unlocked?('点击挑战'+(i===cleared?'':' · 已通关')):'🔒 未解锁',bx+bw/2,by+92);
+  }
+  ctx.fillStyle='#6f8298'; ctx.font='12px sans-serif'; ctx.fillText('点击时代卡片进入战斗',cv.width/2,430);
+}
+function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function drawHouse(){ ctx.fillStyle='#4a3a2a'; ctx.fillRect(0,0,fieldX-10,cv.height); ctx.fillStyle='#6a5438'; ctx.fillRect(0,0,fieldX-10,40); ctx.fillStyle='#ffe66a'; ctx.font='12px sans-serif'; ctx.textAlign='center'; ctx.fillText('家',fieldX/2-5,cv.height/2); ctx.fillStyle='#3a2a1a'; ctx.fillRect(fieldX-16,0,6,cv.height); }
+function drawPlant(p){ var def=plantById[p.id]; var bob=p.hp>0?Math.sin(p.bob||0)*2:0; ctx.save(); ctx.translate(p.x,p.y+bob); ctx.beginPath(); ctx.arc(0,0,16,0,7); ctx.fillStyle=def.color; ctx.fill(); ctx.strokeStyle='rgba(0,0,0,.25)';ctx.lineWidth=1.5;ctx.stroke(); ctx.fillStyle='#4a9b42'; ctx.beginPath(); ctx.ellipse(0,10,9,6,0,0,7); ctx.fill(); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(-5,-4,4,0,7); ctx.arc(6,-4,4,0,7); ctx.fill(); ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(-4,-4,1.8,0,7); ctx.arc(7,-4,1.8,0,7); ctx.fill(); if(def.kind==='wall')drawHP(p,def); if(p.ready){ctx.fillStyle='#ff6a6a';ctx.beginPath();ctx.arc(0,-20,4,0,7);ctx.fill();} ctx.restore(); }
+function drawHP(p,def){var w=30,h=4,ratio=Math.max(0,p.hp/def.hp);ctx.fillStyle='#000';ctx.fillRect(p.x-w/2,p.y-26,w,h);ctx.fillStyle=ratio>0.5?'#5dd15d':ratio>0.25?'#ffd24d':'#ff6a6a';ctx.fillRect(p.x-w/2,p.y-26,w*ratio,h);}
+function drawSun(su){ctx.save();ctx.globalAlpha=Math.max(0,1-(su.t/(su.fromSky?16:9)));ctx.translate(su.x,su.y);ctx.fillStyle='#ffe66a';ctx.beginPath();ctx.arc(0,0,12,0,7);ctx.fill();ctx.fillStyle='#ffd54d';for(var i=0;i<8;i++){var a=i*Math.PI/4;ctx.strokeStyle='#ffd54d';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(Math.cos(a)*16,Math.sin(a)*16);ctx.lineTo(Math.cos(a)*22,Math.sin(a)*22);ctx.stroke();}ctx.fillStyle='#333';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText('+'+su.amt,0,3);ctx.restore();}
+function drawZombie(z){var s=z.scale||1;ctx.save();ctx.translate(z.x,z.y);var bob=Math.sin(z.bob)*3;ctx.fillStyle=z.color;ctx.beginPath();ctx.arc(0,-14*s,11*s,0,7);ctx.fill();ctx.strokeStyle='rgba(0,0,0,.3)';ctx.stroke();ctx.fillStyle='#5a5a4a';ctx.fillRect(-9*s,4*s,18*s,20*s);ctx.fillStyle='#3a3a2a';ctx.fillRect(-9*s,20*s,18*s,8*s);ctx.strokeStyle='#5a5a4a';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(8*s,8*s);ctx.lineTo(22*s,10*s+bob);ctx.stroke();ctx.fillStyle='#f2d53a';ctx.beginPath();ctx.arc(-4,-16*s,3,0,7);ctx.arc(5,-16*s,3,0,7);ctx.fill();ctx.fillStyle='#111';ctx.beginPath();ctx.arc(-3,-16*s,1.5,0,7);ctx.arc(6,-16*s,1.5,0,7);ctx.fill();var w=26,h=4,ratio=Math.max(0,z.hp/z.maxhp);ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(-w/2,-30,w,h);ctx.fillStyle=ratio>0.5?'#5dd15d':ratio>0.25?'#ffd24d':'#ff6a6a';ctx.fillRect(-w/2,-30,w*ratio,h);ctx.restore();}
+function drawEffect(f){ if(f.type==='hit'){ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText('✳',f.x,f.y);} if(f.type==='boom'){ctx.globalAlpha=Math.max(0,1-f.t/0.6);ctx.fillStyle='rgba(255,140,50,.7)';ctx.beginPath();ctx.arc(f.x,f.y,20+f.t*120,0,7);ctx.fill();ctx.globalAlpha=1;} }
+function drawOverlay(title,sub){ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(0,0,cv.width,cv.height);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='bold 30px sans-serif';ctx.fillText(title,cv.width/2,cv.height/2-16);ctx.font='15px sans-serif';ctx.fillStyle='#ddebd0';ctx.fillText(sub,cv.width/2,cv.height/2+22);}
+function flash(msg){statusBox.textContent=msg;statusBox.style.color='#ff9d6a';setTimeout(function(){statusBox.textContent=state==='playing'?('第 '+wave+' 波进攻'):'选择关卡';},1200);}
+updateSun();
+})();
+</script>
+</body>
+</html>
