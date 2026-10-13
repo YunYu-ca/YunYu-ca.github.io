@@ -1,106 +1,809 @@
 <!DOCTYPE html>
-<html lang="zh">
-
+<html lang="zh-CN">
 <head>
-<script>
-(function(){
-  var needsPolyfill=(function(){
-    try{
-      if(typeof crypto==="undefined"||typeof crypto.randomUUID!=="function")return true;
-      if(typeof Object.hasOwn!=="function")return true;
-      if(typeof[].at!=="function")return true;
-      if(typeof[].findLast!=="function")return true;
-      return false;
-    }catch(e){return true}
-  })();
-  if(needsPolyfill){
-    document.write('<script src="./assets/polyfills.js"><\/script>');
-  }
-})();
-</script>
-
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="幸运筹码乐园 - 一个纯前端本地存档的休闲赌场小游戏">
-  <title>幸运筹码乐园</title>
-  <link rel="icon" href="./favicon.svg">
-<script>
-/* ==== Game5 云同步改道 Supabase（前端 REST 直连，零配置、跨设备，无需任何 Token） ==== */
-(function(){
-  if(window.__g5gh) return; window.__g5gh=true;
-  var WORKER='lucky-chip-sync.3837782838.workers.dev';
-  var SB_URL='https://qgiaengfruthibcrowjt.supabase.co';
-  var SB_KEY='sb_publishable_ZKhKHclof1R45BZjqjLdyQ_69xim82A';
-  var _fetch=window.fetch;
-  function resp(obj){ return Promise.resolve(new Response(JSON.stringify(obj),{status:200,headers:{'Content-Type':'application/json'}})); }
-  function hdr(extra){ var h={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'}; for(var k in (extra||{})) h[k]=extra[k]; return h; }
-  function esc(v){ return encodeURIComponent(v); }
-  function accToRow(a){ return {username:a.username, salt:a.salt, password_hash:a.passwordHash, created_at:a.createdAt||new Date().toISOString()}; }
-  function rowToAcc(r){ return {username:r.username, salt:r.salt, passwordHash:r.password_hash, createdAt:r.created_at}; }
-  function post(url, obj, prefer){ return _fetch(url,{method:'POST',headers:hdr({Prefer:(prefer||'return=minimal')}),body:JSON.stringify(obj)}); }
-  function get(url){ return _fetch(url,{headers:hdr()}); }
-  function errResp(j,status,msg){ var m=(j&&j.message)||(msg||('HTTP '+status)); return resp({ok:false,error:m}); }
-  window.fetch=function(input,init){
-    var u=(typeof input==='string'? input : (input&&input.url))||'';
-    if(u.indexOf(WORKER)<0) return _fetch.apply(this, arguments);
-    var method=((init&&init.method)||'GET').toUpperCase();
-    var q={}; (u.split('?')[1]||'').split('&').forEach(function(p){ if(!p)return; var kv=p.split('='); q[decodeURIComponent(kv[0])]=decodeURIComponent(kv[1]||''); });
-    var un=q.username||''; var isAcc=(q.account==='1');
-    if(q.leaderboard==='1'){
-      return get(SB_URL+'/rest/v1/saves?select=username,data').then(function(r){
-        if(!r.ok) return r.json().then(function(j){ return errResp(j,r.status,'拉取排行榜失败'); });
-        return r.json().then(function(rows){ var list={}; (rows||[]).forEach(function(x){ list[x.username]=x.data||{}; }); return resp({ok:true,list:list}); });
-      }).catch(function(){ return resp({ok:false,error:'网络错误'}); });
-    }
-    if(!isAcc){
-      if(method==='POST'||method==='PUT'){
-        var b1={}; try{ b1=JSON.parse((init&&init.body)||'{}'); }catch(e){}
-        var save=b1.save; if(!save||typeof save!=='object') return resp({ok:false,error:'无效存档'});
-        var row={username:un, data:save, saved_at:save.savedAt||new Date().toISOString()};
-        return post(SB_URL+'/rest/v1/saves', row, 'resolution=merge-duplicates,return=minimal').then(function(r){
-          if(!r.ok) return r.json().then(function(j){ return errResp(j,r.status,'同步失败'); });
-          return resp({ok:true,message:'已同步到云端'});
-        }).catch(function(){ return resp({ok:false,error:'网络错误'}); });
-      } else {
-        return get(SB_URL+'/rest/v1/saves?username=eq.'+esc(un)+'&select=username,data,saved_at').then(function(r){
-          if(!r.ok) return r.json().then(function(j){ return errResp(j,r.status,'拉取失败'); });
-          return r.json().then(function(rows){
-            if(!rows||!rows.length) return resp({ok:true,exists:false});
-            var x=rows[0], sv=Object.assign({}, x.data||{}, {username:x.username, savedAt:x.saved_at});
-            return resp({ok:true,exists:true, save:sv});
-          });
-        }).catch(function(){ return resp({ok:false,error:'网络错误'}); });
-      }
-    }
-    if(method==='POST'||method==='PUT'){
-      var b2={}; try{ b2=JSON.parse((init&&init.body)||'{}'); }catch(e){}
-      var acct=b2.account; if(!acct||typeof acct!=='object') return resp({ok:false,error:'无效账号'});
-      return post(SB_URL+'/rest/v1/accounts', accToRow(acct), 'resolution=merge-duplicates,return=minimal').then(function(r){
-        if(!r.ok) return r.json().then(function(j){ return errResp(j,r.status,'账号同步失败'); });
-        return resp({ok:true,message:'账号已同步'});
-      }).catch(function(){ return resp({ok:false,error:'网络错误'}); });
-    } else {
-      return get(SB_URL+'/rest/v1/accounts?username=eq.'+esc(un)+'&select=username,salt,password_hash,created_at').then(function(r){
-        if(!r.ok) return r.json().then(function(j){ return errResp(j,r.status,'账号拉取失败'); });
-        return r.json().then(function(rows){
-          if(!rows||!rows.length) return resp({ok:true,exists:false});
-          return resp({ok:true,exists:true, save:rowToAcc(rows[0])});
-        });
-      }).catch(function(){ return resp({ok:false,error:'网络错误'}); });
-    }
-  };
-})();
-</script>
-<script type="module" crossorigin src="./assets/index-CGr9Nm5r.js"></script>
-  <link rel="modulepreload" crossorigin href="./assets/rolldown-runtime-B0Z9INg1.js">
-  <link rel="modulepreload" crossorigin href="./assets/radix-DcRP15Mo.js">
-  <link rel="stylesheet" crossorigin href="./assets/index-Bxhpevth.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>幸运筹码乐园 · 赌场</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2312100c'/%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%23d4af37' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23d4af37'/%3E%3Crect x='15' y='4' width='2' height='24' fill='%23d4af37'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0d0b08; --bg2:#161210; --card:#1c1713; --card2:#241d17;
+  --gold:#d4af37; --gold2:#e6c200; --gold3:#a8852a; --gold-line:#5a4820;
+  --text:#f0e6cf; --muted:#a89a7a; --red:#c0392b; --green:#2e9e57;
+  --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  background:radial-gradient(1200px 800px at 50% -10%,#2a2213,#0d0b08 60%);
+  color:var(--text);font-family:PingFang SC,Hiragino Sans GB,Microsoft YaHei,sans-serif;
+  min-height:100vh;overflow-x:hidden;line-height:1.6;
+}
+button{font-family:inherit;cursor:pointer;border:none;}
+input{font-family:inherit;}
+.wrap{max-width:960px;margin:0 auto;padding:16px 14px 60px;}
+.hidden{display:none!important;}
+.screen{animation:fade .3s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border:1px solid var(--gold-line);border-radius:var(--radius);box-shadow:0 12px 30px rgba(0,0,0,.4);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#241d10;font-weight:800;border-radius:10px;padding:12px 20px;font-size:15px;transition:transform .15s,filter .2s;box-shadow:0 4px 14px rgba(212,175,55,.25);}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.05);}
+.btn:active{transform:scale(.97);}
+.btn.ghost{background:transparent;color:var(--gold);border:1px solid var(--gold-line);box-shadow:none;}
+.btn.danger{background:linear-gradient(135deg,#b0352a,#8f2418);color:#fff;}
+.btn.sm{padding:8px 14px;font-size:13px;border-radius:8px;}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+h1,h2,h3{line-height:1.3;}
+.muted{color:var(--muted);}
+.chips{color:var(--gold2);font-weight:800;}
+.topbar{position:sticky;top:0;z-index:40;background:rgba(13,11,8,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--gold-line);}
+.topbar-in{max-width:960px;margin:0 auto;padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;color:var(--gold2);}
+.logo .chip{width:22px;height:22px;border-radius:50%;border:3px solid var(--gold2);position:relative;flex-shrink:0;}
+.logo .chip::after{content:"";position:absolute;inset:4px;border-radius:50%;border:1.5px dashed var(--gold2);}
+.bal{background:var(--card);border:1px solid var(--gold-line);border-radius:10px;padding:6px 14px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px;}
+.bal .n{color:var(--gold2);font-size:16px;}
+.nav{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;}
+.nav button{background:var(--card);color:var(--muted);border:1px solid var(--gold-line);border-radius:8px;padding:7px 12px;font-size:13px;transition:.2s;}
+.nav button:hover{color:var(--gold2);border-color:var(--gold3);}
+.nav button.active{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#241d10;font-weight:800;}
+.login-wrap{max-width:420px;margin:6vh auto;text-align:center;padding:0 14px;}
+.login-box{background:var(--card);border:1px solid var(--gold-line);border-radius:18px;padding:34px 28px;box-shadow:0 20px 60px rgba(0,0,0,.55);}
+.login-box .logo{justify-content:center;font-size:26px;margin-bottom:6px;}
+.login-sub{color:var(--muted);font-size:13px;margin-bottom:22px;}
+.tabs{display:flex;background:var(--card2);border-radius:10px;padding:4px;margin-bottom:18px;}
+.tabs button{flex:1;padding:10px;border-radius:8px;background:transparent;color:var(--muted);font-weight:700;font-size:14px;}
+.tabs button.active{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#241d10;}
+.field{text-align:left;margin-bottom:14px;}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;}
+.field input{width:100%;background:var(--bg);border:1px solid var(--gold-line);border-radius:9px;color:var(--text);padding:12px 14px;font-size:15px;outline:none;}
+.field input:focus{border-color:var(--gold3);}
+.login-btn{width:100%;padding:14px;font-size:16px;}
+.login-msg{min-height:20px;margin-top:10px;font-size:13px;color:var(--red);}
+.login-foot{color:var(--muted);font-size:12px;margin-top:16px;}
+.hero{text-align:center;padding:30px 10px 8px;}
+.hero h1{font-size:clamp(28px,5vw,44px);background:linear-gradient(120deg,var(--gold2),#fff3c4,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:900;letter-spacing:1px;}
+.hero .sub{color:var(--muted);font-size:14px;margin-top:6px;}
+.tier-bar{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;flex-wrap:wrap;}
+.tier-badge{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#241d10;font-weight:800;border-radius:999px;padding:5px 16px;font-size:13px;}
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:22px 0;}
+.stat{background:var(--card);border:1px solid var(--gold-line);border-radius:12px;padding:14px;text-align:center;}
+.stat .v{font-size:22px;font-weight:800;color:var(--gold2);}
+.stat .k{font-size:11px;color:var(--muted);margin-top:2px;}
+.game-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:8px;}
+.gcard{background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--gold-line);border-radius:16px;padding:22px 18px;cursor:pointer;transition:.22s;position:relative;overflow:hidden;text-align:center;}
+.gcard:hover{transform:translateY(-4px);border-color:var(--gold3);box-shadow:0 14px 34px rgba(212,175,55,.15);}
+.gcard .emo{font-size:40px;margin-bottom:8px;}
+.gcard .nm{font-size:17px;font-weight:800;color:var(--gold2);}
+.gcard .ds{font-size:12px;color:var(--muted);margin-top:6px;}
+.gcard .go{margin-top:14px;font-size:13px;color:var(--gold3);font-weight:700;}
+.quick-row{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;justify-content:center;}
+.game-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.game-head h2{font-size:22px;color:var(--gold2);}
+.bet-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card);border:1px solid var(--gold-line);border-radius:12px;padding:12px;margin-bottom:16px;}
+.bet-bar label{font-size:13px;color:var(--muted);}
+.bet-input{display:flex;align-items:center;gap:6px;}
+.bet-input button{width:34px;height:34px;border-radius:8px;background:var(--card2);color:var(--gold2);border:1px solid var(--gold-line);font-size:18px;font-weight:800;}
+.bet-input input{width:90px;background:var(--bg);border:1px solid var(--gold-line);border-radius:8px;color:var(--gold2);text-align:center;padding:8px;font-size:16px;font-weight:800;}
+.msg{text-align:center;min-height:30px;font-size:15px;font-weight:700;margin:12px 0;}
+.msg.win{color:#3ddc84;} .msg.lose{color:#ff5a4e;} .msg.info{color:var(--gold2);}
+.roulette{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.wheel-box{position:relative;width:min(300px,86vw);height:min(300px,86vw);}
+.wheel{width:100%;height:100%;border-radius:50%;border:8px solid var(--gold3);box-shadow:0 0 30px rgba(212,175,55,.25),inset 0 0 30px rgba(0,0,0,.6);}
+.pointer{position:absolute;top:-14px;left:50%;transform:translateX(-50%);color:var(--gold2);font-size:26px;z-index:5;text-shadow:0 2px 6px #000;}
+.bet-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;max-width:460px;width:100%;}
+.bet-cell{background:var(--card);border:1px solid var(--gold-line);border-radius:9px;padding:10px 4px;text-align:center;font-size:12px;cursor:pointer;transition:.15s;}
+.bet-cell:hover{border-color:var(--gold3);}
+.bet-cell.sel{border-color:var(--gold2);background:var(--card2);box-shadow:0 0 0 2px rgba(212,175,55,.3);}
+.dice-area{display:flex;justify-content:center;gap:16px;min-height:90px;align-items:center;}
+.die{width:64px;height:64px;background:linear-gradient(145deg,#fff,#e8e0cf);border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.5);display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:6px;padding:12px;transition:transform .2s;}
+.die .p{width:11px;height:11px;border-radius:50%;background:#1a1208;}
+.die.rolling{animation:shake .3s infinite;}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+.dice-bets{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:460px;margin:0 auto;}
+.slots{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.reels{display:flex;gap:8px;background:var(--bg);border:3px solid var(--gold3);border-radius:12px;padding:10px;box-shadow:inset 0 0 20px rgba(0,0,0,.7);}
+.reel{width:70px;height:90px;background:linear-gradient(180deg,#2a2118,#1c1710);border-radius:8px;border:1px solid var(--gold-line);display:flex;align-items:center;justify-content:center;font-size:46px;overflow:hidden;}
+.reel.rolling .sym{animation:spinY .5s linear infinite;}
+@keyframes spinY{from{transform:translateY(60px);opacity:0}50%{opacity:1}to{transform:translateY(-60px);opacity:0}}
+.sym{font-size:46px;line-height:1;}
+.paytable{font-size:12px;color:var(--muted);text-align:center;line-height:1.9;}
+.bj-table{background:linear-gradient(160deg,#14532d,#0b3d22);border-radius:16px;padding:20px;border:1px solid #1f6e3a;max-width:640px;margin:0 auto;}
+.bj-hand{margin:8px 0 16px;}
+.bj-hand .lab{font-size:12px;color:#b7e0c2;margin-bottom:6px;font-weight:700;}
+.bj-cards{display:flex;gap:6px;min-height:70px;flex-wrap:wrap;}
+.bj-card{width:44px;height:62px;background:#fff;color:#1a1a1a;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;box-shadow:0 4px 10px rgba(0,0,0,.4);}
+.bj-card.red{color:#c0392b;}
+.bj-actions{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:60;display:flex;align-items:center;justify-content:center;padding:14px;}
+.modal{background:var(--card);border:1px solid var(--gold-line);border-radius:16px;max-width:520px;width:100%;max-height:86vh;overflow:auto;padding:24px;position:relative;}
+.modal h3{font-size:19px;color:var(--gold2);margin-bottom:14px;text-align:center;}
+.modal .close{position:absolute;top:10px;right:12px;background:none;color:var(--muted);font-size:22px;}
+.row{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid rgba(212,175,55,.1);}
+.row:last-child{border:none;}
+.checkin-days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:16px;}
+.day{background:var(--card2);border:1px solid var(--gold-line);border-radius:10px;padding:12px 4px;text-align:center;}
+.day .d{font-size:20px;}
+.day .r{font-size:11px;color:var(--gold2);}
+.day.done{background:#1f3d24;border-color:#2e9e57;}
+.day.done .d{opacity:.6;}
+.day.today{border-color:var(--gold2);box-shadow:0 0 0 2px rgba(212,175,55,.35);}
+.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-20px);background:linear-gradient(135deg,var(--gold2),var(--gold));color:#241d10;font-weight:800;border-radius:999px;padding:10px 22px;z-index:80;opacity:0;transition:.3s;box-shadow:0 8px 24px rgba(0,0,0,.5);pointer-events:none;font-size:14px;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.ach{display:flex;align-items:center;gap:12px;padding:10px;border-bottom:1px solid rgba(212,175,55,.1);}
+.ach .ic{font-size:26px;}
+.ach .nm{font-weight:700;font-size:14px;}
+.ach .ds{font-size:12px;color:var(--muted);}
+.ach .st{margin-left:auto;font-size:12px;font-weight:800;color:var(--gold3);}
+.ach.done{background:#1a2a1d;}
+.ach.done .st{color:#3ddc84;}
+.lb{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid rgba(212,175,55,.1);}
+.lb .rk{width:30px;text-align:center;font-weight:800;color:var(--gold3);}
+.lb .un{flex:1;font-weight:600;}
+.lb .bl{color:var(--gold2);font-weight:800;}
+@media(max-width:560px){
+  .nav{width:100%;justify-content:flex-start;}
+  .game-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
 </head>
-
 <body>
+<div class="toast" id="toast"></div>
 
-  <div id="root"></div>
+<div class="login-wrap screen" id="loginScreen">
+  <div class="login-box">
+    <div class="logo"><span class="chip"></span>幸运筹码乐园</div>
+    <p class="login-sub">登录或注册，保存你的赌场进度，随时随地继续</p>
+    <div class="tabs" id="authTabs">
+      <button data-mode="login" class="active">登录</button>
+      <button data-mode="register">注册</button>
+    </div>
+    <div class="field"><label>用户名</label><input id="authUser" autocomplete="username" placeholder="请输入用户名"></div>
+    <div class="field"><label>密码</label><input id="authPass" type="password" autocomplete="current-password" placeholder="请输入密码"></div>
+    <div class="field hidden" id="confirmField"><label>确认密码</label><input id="authPass2" type="password" placeholder="请再次输入密码"></div>
+    <button class="btn login-btn" id="authBtn">登 录</button>
+    <div class="login-msg" id="authMsg"></div>
+    <p class="login-foot">每一次转动，都是命运的邂逅</p>
+  </div>
+</div>
 
+<div class="topbar hidden" id="topbar">
+  <div class="topbar-in">
+    <div class="logo"><span class="chip"></span>幸运筹码乐园</div>
+    <div class="bal">筹码 <span class="n" id="topBal">0</span></div>
+    <div class="nav">
+      <button data-nav="lobby" class="active">大厅</button>
+      <button data-nav="roulette">轮盘</button>
+      <button data-nav="dice">骰子</button>
+      <button data-nav="slots">老虎机</button>
+      <button data-nav="blackjack">21点</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap hidden" id="mainWrap">
+  <div class="screen" id="lobbyScreen">
+    <div class="hero">
+      <h1>幸运筹码乐园</h1>
+      <p class="sub">欢迎回来，<span id="helloUser"></span></p>
+      <div class="tier-bar">
+        <span class="tier-badge" id="tierBadge">青铜</span>
+        <span class="muted" id="tierNext"></span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="v" id="statBal">0</div><div class="k">当前筹码</div></div>
+      <div class="stat"><div class="v" id="statPlayed">0</div><div class="k">累计游玩</div></div>
+      <div class="stat"><div class="v" id="statWon">0</div><div class="k">累计赢取</div></div>
+      <div class="stat"><div class="v" id="statStreak">0</div><div class="k">签到连击</div></div>
+    </div>
+    <div class="quick-row">
+      <button class="btn sm" id="btnCheckin">🎁 每日签到</button>
+      <button class="btn sm ghost" id="btnTasks">📋 每日任务</button>
+      <button class="btn sm ghost" id="btnAch">🏆 成就</button>
+      <button class="btn sm ghost" id="btnLb">🏅 排行榜</button>
+      <button class="btn sm ghost" id="btnSound">🔇 音效</button>
+      <button class="btn sm danger" id="btnLogout">退出</button>
+    </div>
+    <div class="game-grid">
+      <div class="gcard" data-nav="roulette"><div class="emo">🎡</div><div class="nm">轮盘</div><div class="ds">押数字/颜色，转出命运</div><div class="go">进入 →</div></div>
+      <div class="gcard" data-nav="dice"><div class="emo">🎲</div><div class="nm">骰子</div><div class="ds">押点数与大小，掷出大奖</div><div class="go">进入 →</div></div>
+      <div class="gcard" data-nav="slots"><div class="emo">🎰</div><div class="nm">老虎机</div><div class="ds">三连相同，中出777</div><div class="go">进入 →</div></div>
+      <div class="gcard" data-nav="blackjack"><div class="emo">🃏</div><div class="nm">21点</div><div class="ds">挑战庄家，逼近21点</div><div class="go">进入 →</div></div>
+    </div>
+  </div>
+
+  <div class="screen hidden" id="rouletteScreen">
+    <div class="game-head">
+      <button class="btn sm ghost" data-back>← 返回</button>
+      <h2>🎡 轮盘</h2>
+    </div>
+    <div class="bet-bar">
+      <label>下注</label>
+      <div class="bet-input">
+        <button data-bet="-">−</button><input id="rlBet" type="number" value="50" min="10" step="10"><button data-bet="+">＋</button>
+      </div>
+      <button class="btn sm" id="rlSpin">开始转动</button>
+    </div>
+    <div class="roulette">
+      <div class="wheel-box"><div class="pointer">▼</div><canvas class="wheel" id="rlWheel" width="300" height="300"></canvas></div>
+      <div class="bet-grid" id="rlBets"></div>
+    </div>
+    <div class="msg" id="rlMsg"></div>
+  </div>
+
+  <div class="screen hidden" id="diceScreen">
+    <div class="game-head">
+      <button class="btn sm ghost" data-back>← 返回</button>
+      <h2>🎲 骰子</h2>
+    </div>
+    <div class="bet-bar">
+      <label>下注</label>
+      <div class="bet-input">
+        <button data-bet="-">−</button><input id="dcBet" type="number" value="50" min="10" step="10"><button data-bet="+">＋</button>
+      </div>
+      <button class="btn sm" id="dcRoll">投骰子</button>
+    </div>
+    <div class="dice-area"><div class="die" id="dcDie1"><div class="p"></div><div class="p"></div><div class="p"></div><div class="p"></div><div class="p"></div><div class="p"></div><div class="p"></div><div class="p"></div><div class="p"></div></div><div class="die" id="dcDie2"><div class="p"></div><div class="p"></div><div class="p"></div><div class="p"></div><div class="p"></div><div class="p"></div><div class="p"></div><div class="p"></div><div class="p"></div></div></div>
+    <div class="msg" id="dcMsg"></div>
+    <div class="dice-bets" id="dcBets"></div>
+  </div>
+
+  <div class="screen hidden" id="slotsScreen">
+    <div class="game-head">
+      <button class="btn sm ghost" data-back>← 返回</button>
+      <h2>🎰 老虎机</h2>
+    </div>
+    <div class="bet-bar">
+      <label>下注</label>
+      <div class="bet-input">
+        <button data-bet="-">−</button><input id="slBet" type="number" value="50" min="10" step="10"><button data-bet="+">＋</button>
+      </div>
+      <button class="btn sm" id="slSpin">拉杆</button>
+    </div>
+    <div class="slots">
+      <div class="reels"><div class="reel" id="slReel0"><span class="sym">🍒</span></div><div class="reel" id="slReel1"><span class="sym">🍒</span></div><div class="reel" id="slReel2"><span class="sym">🍒</span></div></div>
+      <div class="msg" id="slMsg"></div>
+      <div class="paytable">🍒🍒🍒 ×2 &nbsp;·&nbsp; 🍋🍋🍋 ×3 &nbsp;·&nbsp; 💎💎💎 ×5 &nbsp;·&nbsp; 🔔🔔🔔 ×8 &nbsp;·&nbsp; 7️⃣7️⃣7️⃣ ×20</div>
+    </div>
+  </div>
+
+  <div class="screen hidden" id="blackjackScreen">
+    <div class="game-head">
+      <button class="btn sm ghost" data-back>← 返回</button>
+      <h2>🃏 21点</h2>
+    </div>
+    <div class="bet-bar">
+      <label>下注</label>
+      <div class="bet-input">
+        <button data-bet="-">−</button><input id="bjBet" type="number" value="50" min="10" step="10"><button data-bet="+">＋</button>
+      </div>
+      <button class="btn sm" id="bjDeal">发牌</button>
+    </div>
+    <div class="bj-table">
+      <div class="bj-hand"><div class="lab">庄家 <span id="bjDealerV"></span></div><div class="bj-cards" id="bjDealer"></div></div>
+      <div class="bj-hand"><div class="lab">你 <span id="bjPlayerV"></span></div><div class="bj-cards" id="bjPlayer"></div></div>
+      <div class="bj-actions">
+        <button class="btn sm ghost" id="bjHit" disabled>要牌</button>
+        <button class="btn sm ghost" id="bjStand" disabled>停牌</button>
+        <button class="btn sm" id="bjDouble" disabled>加倍</button>
+      </div>
+      <div class="msg" id="bjMsg"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg hidden" id="checkinModal"><div class="modal">
+  <button class="close" data-close>✕</button>
+  <h3>🎁 每日签到</h3>
+  <div class="checkin-days" id="checkinDays"></div>
+  <button class="btn" id="checkinBtn" style="width:100%">签到领取</button>
+  <div class="msg" id="checkinMsg"></div>
+</div></div>
+
+<div class="modal-bg hidden" id="tasksModal"><div class="modal">
+  <button class="close" data-close>✕</button>
+  <h3>📋 每日任务</h3>
+  <div id="tasksList"></div>
+</div></div>
+
+<div class="modal-bg hidden" id="achModal"><div class="modal">
+  <button class="close" data-close>✕</button>
+  <h3>🏆 成就</h3>
+  <div id="achList"></div>
+</div></div>
+
+<div class="modal-bg hidden" id="lbModal"><div class="modal">
+  <button class="close" data-close>✕</button>
+  <h3>🏅 筹码排行榜</h3>
+  <div id="lbList"></div>
+</div></div>
+
+<script>
+/* ===== 幸运筹码乐园 v2 核心逻辑 ===== */
+(function(){
+"use strict";
+/* Supabase */
+const SB_URL='https://qgiaengfruthibcrowjt.supabase.co';
+const SB_KEY='sb_publishable_ZKhKHclof1R45BZjqjLdyQ_69xim82A';
+const LS_AUTH='g5v2_auth', LS_SAVE='g5v2_save';
+const $=id=>document.getElementById(id);
+let toastTimer=null;
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),1800);}
+function fmt(n){return (n||0).toLocaleString('zh-CN');}
+
+/* ---- 状态 ---- */
+const DEFAULT_SAVE={balance:1000,played:0,won:0,winCount:0,playCount:0,checkins:0,streak:0,lastCheckin:'',today:{play:0,win:0,bet:0},tasks:{},ach:{},created:Date.now()};
+let S=JSON.parse(JSON.stringify(DEFAULT_SAVE));
+let user=null;
+
+/* ---- 密码哈希 (SHA-256 + salt) ---- */
+async function sha256(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function hashPass(pass,salt){ return await sha256(salt+':'+pass); }
+function genSalt(){ return Array.from(crypto.getRandomValues(new Uint8Array(12))).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+
+/* ---- Supabase REST ---- */
+async function sb(path,opts){
+  const res=await fetch(SB_URL+'/rest/v1/'+path,Object.assign({
+    headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'}
+  },opts||{}));
+  return res;
+}
+async function getAccount(u){ const r=await sb('accounts?username=eq.'+encodeURIComponent(u)+'&select=*&limit=1'); if(r.status!==200)return null; const a=await r.json(); return a&&a.length?a[0]:null; }
+async function saveCloud(data){
+  const body=JSON.stringify({username:user,data:JSON.stringify(data),saved_at:new Date().toISOString()});
+  const r=await sb('saves?username=eq.'+encodeURIComponent(user),{method:'POST',body:body,headers:{'Prefer':'resolution=merge-duplicates,return=representation'}});
+  return r.status===200||r.status===201;
+}
+async function loadCloud(){
+  const r=await sb('saves?username=eq.'+encodeURIComponent(user)+'&select=data&limit=1');
+  if(r.status!==200)return null;
+  const a=await r.json(); if(!a||!a.length||!a[0].data)return null;
+  try{return JSON.parse(a[0].data);}catch(e){return null;}
+}
+async function getLeaderboard(){
+  const r=await sb('saves?select=username,data&order=data.asc');
+  if(r.status!==200)return [];
+  const a=await r.json();
+  const rows=[];
+  for(const x of a){ try{const d=JSON.parse(x.data);rows.push({un:x.username,bl:d.balance||0});}catch(e){} }
+  rows.sort((a,b)=>b.bl-a.bl);
+  return rows.slice(0,20);
+}
+
+/* ---- 音效 (Web Audio) ---- */
+let actx=null, muted=true;
+function ensureAudio(){ if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}} if(actx&&actx.state==='suspended')actx.resume(); }
+function beep(freq,dur,type,vol){
+  if(muted||!actx)return; try{const o=actx.createOscillator(),g=actx.createGain();o.type=type||'sine';o.frequency.value=freq;g.gain.setValueAtTime(vol||0.12,actx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+dur);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+dur);}catch(e){}
+}
+const sfx={spin:()=>beep(300,0.15,'triangle',0.1),win:()=>{beep(660,0.12,'square',0.1);setTimeout(()=>beep(880,0.15,'square',0.1),100);setTimeout(()=>beep(1100,0.2,'square',0.12),200);},lose:()=>{beep(300,0.2,'sawtooth',0.08);setTimeout(()=>beep(200,0.25,'sawtooth',0.08),150);},chip:()=>beep(1200,0.05,'square',0.06),click:()=>beep(700,0.05,'sine',0.05),deal:()=>beep(500,0.08,'triangle',0.08)};
+
+/* ---- 等级 ---- */
+const TIERS=[[0,'青铜'],[2000,'白银'],[5000,'黄金'],[15000,'铂金'],[50000,'钻石']];
+function tierOf(b){let t=0;for(let i=0;i<TIERS.length;i++)if(b>=TIERS[i][0])t=i;return t;}
+function tierName(b){return TIERS[tierOf(b)][1];}
+function tierNext(b){const t=tierOf(b);if(t>=TIERS.length-1)return '已达最高等级';const nt=TIERS[t+1];return '再 '+fmt(nt[0]-b)+' 筹码升至'+nt[1];}
+
+/* ---- 本地保存 ---- */
+function persist(){ try{localStorage.setItem(LS_SAVE,JSON.stringify(S));}catch(e){} }
+function setBalance(n){ S.balance=Math.max(0,n); }
+function updateHUD(){ $('topBal').textContent=fmt(S.balance); $('statBal').textContent=fmt(S.balance); $('statPlayed').textContent=S.playCount; $('statWon').textContent=fmt(S.won); $('statStreak').textContent=S.streak; $('tierBadge').textContent=tierName(S.balance); $('tierNext').textContent=tierNext(S.balance); $('helloUser').textContent=user; }
+
+/* ---- 成就 ---- */
+const ACHS=[
+  {id:'first',ic:'🎯',nm:'初来乍到',ds:'玩第一局游戏'},
+  {id:'play10',ic:'🎮',nm:'资深玩家',ds:'累计玩10局'},
+  {id:'win5',ic:'🏆',nm:'小赢家',ds:'累计赢5局'},
+  {id:'bal5000',ic:'💰',nm:'小有积蓄',ds:'筹码达到5000'},
+  {id:'bal50000',ic:'👑',nm:'赌场大亨',ds:'筹码达到50000'},
+  {id:'check7',ic:'📅',nm:'签到达人',ds:'累计签到7次'}
+];
+function checkAch(){
+  const a=S.ach; const got=[];
+  const set=(id)=>{ if(!a[id]){a[id]=true;got.push(id);} };
+  if(S.playCount>=1)set('first');
+  if(S.playCount>=10)set('play10');
+  if(S.winCount>=5)set('win5');
+  if(S.balance>=5000)set('bal5000');
+  if(S.balance>=50000)set('bal50000');
+  if(S.checkins>=7)set('check7');
+  if(got.length) got.forEach(id=>{const c=ACHS.find(x=>x.id===id); if(c)toast('🏆 达成成就：'+c.nm);});
+  return got.length;
+}
+
+/* ---- 每日任务 ---- */
+const TASKS=[
+  {id:'play',nm:'游玩3局',need:3,key:'play',reward:200,icon:'🎮'},
+  {id:'win',nm:'赢1局',need:1,key:'win',reward:200,icon:'🏆'},
+  {id:'bet',nm:'下注满1000筹码',need:1000,key:'bet',reward:300,icon:'🪙'}
+];
+function newDay(){ const today=new Date().toISOString().slice(0,10); if(S.today.date!==today){ S.today={date:today,play:0,win:0,bet:0}; } }
+function checkTasks(){
+  newDay(); let changed=false;
+  TASKS.forEach(t=>{
+    const id='task_'+t.id;
+    if(!S.tasks[id] && S.today[t.key]>=t.need){ S.tasks[id]=true; setBalance(S.balance+t.reward); changed=true; toast('📋 完成任务 '+t.nm+'，+'+t.reward+' 筹码'); sfx.win(); }
+  });
+  if(changed)persist();
+}
+
+/* ===== 路由 ===== */
+const SCREENS={lobby:'lobbyScreen',roulette:'rouletteScreen',dice:'diceScreen',slots:'slotsScreen',blackjack:'blackjackScreen'};
+let currentNav='lobby';
+function route(nav){
+  currentNav=nav;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
+  $('mainWrap').classList.remove('hidden'); $('topbar').classList.remove('hidden');
+  $('loginScreen').classList.add('hidden');
+  $('lobbyScreen').classList.toggle('hidden',nav!=='lobby');
+  $('rouletteScreen').classList.toggle('hidden',nav!=='roulette');
+  $('diceScreen').classList.toggle('hidden',nav!=='dice');
+  $('slotsScreen').classList.toggle('hidden',nav!=='slots');
+  $('blackjackScreen').classList.toggle('hidden',nav!=='blackjack');
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.nav===nav));
+  updateHUD();
+  if(nav==='roulette')drawWheel();
+}
+
+/* ===== 账号 ===== */
+function authUI(mode){ document.querySelectorAll('#authTabs button').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode)); $('confirmField').classList.toggle('hidden',mode!=='register'); $('authBtn').textContent=(mode==='register'?'注 册':'登 录'); }
+let authMode='login';
+$('authTabs').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return; authMode=b.dataset.mode; authUI(authMode); $('authMsg').textContent=''; });
+async function doAuth(){
+  const u=$('authUser').value.trim(), p=$('authPass').value;
+  if(!u||!p){$('authMsg').textContent='请输入用户名和密码';return;}
+  if(authMode==='register'){
+    if(p.length<4){$('authMsg').textContent='密码至少4位';return;}
+    if(p!==$('authPass2').value){$('authMsg').textContent='两次密码不一致';return;}
+    if(!/^[a-zA-Z0-9_]{2,20}$/.test(u)){$('authMsg').textContent='用户名需2-20位字母/数字/下划线';return;}
+  }
+  $('authBtn').disabled=true; $('authMsg').textContent='请稍候…';
+  try{
+    if(authMode==='register'){
+      const exist=await getAccount(u);
+      if(exist){$('authMsg').textContent='该用户名已存在';$('authBtn').disabled=false;return;}
+      const salt=genSalt(), ph=await hashPass(p,salt);
+      const r=await sb('accounts',{method:'POST',body:JSON.stringify({username:u,salt:salt,password_hash:ph})});
+      if(r.status!==201){$('authMsg').textContent='注册失败，请重试';$('authBtn').disabled=false;return;}
+      toast('🎉 注册成功，赠送 1000 筹码');
+    }else{
+      const a=await getAccount(u);
+      if(!a){$('authMsg').textContent='账号不存在';$('authBtn').disabled=false;return;}
+      const ph=await hashPass(p,a.salt);
+      if(ph!==a.password_hash){$('authMsg').textContent='密码错误';$('authBtn').disabled=false;return;}
+    }
+    await loginOK(u);
+  }catch(e){ $('authMsg').textContent='网络异常，请重试'; $('authBtn').disabled=false; }
+}
+async function loginOK(u){
+  user=u; localStorage.setItem(LS_AUTH,u);
+  let cloud=null; try{cloud=await loadCloud();}catch(e){}
+  let local=null; try{const raw=localStorage.getItem(LS_SAVE); if(raw){const j=JSON.parse(raw); if(j.user===u)local=j.data;}}catch(e){}
+  S = (cloud?cloud:(local?local:JSON.parse(JSON.stringify(DEFAULT_SAVE))));
+  S.user=u; persist();
+  $('authMsg').textContent=''; $('authBtn').disabled=false;
+  $('loginScreen').classList.add('hidden');
+  newDay(); checkAch(); updateHUD(); route('lobby');
+  try{saveCloud(S);}catch(e){}
+  toast('欢迎回来，'+u);
+}
+$('authBtn').addEventListener('click',doAuth);
+['authUser','authPass','authPass2'].forEach(id=>{ $(id).addEventListener('keydown',e=>{ if(e.key==='Enter')doAuth(); }); });
+
+/* 退出 */
+function logout(){
+  try{saveCloud(S);}catch(e){}
+  localStorage.removeItem(LS_AUTH); localStorage.removeItem(LS_SAVE);
+  user=null; S=JSON.parse(JSON.stringify(DEFAULT_SAVE));
+  $('mainWrap').classList.add('hidden'); $('topbar').classList.add('hidden');
+  $('loginScreen').classList.remove('hidden');
+  $('authUser').value=''; $('authPass').value=''; $('authPass2').value='';
+}
+$('btnLogout').addEventListener('click',logout);
+
+/* ===== 导航事件 ===== */
+document.querySelectorAll('.nav button, .gcard[data-nav]').forEach(el=>{ el.addEventListener('click',()=>route(el.dataset.nav)); });
+document.querySelectorAll('[data-back]').forEach(el=>el.addEventListener('click',()=>route('lobby')));
+/* 下注步进 */
+document.querySelectorAll('[data-bet]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const screen=btn.closest('.screen'); if(!screen)return;
+    const input=screen.querySelector('.bet-input input'); const v=parseInt(input.value)||50;
+    let nv=btn.dataset.bet==='+'?v+50:v-50; if(nv<10)nv=10; input.value=nv;
+  });
+});
+
+/* ===== 轮盘 ===== */
+const WHEEL=[0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+const RED=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const SEG=Math.PI*2/WHEEL.length;
+let wheelRot=0, spinning=false;
+function colorOf(n){ if(n===0)return '#1b7a3d'; return RED.has(n)?'#c0392b':'#151515'; }
+function drawWheel(){
+  const c=$('rlWheel'), ctx=c.getContext('2d'), cx=150, cy=150, R=138;
+  ctx.clearRect(0,0,300,300);
+  for(let i=0;i<WHEEL.length;i++){
+    const a0=wheelRot+i*SEG, a1=a0+SEG;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,R,a0,a1); ctx.closePath();
+    ctx.fillStyle=colorOf(WHEEL[i]); ctx.fill();
+    ctx.strokeStyle='rgba(212,175,55,.5)'; ctx.lineWidth=1; ctx.stroke();
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(a0+SEG/2); ctx.textAlign='right';
+    ctx.fillStyle='#fff'; ctx.font='bold 13px sans-serif'; ctx.fillText(WHEEL[i],R-10,4); ctx.restore();
+  }
+  ctx.beginPath(); ctx.arc(cx,cy,16,0,Math.PI*2); ctx.fillStyle='#d4af37'; ctx.fill();
+  ctx.beginPath(); ctx.arc(cx,cy,8,0,Math.PI*2); ctx.fillStyle='#241d10'; ctx.fill();
+}
+let rlBetSel='红';
+function rlBetGrid(){
+  const g=$('rlBets'); g.innerHTML='';
+  const opts=[['0','0'],['红','红'],['黑','黑'],['单','单'],['双','双'],['大','大(19-36)'],['小','小(1-18)']];
+  opts.forEach(([k,lab])=>{
+    const d=document.createElement('div'); d.className='bet-cell'+(rlBetSel===k?' sel':''); d.textContent=lab; d.dataset.k=k;
+    d.style.background= k==='红'?'#5a1a12':k==='黑'?'#151515':k==='0'?'#124a26':'';
+    d.addEventListener('click',()=>{ rlBetSel=k; rlBetGrid(); });
+    g.appendChild(d);
+  });
+  const grid=document.createElement('div'); grid.style.cssText='grid-column:1/-1;display:grid;grid-template-columns:repeat(6,1fr);gap:8px;';
+  for(let n=1;n<=36;n++){
+    const d=document.createElement('div'); d.className='bet-cell'+(rlBetSel===String(n)?' sel':''); d.textContent=n;
+    d.style.background=colorOf(n); d.style.color='#fff';
+    d.addEventListener('click',()=>{ rlBetSel=String(n); rlBetGrid(); });
+    grid.appendChild(d);
+  }
+  g.appendChild(grid);
+}
+function rlWinOf(num){
+  const black=!RED.has(num)&&num!==0;
+  const even=num%2===0, big=num>=19;
+  switch(rlBetSel){
+    case '0': return num===0?35:0;
+    case '红': return RED.has(num)?2:0;
+    case '黑': return (black)?2:0;
+    case '单': return (num!==0&&num%2===1)?2:0;
+    case '双': return (num!==0&&num%2===0)?2:0;
+    case '大': return big?2:0;
+    case '小': return (num>=1&&num<=18)?2:0;
+    default: return num===parseInt(rlBetSel)?35:0;
+  }
+}
+function spinRoulette(){
+  if(spinning)return;
+  const bet=parseInt($('rlBet').value)||50; if(bet<10)bet=10; $('rlBet').value=bet;
+  if(S.balance<bet){$('rlMsg').textContent='筹码不足';$('rlMsg').className='msg lose';return;}
+  setBalance(S.balance-bet); S.today.bet+=bet; S.today.play++; S.playCount++; persist(); updateHUD();
+  $('rlMsg').textContent=''; spinning=true; $('rlSpin').disabled=true; sfx.spin(); ensureAudio();
+  const idx=Math.floor(Math.random()*WHEEL.length);
+  const target=(-Math.PI/2 - (idx*SEG+SEG/2)) % (Math.PI*2);
+  let final=wheelRot+ (Math.PI*2*6);
+  let d=(target-final)%(Math.PI*2); if(d>0)d-=Math.PI*2; final+=d;
+  const start=wheelRot, dur=2200, t0=performance.now();
+  function anim(t){
+    const p=Math.min(1,(t-t0)/dur); const e=1-Math.pow(1-p,3);
+    wheelRot=start+(final-start)*e; drawWheel();
+    if(p<1){requestAnimationFrame(anim);}else{ finishSpin(idx,bet); }
+  }
+  requestAnimationFrame(anim);
+}
+function finishSpin(idx,bet){
+  spinning=false; $('rlSpin').disabled=false;
+  const num=WHEEL[idx], mult=rlWinOf(num), win=bet*mult;
+  $('rlMsg').textContent = win>0 ? ('🎉 命中 '+num+'，赢取 '+fmt(win)+' 筹码！') : ('落点 '+num+'，未中，扣除 '+fmt(bet));
+  $('rlMsg').className='msg '+(win>0?'win':'lose');
+  if(win>0){ setBalance(S.balance+win); S.won+=win; S.winCount++; S.today.win++; sfx.win(); } else { sfx.lose(); }
+  persist(); updateHUD(); checkTasks(); checkAch();
+}
+$('rlSpin').addEventListener('click',spinRoulette);
+
+/* ===== 骰子 ===== */
+const DIE_DOTS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+function renderDie(el,val){ const dots=el.children; for(let i=0;i<9;i++){ dots[i].style.visibility=DIE_DOTS[val].includes(i)?'visible':'hidden'; } }
+let dcBetSel='大';
+function dcBetGrid(){
+  const g=$('dcBets'); g.innerHTML='';
+  [['大','大(8-12) ×2'],['小','小(3-7) ×2'],['豹子','豹子(两骰相同) ×6']].forEach(([k,lab])=>{
+    const d=document.createElement('div'); d.className='bet-cell'+(dcBetSel===k?' sel':''); d.textContent=lab;
+    d.addEventListener('click',()=>{dcBetSel=k;dcBetGrid();});
+    g.appendChild(d);
+  });
+}
+function rollDice(){
+  const bet=parseInt($('dcBet').value)||50; if(bet<10)bet=10; $('dcBet').value=bet;
+  if(S.balance<bet){$('dcMsg').textContent='筹码不足';$('dcMsg').className='msg lose';return;}
+  setBalance(S.balance-bet); S.today.bet+=bet; S.today.play++; S.playCount++; persist(); updateHUD();
+  $('dcMsg').textContent=''; sfx.spin(); ensureAudio();
+  $('dcDie1').classList.add('rolling'); $('dcDie2').classList.add('rolling');
+  setTimeout(()=>{
+    const a=1+Math.floor(Math.random()*6), b=1+Math.floor(Math.random()*6), sum=a+b;
+    $('dcDie1').classList.remove('rolling'); $('dcDie2').classList.remove('rolling');
+    renderDie($('dcDie1'),a); renderDie($('dcDie2'),b);
+    let mult=0;
+    if(dcBetSel==='大'&&sum>=8&&sum<=12)mult=2;
+    else if(dcBetSel==='小'&&sum>=3&&sum<=7)mult=2;
+    else if(dcBetSel==='豹子'&&a===b)mult=6;
+    const win=bet*mult;
+    $('dcMsg').textContent = win>0?('🎉 '+a+' + '+b+' = '+sum+'，赢取 '+fmt(win)+'！'):('出 '+a+' + '+b+' = '+sum+'，未中');
+    $('dcMsg').className='msg '+(win>0?'win':'lose');
+    if(win>0){setBalance(S.balance+win);S.won+=win;S.winCount++;S.today.win++;sfx.win();}else{sfx.lose();}
+    persist(); updateHUD(); checkTasks(); checkAch();
+  },700);
+}
+/* 投骰子 */
+$('dcRoll').addEventListener('click',rollDice);
+dcBetGrid();
+
+/* ===== 老虎机 ===== */
+const SLOT_SYMS=['🍒','🍋','💎','🔔','7'];
+const SLOT_PAY={0:2,1:3,2:5,3:8,4:20};
+let slotSpin=false;
+function spinSlots(){
+  if(slotSpin)return;
+  const bet=parseInt($('slBet').value)||50; if(bet<10)bet=10; $('slBet').value=bet;
+  if(S.balance<bet){$('slMsg').textContent='筹码不足';$('slMsg').className='msg lose';return;}
+  setBalance(S.balance-bet); S.today.bet+=bet; S.today.play++; S.playCount++; persist(); updateHUD();
+  $('slMsg').textContent=''; slotSpin=true; $('slSpin').disabled=true; sfx.spin(); ensureAudio();
+  document.querySelectorAll('.reel').forEach(r=>r.classList.add('rolling'));
+  const t0=performance.now();
+  function anim(t){
+    document.querySelectorAll('.reel').forEach((r,i)=>{
+      if((t-t0)>300+i*600){ const s=Math.floor(Math.random()*SLOT_SYMS.length); r.querySelector('.sym').textContent=SLOT_SYMS[s]; }
+    });
+    if(t-t0<2000){requestAnimationFrame(anim);}else{ finishSlots(bet); }
+  }
+  requestAnimationFrame(anim);
+}
+function finishSlots(bet){
+  document.querySelectorAll('.reel').forEach(r=>r.classList.remove('rolling'));
+  const res=[]; document.querySelectorAll('.reel').forEach((r,i)=>{ const s=SLOT_SYMS[Math.floor(Math.random()*SLOT_SYMS.length)]; res.push(s); r.querySelector('.sym').textContent=s; });
+  slotSpin=false; $('slSpin').disabled=false;
+  const all=res[0]===res[1]&&res[1]===res[2];
+  const win=all?bet*SLOT_PAY[SLOT_SYMS.indexOf(res[0])]:0;
+  $('slMsg').textContent = win>0?('🎉 '+res.join(' ')+' 三连！赢取 '+fmt(win)+'！'):(res.join(' ')+' 未中，再试一次');
+  $('slMsg').className='msg '+(win>0?'win':'lose');
+  if(win>0){setBalance(S.balance+win);S.won+=win;S.winCount++;S.today.win++;sfx.win();}else{sfx.lose();}
+  persist(); updateHUD(); checkTasks(); checkAch();
+}
+$('slSpin').addEventListener('click',spinSlots);
+
+/* ===== 21点 ===== */
+let deck=[], pHand=[], dHand=[], bjBet=0, bjPlaying=false;
+function newDeck(){ deck=[]; for(const s of ['♠','♥','♦','♣'])for(const r of ['A','2','3','4','5','6','7','8','9','10','J','Q','K'])deck.push({s,r}); for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];} }
+function cardVal(c){ if(c.r==='A')return 11; const n=parseInt(c.r); return isNaN(n)?10:n; }
+function handVal(h){ let sum=h.reduce((a,c)=>a+cardVal(c),0), aces=h.filter(c=>c.r==='A').length; while(sum>21&&aces){sum-=10;aces--;} return sum; }
+function cardHTML(c){ const red=c.s==='♥'||c.s==='♦'; return '<div class="bj-card'+(red?' red':'')+'">'+c.r+'<span style="font-size:14px">'+c.s+'</span></div>'; }
+function renderBJ(){ $('bjDealer').innerHTML=dHand.map(cardHTML).join('')||'<span style="color:#b7e0c2;font-size:13px">等待发牌</span>'; $('bjPlayer').innerHTML=pHand.map(cardHTML).join(''); $('bjDealerV').textContent=handVal(dHand); $('bjPlayerV').textContent=handVal(pHand); }
+function dealBJ(){
+  const bet=parseInt($('bjBet').value)||50; if(bet<10)bet=10; $('bjBet').value=bet;
+  if(S.balance<bet){$('bjMsg').textContent='筹码不足';$('bjMsg').className='msg lose';return;}
+  bjBet=bet; setBalance(S.balance-bet); S.today.bet+=bet; sfx.deal(); ensureAudio();
+  newDeck(); pHand=[deck.pop(),deck.pop()]; dHand=[deck.pop(),deck.pop()];
+  bjPlaying=true; $('bjDeal').disabled=true; $('bjHit').disabled=false; $('bjStand').disabled=false;
+  $('bjDouble').disabled=(pHand.length!==2||S.balance<bet);
+  renderBJ(); $('bjMsg').textContent=''; $('bjMsg').className='msg';
+  if(handVal(pHand)===21){ bjEnd(); }
+}
+function hitBJ(){ sfx.deal(); pHand.push(deck.pop()); renderBJ(); if(handVal(pHand)>21){bjEnd();} else if(handVal(pHand)===21){bjStandBJ();} }
+function doubleBJ(){ if(pHand.length!==2||S.balance<bjBet)return; setBalance(S.balance-bjBet); bjBet*=2; $('bjDouble').disabled=true; sfx.chip(); pHand.push(deck.pop()); renderBJ(); if(handVal(pHand)>=21){bjEnd();}else{bjStandBJ();} }
+function standBJ(){ bjStandBJ(); }
+function bjStandBJ(){ $('bjHit').disabled=true; $('bjStand').disabled=true; $('bjDouble').disabled=true; sfx.deal(); while(handVal(dHand)<17)dHand.push(deck.pop()); renderBJ(); bjEnd(); }
+function bjEnd(){
+  $('bjHit').disabled=true; $('bjStand').disabled=true; $('bjDouble').disabled=true; $('bjDeal').disabled=false;
+  bjPlaying=false; const pv=handVal(pHand), dv=handVal(dHand);
+  let msg, win=0;
+  if(pv>21){msg='爆牌，庄家获胜';}
+  else if(dv>21||pv>dv){win=bjBet*2; msg='🎉 你赢了 +'+fmt(win)+'！';}
+  else if(pv===dv){win=bjBet; msg='平局，退还押注';}
+  else {msg='庄家获胜';}
+  if(win>0){ setBalance(S.balance+win); } 
+  S.today.play++; S.playCount++; S.today.bet=Math.max(S.today.bet,0);
+  const isWin=win>=bjBet*2;
+  if(isWin){S.won+=win;S.winCount++;S.today.win++;sfx.win();}else{sfx.lose();}
+  $('bjMsg').textContent=msg; $('bjMsg').className='msg '+(isWin?'win':(pv>21||dv>pv)?'lose':'info');
+  persist(); updateHUD(); checkTasks(); checkAch();
+}
+$('bjDeal').addEventListener('click',dealBJ);
+$('bjHit').addEventListener('click',hitBJ);
+$('bjStand').addEventListener('click',standBJ);
+$('bjDouble').addEventListener('click',doubleBJ);
+
+/* ===== 签到 ===== */
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function checkinState(){
+  const today=todayStr();
+  if(S.lastCheckin!==today){ const last=new Date(S.lastCheckin+'T00:00:00'), prev=new Date(today+'T00:00:00'); prev.setDate(prev.getDate()-1); const cont=S.lastCheckin&&last.getTime()===prev.getTime(); if(!cont){S.streak=0;} }
+}
+const CHECKIN_REWARD=[100,150,200,250,300,400,500];
+function renderCheckin(){
+  checkinState(); const today=todayStr();
+  const g=$('checkinDays'); g.innerHTML='';
+  const cycle=CHECKIN_REWARD.length, pos=S.streak%cycle;
+  for(let i=0;i<cycle;i++){
+    const d=document.createElement('div');
+    d.className='day'+( (i<pos || (S.lastCheckin===today&&i===pos)) ?' done':'')+( i===pos&&S.lastCheckin!==today?' today':'');
+    d.innerHTML='<div class="d">🎁</div><div class="r">+'+CHECKIN_REWARD[i]+'</div>';
+    g.appendChild(d);
+  }
+  $('checkinBtn').disabled = (S.lastCheckin===today);
+  $('checkinBtn').textContent = S.lastCheckin===today ? '今日已签到' : '签到领取 +'+CHECKIN_REWARD[pos]+' 筹码';
+  $('checkinMsg').textContent='';
+}
+function doCheckin(){
+  checkinState(); const today=todayStr();
+  if(S.lastCheckin===today){$('checkinMsg').textContent='今天已经签到过啦';return;}
+  const reward=CHECKIN_REWARD[S.streak%CHECKIN_REWARD.length];
+  if(S.lastCheckin){const last=new Date(S.lastCheckin+'T00:00:00'),prev=new Date(today+'T00:00:00');prev.setDate(prev.getDate()-1);if(last.getTime()===prev.getTime()){S.streak++;}else{S.streak=1;}}else{S.streak=1;}
+  S.lastCheckin=today; S.checkins++; setBalance(S.balance+reward); sfx.win();
+  $('checkinMsg').textContent='🎉 签到成功，+'+reward+' 筹码'; $('checkinMsg').className='msg win';
+  persist(); updateHUD(); renderCheckin(); checkAch();
+}
+$('btnCheckin').addEventListener('click',()=>{ renderCheckin(); $('checkinModal').classList.remove('hidden'); });
+$('checkinBtn').addEventListener('click',doCheckin);
+
+/* ===== 任务/成就/排行榜弹窗 ===== */
+function renderTasks(){
+  newDay(); const g=$('tasksList'); g.innerHTML='';
+  TASKS.forEach(t=>{
+    const done=!!S.tasks['task_'+t.id], cur=Math.min(S.today[t.key],t.need);
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML='<span>'+t.icon+' '+t.nm+' <span class="muted">('+cur+'/'+t.need+')</span></span><span style="color:var(--gold2);font-weight:700">'+(done?'✓ 已完成':'+'+t.reward)+'</span>';
+    g.appendChild(row);
+  });
+}
+function renderAch(){
+  const g=$('achList'); g.innerHTML='';
+  ACHS.forEach(a=>{
+    const done=!!S.ach[a.id];
+    const row=document.createElement('div'); row.className='ach'+(done?' done':'');
+    row.innerHTML='<span class="ic">'+a.ic+'</span><div><div class="nm">'+a.nm+'</div><div class="ds">'+a.ds+'</div></div><span class="st">'+(done?'✓ 已达成':'未达成')+'</span>';
+    g.appendChild(row);
+  });
+}
+async function renderLb(){
+  const g=$('lbList'); g.innerHTML='<div class="muted" style="text-align:center;padding:20px">加载中…</div>';
+  try{
+    const rows=await getLeaderboard();
+    g.innerHTML='';
+    if(!rows.length){g.innerHTML='<div class="muted" style="text-align:center;padding:20px">暂无玩家数据</div>';return;}
+    rows.forEach((r,i)=>{
+      const row=document.createElement('div'); row.className='lb';
+      row.innerHTML='<span class="rk">'+(i+1)+'</span><span class="un">'+r.un+(r.un===user?' <span style="color:var(--gold2)">(你)</span>':'')+'</span><span class="bl">'+fmt(r.bl)+'</span>';
+      g.appendChild(row);
+    });
+  }catch(e){ g.innerHTML='<div class="muted" style="text-align:center;padding:20px">排行榜加载失败</div>'; }
+}
+$('btnTasks').addEventListener('click',()=>{ renderTasks(); $('tasksModal').classList.remove('hidden'); });
+$('btnAch').addEventListener('click',()=>{ renderAch(); $('achModal').classList.remove('hidden'); });
+$('btnLb').addEventListener('click',()=>{ $('lbModal').classList.remove('hidden'); renderLb(); });
+/* 音效开关 */
+function renderSound(){ $('btnSound').textContent=muted?'🔇 音效':'🔊 音效'; }
+$('btnSound').addEventListener('click',()=>{ muted=!muted; if(!muted){ensureAudio();} renderSound(); try{localStorage.setItem('g5v2_muted',muted?'1':'0');}catch(e){} });
+/* 关闭弹窗 */
+document.querySelectorAll('.modal-bg').forEach(bg=>{
+  bg.addEventListener('click',e=>{ if(e.target===bg || e.target.closest('.close'))bg.classList.add('hidden'); });
+});
+
+/* ===== 初始化 ===== */
+function init(){
+  try{ const m=localStorage.getItem('g5v2_muted'); if(m)muted=m==='1'; }catch(e){}
+  renderSound(); rlBetGrid(); dcBetGrid(); drawWheel();
+  renderDie($('dcDie1'),1); renderDie($('dcDie2'),1);
+  /* 自动登录 */
+  try{
+    const savedUser=localStorage.getItem(LS_AUTH);
+    if(savedUser){ user=savedUser; S.user=savedUser; try{const raw=localStorage.getItem(LS_SAVE); if(raw){const j=JSON.parse(raw); if(j.user===savedUser)S=j.data;}}catch(e){}
+      newDay(); updateHUD(); $('loginScreen').classList.add('hidden'); route('lobby');
+      /* 后台同步云端 */
+      (async()=>{ const cloud=await loadCloud(); if(cloud){ S=cloud; S.user=savedUser; persist(); } newDay(); updateHUD(); saveCloud(S); })();
+    }
+  }catch(e){}
+  /* 退出前自动云存档 */
+  window.addEventListener('beforeunload',()=>{ if(user){ try{saveCloud(S);}catch(e){} } });
+}
+init();
+})();
+</script>
 </body>
-
 </html>
