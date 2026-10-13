@@ -487,13 +487,23 @@ async function loginOK(u){
   user=u; localStorage.setItem(LS_AUTH,u);
   let cloud=null; try{cloud=await loadCloud();}catch(e){}
   let local=null; try{const raw=localStorage.getItem(LS_SAVE); if(raw){const j=JSON.parse(raw); if(j.user===u)local=j.data;}}catch(e){}
-  S = (cloud?cloud:(local?local:JSON.parse(JSON.stringify(DEFAULT_SAVE))));
+  S=mergeSave(cloud||local||null);
   S.user=u; persist();
   $('authMsg').textContent=''; $('authBtn').disabled=false;
   $('loginScreen').classList.add('hidden');
   newDay(); checkAch(); updateHUD(); route('lobby');
   try{saveCloud(S);}catch(e){}
   toast('欢迎回来，'+u);
+}
+function mergeSave(src){
+  const d=JSON.parse(JSON.stringify(DEFAULT_SAVE));
+  if(src&&typeof src==='object'){
+    for(const k in d){ if(src[k]!==undefined)d[k]=src[k]; }
+    d.today=Object.assign({date:'',play:0,win:0,bet:0},src.today||{});
+    d.tasks=Object.assign({},src.tasks||{});
+    d.ach=Object.assign({},src.ach||{});
+  }
+  return d;
 }
 $('authBtn').addEventListener('click',doAuth);
 ['authUser','authPass','authPass2'].forEach(id=>{ $(id).addEventListener('keydown',e=>{ if(e.key==='Enter')doAuth(); }); });
@@ -797,10 +807,11 @@ function init(){
   /* 自动登录 */
   try{
     const savedUser=localStorage.getItem(LS_AUTH);
-    if(savedUser){ user=savedUser; S.user=savedUser; try{const raw=localStorage.getItem(LS_SAVE); if(raw){const j=JSON.parse(raw); if(j.user===savedUser)S=j.data;}}catch(e){}
+    if(savedUser){ user=savedUser; S.user=savedUser; let local=null; try{const raw=localStorage.getItem(LS_SAVE); if(raw){const j=JSON.parse(raw); if(j.user===savedUser)local=j.data;}}catch(e){}
+      S=mergeSave(local); S.user=savedUser; persist();
       newDay(); updateHUD(); $('loginScreen').classList.add('hidden'); route('lobby');
       /* 后台同步云端 */
-      (async()=>{ const cloud=await loadCloud(); if(cloud){ S=cloud; S.user=savedUser; persist(); } newDay(); updateHUD(); saveCloud(S); })();
+      (async()=>{ const cloud=await loadCloud(); if(cloud){ S=mergeSave(cloud); S.user=savedUser; persist(); } newDay(); updateHUD(); saveCloud(S); })();
     }
   }catch(e){}
   /* 退出前自动云存档 */
