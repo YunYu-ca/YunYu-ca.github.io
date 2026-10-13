@@ -368,6 +368,11 @@ async function loadCloud(){
   const a=await r.json(); if(!a||!a.length||!a[0].data)return null;
   try{return JSON.parse(a[0].data);}catch(e){return null;}
 }
+let _syncing=false;
+function syncCloud(){
+  if(!user||_syncing)return; _syncing=true;
+  saveCloud(S).then(()=>{_syncing=false;}).catch(()=>{_syncing=false;});
+}
 async function getLeaderboard(){
   const r=await sb('saves?select=username,data&order=data.asc');
   if(r.status!==200)return [];
@@ -608,7 +613,7 @@ function finishSpin(idx,bet){
   $('rlMsg').textContent = win>0 ? ('🎉 命中 '+num+'，赢取 '+fmt(win)+' 筹码！') : ('落点 '+num+'，未中，扣除 '+fmt(bet));
   $('rlMsg').className='msg '+(win>0?'win':'lose');
   if(win>0){ setBalance(S.balance+win); S.won+=win; S.winCount++; S.today.win++; sfx.win(); } else { sfx.lose(); }
-  persist(); updateHUD(); checkTasks(); checkAch();
+  persist(); updateHUD(); checkTasks(); checkAch(); syncCloud(); syncCloud();
 }
 $('rlSpin').addEventListener('click',spinRoulette);
 
@@ -642,7 +647,7 @@ function rollDice(){
     $('dcMsg').textContent = win>0?('🎉 '+a+' + '+b+' = '+sum+'，赢取 '+fmt(win)+'！'):('出 '+a+' + '+b+' = '+sum+'，未中');
     $('dcMsg').className='msg '+(win>0?'win':'lose');
     if(win>0){setBalance(S.balance+win);S.won+=win;S.winCount++;S.today.win++;sfx.win();}else{sfx.lose();}
-    persist(); updateHUD(); checkTasks(); checkAch();
+    persist(); updateHUD(); checkTasks(); checkAch(); syncCloud();
   },700);
 }
 /* 投骰子 */
@@ -678,7 +683,7 @@ function finishSlots(bet){
   $('slMsg').textContent = win>0?('🎉 '+res.join(' ')+' 三连！赢取 '+fmt(win)+'！'):(res.join(' ')+' 未中，再试一次');
   $('slMsg').className='msg '+(win>0?'win':'lose');
   if(win>0){setBalance(S.balance+win);S.won+=win;S.winCount++;S.today.win++;sfx.win();}else{sfx.lose();}
-  persist(); updateHUD(); checkTasks(); checkAch();
+  persist(); updateHUD(); checkTasks(); checkAch(); syncCloud();
 }
 $('slSpin').addEventListener('click',spinSlots);
 
@@ -716,7 +721,7 @@ function bjEnd(){
   const isWin=win>=bjBet*2;
   if(isWin){S.won+=win;S.winCount++;S.today.win++;sfx.win();}else{sfx.lose();}
   $('bjMsg').textContent=msg; $('bjMsg').className='msg '+(isWin?'win':(pv>21||dv>pv)?'lose':'info');
-  persist(); updateHUD(); checkTasks(); checkAch();
+  persist(); updateHUD(); checkTasks(); checkAch(); syncCloud();
 }
 $('bjDeal').addEventListener('click',dealBJ);
 $('bjHit').addEventListener('click',hitBJ);
@@ -751,7 +756,7 @@ function doCheckin(){
   if(S.lastCheckin){const last=new Date(S.lastCheckin+'T00:00:00'),prev=new Date(today+'T00:00:00');prev.setDate(prev.getDate()-1);if(last.getTime()===prev.getTime()){S.streak++;}else{S.streak=1;}}else{S.streak=1;}
   S.lastCheckin=today; S.checkins++; setBalance(S.balance+reward); sfx.win();
   $('checkinMsg').textContent='🎉 签到成功，+'+reward+' 筹码'; $('checkinMsg').className='msg win';
-  persist(); updateHUD(); renderCheckin(); checkAch();
+  persist(); updateHUD(); renderCheckin(); checkAch(); syncCloud();
 }
 $('btnCheckin').addEventListener('click',()=>{ renderCheckin(); $('checkinModal').classList.remove('hidden'); });
 $('checkinBtn').addEventListener('click',doCheckin);
@@ -810,8 +815,8 @@ function init(){
     if(savedUser){ user=savedUser; S.user=savedUser; let local=null; try{const raw=localStorage.getItem(LS_SAVE); if(raw){const j=JSON.parse(raw); if(j.user===savedUser)local=j.data;}}catch(e){}
       S=mergeSave(local); S.user=savedUser; persist();
       newDay(); updateHUD(); $('loginScreen').classList.add('hidden'); route('lobby');
-      /* 后台同步云端 */
-      (async()=>{ const cloud=await loadCloud(); if(cloud){ S=mergeSave(cloud); S.user=savedUser; persist(); } newDay(); updateHUD(); saveCloud(S); })();
+      /* 后台同步云端（不倒退进度） */
+      (async()=>{ const cloud=await loadCloud(); if(cloud){ if(cloud.played>=S.played){ S=mergeSave(cloud); S.user=savedUser; persist(); } } newDay(); updateHUD(); saveCloud(S); })();
     }
   }catch(e){}
   /* 退出前自动云存档 */
