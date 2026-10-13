@@ -347,9 +347,13 @@ function genSalt(){ return Array.from(crypto.getRandomValues(new Uint8Array(12))
 
 /* ---- Supabase REST ---- */
 async function sb(path,opts){
-  const res=await fetch(SB_URL+'/rest/v1/'+path,Object.assign({
-    headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'}
-  },opts||{}));
+  opts=opts||{};
+  const baseH={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'};
+  const res=await fetch(SB_URL+'/rest/v1/'+path,{
+    method:opts.method||'GET',
+    body:opts.body,
+    headers:Object.assign({},baseH,opts.headers||{})
+  });
   return res;
 }
 async function getAccount(u){ const r=await sb('accounts?username=eq.'+encodeURIComponent(u)+'&select=*&limit=1'); if(r.status!==200)return null; const a=await r.json(); return a&&a.length?a[0]:null; }
